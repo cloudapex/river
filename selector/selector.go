@@ -13,9 +13,10 @@ import (
 type Selector interface {
 	Apply(opts ...Option) error
 	Options() Options
+
 	// Select returns a function which should return the next node
 	Select(service string, opts ...SelectOption) (Next, error)
-
+	// GetService returns registry.Service
 	GetService(name string) ([]*registry.Service, error)
 
 	// Mark sets the success/error against a node

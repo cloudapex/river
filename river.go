@@ -39,35 +39,38 @@ import (
 	"github.com/pkg/errors"
 )
 
-// NewApp 创建app
-func NewApp(opts ...app.Option) app.IApp {
-	out := new(DefaultApp)
-	out.opts = app.NewOptions(opts...)
+// CreateApp 创建app实例
+func CreateApp(opts ...app.Option) app.IApp {
+	return newApp(append(opts, app.Version(version))...)
+}
+
+// newApp 创建app
+func newApp(opts ...app.Option) app.IApp {
+	out := &DefaultApp{
+		opts:    app.NewOptions(opts...),
+		manager: modulebase.NewModuleManager(),
+	}
 	if app.Default == nil {
 		app.Default = out
 	}
 	return out
 }
 
-// CreateApp 创建app实例
-func CreateApp(opts ...app.Option) app.IApp {
-	app := NewApp(append(opts, app.Version(version))...)
-	return app
-}
-
 // DefaultApp 默认应用
 type DefaultApp struct {
 	opts app.Options
+
+	manager *modulebase.ModuleManager
 
 	serverList sync.Map
 
 	//将一个RPC调用路由到新的路由上
 	serviceRoute func(app app.IApp, route string) string
 
-	configurationLoaded func(app app.IApp)                              // 应用启动配置初始化完成后回调
-	moduleInited        func(app app.IApp, module app.IModule)          // 每个模块初始化完成后回调
-	startup             func(app app.IApp)                              // 应用启动完成后回调
-	serviceDeleted      func(app app.IApp, moduleName, serverId string) // 当模块服务断开删除时回调
+	onConfigurationLoaded func(app app.IApp)                              // 应用启动配置初始化完成后回调
+	onModuleInited        func(app app.IApp, module app.IModule)          // 每个模块初始化完成后回调
+	onStartup             func(app app.IApp)                              // 应用启动完成后回调
+	onServiceDeleted      func(app app.IApp, moduleName, serverId string) // 当模块服务断开删除时回调
 }
 
 // 初始化 consul
@@ -92,7 +95,7 @@ func (this *DefaultApp) initConsul() error {
 }
 
 // 初始化 config
-func (this *DefaultApp) loadConfig() error {
+func (this *DefaultApp) initConfig() error {
 	confData, err := this.Options().Registry.GetKV(this.Options().ConfigKey)
 	if err != nil {
 		return fmt.Errorf("无法从consul获取配置:%s, err:%v", this.Options().ConfigKey, err)
@@ -143,7 +146,7 @@ func (this *DefaultApp) Run(mods ...app.IModule) error {
 	}
 
 	// init config
-	err = this.loadConfig()
+	err = this.initConfig()
 	if err != nil {
 		return err
 	}
@@ -155,8 +158,8 @@ func (this *DefaultApp) Run(mods ...app.IModule) error {
 	}
 
 	// callback
-	if this.configurationLoaded != nil {
-		this.configurationLoaded(this)
+	if this.onConfigurationLoaded != nil {
+		this.onConfigurationLoaded(this)
 	}
 
 	// init nats
@@ -169,22 +172,21 @@ func (this *DefaultApp) Run(mods ...app.IModule) error {
 	log.Info("river %v starting...", this.opts.Version)
 
 	// 1 RegisterRunMod
-	manager := modulebase.NewModuleManager()
-	manager.RegisterRunMod(modules.TimerModule()) // 先注册时间轮模块 每一个进程都默认运行
+	this.manager.RegisterRunMod(modules.TimerModule()) // 先注册时间轮模块 每一个进程都默认运行
 
 	// 2 Register
 	for i := 0; i < len(mods); i++ {
 		mods[i].OnAppConfigurationLoaded(this)
-		manager.Register(mods[i])
+		this.manager.Register(mods[i])
 	}
-	this.OnInit()
+	this.OnInit() // 初始化modules之前回调(重载)
 
 	// 2 init modules
-	manager.Init(this, this.opts.ProcessEnv)
+	this.manager.Init(this, this.opts.ProcessEnv)
 
 	// 3 startup callback
-	if this.startup != nil {
-		this.startup(this)
+	if this.onStartup != nil {
+		this.onStartup(this) // 初始化modules之后回调
 	}
 	log.Info("river %v started", this.opts.Version)
 
@@ -199,7 +201,6 @@ func (this *DefaultApp) Run(mods ...app.IModule) error {
 	timeout := time.NewTimer(this.opts.KillWaitTTL)
 	wait := make(chan struct{})
 	go func() {
-		manager.Destroy()
 		this.OnDestroy()
 		wait <- struct{}{}
 	}()
@@ -253,8 +254,8 @@ func (this *DefaultApp) Watcher(node *registry.Node) {
 	if len(s) < 2 {
 		return
 	}
-	if this.serviceDeleted != nil {
-		go this.serviceDeleted(this, s[0], node.Id)
+	if this.onServiceDeleted != nil {
+		go this.onServiceDeleted(this, s[0], node.Id)
 	}
 }
 
@@ -262,7 +263,7 @@ func (this *DefaultApp) Watcher(node *registry.Node) {
 func (this *DefaultApp) OnInit() error { return nil }
 
 // OnDestroy 应用退出
-func (this *DefaultApp) OnDestroy() error { return nil }
+func (this *DefaultApp) OnDestroy() error { this.manager.Destroy(); return nil }
 
 // SetServiceRoute 设置服务路由器(动态转换service名称)
 func (this *DefaultApp) SetServiceRoute(fn func(app app.IApp, route string) string) error {
@@ -287,17 +288,16 @@ func (this *DefaultApp) GetRouteServer(service string, opts ...selector.SelectOp
 	return this.GetServerBySelector(moduleType, opts...)
 }
 
-// GetServerByID 通过服务ID(moduleType@id)获取服务实例
+// GetServerByID 获取服务实例(通过服务ID(moduleType@id))
 func (this *DefaultApp) GetServerByID(serverID string) (app.IServerSession, error) {
 	session, ok := this.serverList.Load(serverID)
 	if !ok {
-		moduleType := serverID // s[0] + @ + s[1] = moduleType@moduleID
+		// s[0] + @ + s[1] = moduleType@moduleID
 		s := strings.Split(serverID, "@")
-		if len(s) == 2 {
-			moduleType = s[0]
-		} else {
+		if len(s) != 2 {
 			return nil, errors.Errorf("serverID is error %v", serverID)
 		}
+		moduleType := s[0]
 		sessions := this.GetServersByType(moduleType)
 		for _, s := range sessions {
 			if s.GetNode().Id == serverID {
@@ -310,7 +310,7 @@ func (this *DefaultApp) GetServerByID(serverID string) (app.IServerSession, erro
 	return nil, errors.Errorf("nofound %v", serverID)
 }
 
-// GetServersByType 通过服务类型(moduleType)获取服务实例列表(处理缓存)
+// GetServersByType 获取服务实例(通过服务类型(moduleType)(处理缓存))
 func (this *DefaultApp) GetServersByType(moduleType string) []app.IServerSession {
 	sessions := make([]app.IServerSession, 0)
 	services, err := this.opts.Selector.GetService(moduleType)
@@ -331,7 +331,7 @@ func (this *DefaultApp) GetServersByType(moduleType string) []app.IServerSession
 	return sessions
 }
 
-// GetServerBySelector 通过服务类型(moduleType)获取服务实例(可设置选择器)(处理缓存)
+// GetServerBySelector 获取服务实例(通过服务类型(moduleType),可设置选择器(处理缓存))
 func (this *DefaultApp) GetServerBySelector(moduleType string, opts ...selector.SelectOption) (app.IServerSession, error) {
 	next, err := this.opts.Selector.Select(moduleType, opts...)
 	if err != nil {
@@ -398,29 +398,29 @@ func (this *DefaultApp) CallBroadcast(ctx context.Context, moduleName, _func str
 
 // OnConfigurationLoaded 设置应用启动配置初始化完成后回调
 func (this *DefaultApp) OnConfigurationLoaded(_func func(app app.IApp)) error {
-	this.configurationLoaded = _func
+	this.onConfigurationLoaded = _func
+	return nil
+}
+
+// OnModuleInited 设置每个模块初始化完成后回调
+func (this *DefaultApp) OnModuleInited(_func func(app app.IApp, module app.IModule)) error {
+	this.onModuleInited = _func
 	return nil
 }
 
 // GetModuleInited 获取每个模块初始化完成后回调函数
 func (this *DefaultApp) GetModuleInited() func(app app.IApp, module app.IModule) {
-	return this.moduleInited
-}
-
-// OnModuleInited 设置每个模块初始化完成后回调
-func (this *DefaultApp) OnModuleInited(_func func(app app.IApp, module app.IModule)) error {
-	this.moduleInited = _func
-	return nil
+	return this.onModuleInited
 }
 
 // OnStartup 设置应用启动完成后回调
 func (this *DefaultApp) OnStartup(_func func(app app.IApp)) error {
-	this.startup = _func
+	this.onStartup = _func
 	return nil
 }
 
 // OnServiceDeleted 设置当模块服务断开删除时回调
 func (this *DefaultApp) OnServiceDeleted(_func func(app app.IApp, moduleName, serverId string)) error {
-	this.serviceDeleted = _func
+	this.onServiceDeleted = _func
 	return nil
 }

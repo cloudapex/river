@@ -22,7 +22,7 @@ import (
 type startUpArgs struct {
 	WordDir    string `env:"wd" env-default:""`
 	ProcessEnv string `env:"env" env-default:"dev"`
-	ConsulAddr string `env:"consul" env-default:"127.0.0.1:8500"` // configKey: config/{env}/server
+	ConsulAddr string `env:"consul" env-default:"127.0.0.1:8500"` // use configKey: config/{env}/server
 	LogPath    string `env:"log" env-default:""`
 	BiPath     string `env:"bi" env-default:""`
 	PProfAddr  string `env:"pprof" env-default:""`
@@ -54,7 +54,7 @@ func NewOptions(opts ...Option) Options {
 		o(&opt)
 	}
 
-	// 解析启动参数
+	// 解析配置参数(环境变量和命令行参数同时指定的话优先使用命令行,应用层指定的优先级最高)
 	var startArgs = startUpArgs{}
 	if opt.Parse {
 		// 其次使用环境变量
@@ -71,12 +71,12 @@ func NewOptions(opts ...Option) Options {
 		flag.Parse()
 	}
 
-	// 工作目录(优先使用代码中的)
+	// 工作目录
 	if opt.WorkDir == "" {
 		opt.WorkDir = startArgs.WordDir
 	}
 
-	// 设置进程分组环境(优先使用代码中的)
+	// 设置进程分组环境名称
 	if opt.ProcessEnv == "" {
 		opt.ProcessEnv = startArgs.ProcessEnv
 		if opt.ProcessEnv == "" {
@@ -85,25 +85,25 @@ func NewOptions(opts ...Option) Options {
 	}
 
 	// 最终检查设置工作目录
-	ApplicationDir := ""
+	appWorkDirPath := ""
 	if opt.WorkDir != "" {
 		_, err := os.Open(opt.WorkDir)
 		if err != nil {
 			panic(err)
 		}
 		os.Chdir(opt.WorkDir)
-		ApplicationDir, err = os.Getwd()
+		appWorkDirPath, err = os.Getwd()
 	} else {
 		var err error
-		ApplicationDir, err = os.Getwd()
+		appWorkDirPath, err = os.Getwd()
 		if err != nil {
 			file, _ := exec.LookPath(os.Args[0])
 			ApplicationPath, _ := filepath.Abs(file)
-			ApplicationDir, _ = filepath.Split(ApplicationPath)
+			appWorkDirPath, _ = filepath.Split(ApplicationPath)
 		}
 
 	}
-	opt.WorkDir = ApplicationDir
+	opt.WorkDir = appWorkDirPath
 
 	// nats addr
 	if len(opt.ConsulAddr) == 0 {
@@ -116,22 +116,20 @@ func NewOptions(opts ...Option) Options {
 	}
 
 	// 创建日志文件
-	defaultLogPath := fmt.Sprintf("%s/bin/logs", ApplicationDir)
-	defaultBIPath := fmt.Sprintf("%s/bin/bi", ApplicationDir)
-
-	if opt.LogDir == "" { // 优先使用代码中的
-		opt.LogDir = defaultLogPath
-		if startArgs.LogPath != "" {
-			opt.LogDir = startArgs.LogPath
+	defaultLogPath := fmt.Sprintf("%s/bin/logs", appWorkDirPath)
+	defaultBIPath := fmt.Sprintf("%s/bin/bi", appWorkDirPath)
+	if opt.LogDir == "" {
+		opt.LogDir = startArgs.LogPath
+		if opt.LogDir == "" {
+			opt.LogDir = defaultLogPath
 		}
 	}
-	if opt.BIDir == "" { // 优先使用代码中的
-		opt.BIDir = defaultBIPath
-		if startArgs.BiPath != "" {
-			opt.BIDir = startArgs.BiPath
+	if opt.BIDir == "" {
+		opt.BIDir = startArgs.BiPath
+		if opt.BIDir == "" {
+			opt.BIDir = defaultBIPath
 		}
 	}
-
 	if _, err := os.Stat(opt.LogDir); os.IsNotExist(err) {
 		if err := os.Mkdir(opt.LogDir, os.ModePerm); err != nil {
 			fmt.Println(err)
@@ -162,13 +160,13 @@ type Option func(*Options)
 type Options struct {
 	Version     string
 	Debug       bool
-	Parse       bool // 是否由框架解析启动环境变量,默认为true
-	WorkDir     string
-	ProcessEnv  string   // 进程分组ID(development)
-	ConfigKey   string   // for consule
-	ConsulAddr  []string // for consule
-	LogDir      string
-	BIDir       string
+	Parse       bool     // 是否由框架解析启动环境变量,默认为true
+	WorkDir     string   // 工作目录(from startUpArgs.WordDir)
+	ProcessEnv  string   // 进程分组名称(from startUpArgs.ProcessEnv)
+	ConfigKey   string   // consul configKey(default: config/{env}/server)
+	ConsulAddr  []string // consul addr(from startUpArgs.ConsulAddr)
+	LogDir      string   // Log目录(from startUpArgs.LogPath default: ./bin/logs)
+	BIDir       string   // BI目录(from startUpArgs.BiPath default: ./bin/bi)
 	PProfAddr   string
 	KillWaitTTL time.Duration // 服务关闭超时强杀(60s)
 
