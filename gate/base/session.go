@@ -21,9 +21,9 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/gate"
 	"github.com/cloudapex/river/log"
-	"github.com/cloudapex/river/module"
 	"github.com/cloudapex/river/mqrpc"
 	"github.com/cloudapex/river/mqtools"
 	"google.golang.org/protobuf/proto"
@@ -37,7 +37,7 @@ func init() {
 }
 
 // NewSession NewSession
-func NewSession(app module.IApp, data []byte) (gate.ISession, error) {
+func NewSession(app app.IApp, data []byte) (gate.ISession, error) {
 	agent := &sessionAgent{
 		app:  app,
 		lock: new(sync.RWMutex),
@@ -53,7 +53,7 @@ func NewSession(app module.IApp, data []byte) (gate.ISession, error) {
 }
 
 // NewSessionByMap NewSessionByMap
-func NewSessionByMap(app module.IApp, data map[string]interface{}) (gate.ISession, error) {
+func NewSessionByMap(app app.IApp, data map[string]interface{}) (gate.ISession, error) {
 	agent := &sessionAgent{
 		app:     app,
 		session: new(SessionImp),
@@ -70,7 +70,7 @@ func NewSessionByMap(app module.IApp, data map[string]interface{}) (gate.ISessio
 }
 
 type sessionAgent struct {
-	app      module.IApp
+	app      app.IApp
 	session  *SessionImp
 	lock     *sync.RWMutex // for session.UserId and session.Setting
 	userdata interface{}
@@ -119,10 +119,10 @@ func (s *sessionAgent) initByMap(datas map[string]interface{}) error {
 	return nil
 }
 
-func (s *sessionAgent) GetApp() module.IApp {
+func (s *sessionAgent) GetApp() app.IApp {
 	return s.app
 }
-func (s *sessionAgent) SetApp(app module.IApp) {
+func (s *sessionAgent) SetApp(app app.IApp) {
 	s.app = app
 }
 

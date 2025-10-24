@@ -19,8 +19,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/log"
-	"github.com/cloudapex/river/module"
 	"github.com/cloudapex/river/mqrpc"
 	rpcpb "github.com/cloudapex/river/mqrpc/pb"
 	"github.com/cloudapex/river/mqtools/uuid"
@@ -28,11 +28,11 @@ import (
 )
 
 type RPCClient struct {
-	app         module.IApp
+	app         app.IApp
 	nats_client *NatsClient
 }
 
-func NewRPCClient(app module.IApp, session module.IServerSession) (mqrpc.RPCClient, error) {
+func NewRPCClient(app app.IApp, session app.IServerSession) (mqrpc.RPCClient, error) {
 	rpc_client := new(RPCClient)
 	rpc_client.app = app
 	nats_client, err := NewNatsClient(app, session)

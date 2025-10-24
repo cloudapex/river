@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/conf"
 	"github.com/cloudapex/river/log"
-	"github.com/cloudapex/river/module"
 	"github.com/cloudapex/river/mqtools"
 )
 
@@ -32,21 +32,21 @@ func NewModuleManager() *ModuleManager {
 
 // ModuleManager 模块管理器
 type ModuleManager struct {
-	app     module.IApp
+	app     app.IApp
 	mods    []*moduleUnit
 	runMods []*moduleUnit // 真正运行的modules
 }
 
 // moduleUnit 模块结构
 type moduleUnit struct {
-	mi       module.IModule
+	mi       app.IModule
 	settings *conf.ModuleSettings // from Config.Settings
 	closeSig chan bool
 	wg       sync.WaitGroup
 }
 
 // Register 注册模块
-func (this *ModuleManager) Register(mi module.IModule) {
+func (this *ModuleManager) Register(mi app.IModule) {
 	md := new(moduleUnit)
 	md.mi = mi
 	md.closeSig = make(chan bool, 1)
@@ -55,7 +55,7 @@ func (this *ModuleManager) Register(mi module.IModule) {
 }
 
 // RegisterRunMod 注册需要运行的模块
-func (this *ModuleManager) RegisterRunMod(mi module.IModule) {
+func (this *ModuleManager) RegisterRunMod(mi app.IModule) {
 	md := new(moduleUnit)
 	md.mi = mi
 	md.closeSig = make(chan bool, 1)
@@ -64,7 +64,7 @@ func (this *ModuleManager) RegisterRunMod(mi module.IModule) {
 }
 
 // Init 初始化
-func (this *ModuleManager) Init(app module.IApp, processEnv string) {
+func (this *ModuleManager) Init(app app.IApp, processEnv string) {
 	log.Info("This server process run ProcessEnvGroup is [%s]", processEnv)
 	this.app = app
 	this.CheckModuleSettings() // 配置文件规则检查(没通过的话直接panic)

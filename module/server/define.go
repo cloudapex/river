@@ -4,8 +4,8 @@ package server
 import (
 	"context"
 
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/conf"
-	"github.com/cloudapex/river/module"
 	"github.com/cloudapex/river/mqrpc"
 	"github.com/pborman/uuid"
 )
@@ -15,7 +15,7 @@ type Server interface {
 	ID() string // 服务节点ID
 	Options() Options
 	UpdMetadata(key, val string) // 更新元数据(正常需要等到下次注册时生效,如果要立即生效还需要调用ServiceRegister)
-	OnInit(module module.IModule, app module.IApp, settings *conf.ModuleSettings) error
+	OnInit(module app.IModule, app app.IApp, settings *conf.ModuleSettings) error
 	OnDestroy() error
 
 	Register(id string, f interface{})   // 注册RPC方法

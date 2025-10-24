@@ -22,15 +22,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/log"
-	"github.com/cloudapex/river/module"
 	"github.com/cloudapex/river/mqrpc"
 	rpcpb "github.com/cloudapex/river/mqrpc/pb"
 )
 
 type RPCServer struct {
-	module         module.IModule
-	app            module.IApp
+	module         app.IModule
+	app            app.IApp
 	functions      map[string]*mqrpc.FunctionInfo
 	nats_server    *NatsServer
 	mq_chan        chan mqrpc.CallInfo //接收到请求信息的队列
@@ -41,7 +41,7 @@ type RPCServer struct {
 	executing      int64                  //正在执行的goroutine数量
 }
 
-func NewRPCServer(app module.IApp, module module.IModule) (mqrpc.RPCServer, error) {
+func NewRPCServer(app app.IApp, module app.IModule) (mqrpc.RPCServer, error) {
 	rpc_server := new(RPCServer)
 	rpc_server.app = app
 	rpc_server.module = module
@@ -274,7 +274,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 				if kvs, ok := ret.(map[mqrpc.ContextTransKey]interface{}); ok {
 					for k, v := range kvs {
 						_v := v
-						if needSet, ok := v.(module.ICtxTransSetApp); ok {
+						if needSet, ok := v.(app.ICtxTransSetApp); ok {
 							needSet.SetApp(s.app)
 						}
 						if traceSpan, ok := v.(log.TraceSpan); ok {

@@ -19,14 +19,14 @@ import (
 	"context"
 	"sync"
 
-	"github.com/cloudapex/river/module"
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/mqrpc"
 	rpcbase "github.com/cloudapex/river/mqrpc/base"
 	"github.com/cloudapex/river/registry"
 )
 
 // NewServerSession 创建一个节点实例(rpcClient)
-func NewServerSession(app module.IApp, name string, node *registry.Node) (module.IServerSession, error) {
+func NewServerSession(app app.IApp, name string, node *registry.Node) (app.IServerSession, error) {
 	session := &serverSession{
 		name: name,
 		node: node,
@@ -45,7 +45,7 @@ type serverSession struct {
 	node *registry.Node
 	name string
 	rpc  mqrpc.RPCClient
-	app  module.IApp
+	app  app.IApp
 }
 
 func (this *serverSession) GetID() string {
@@ -59,7 +59,7 @@ func (this *serverSession) GetRPC() mqrpc.RPCClient {
 	return this.rpc
 }
 
-func (this *serverSession) GetApp() module.IApp {
+func (this *serverSession) GetApp() app.IApp {
 	return this.app
 }
 func (this *serverSession) GetNode() *registry.Node {

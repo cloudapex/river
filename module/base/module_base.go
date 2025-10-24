@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/conf"
 	"github.com/cloudapex/river/log"
-	"github.com/cloudapex/river/module"
 	"github.com/cloudapex/river/module/server"
 	"github.com/cloudapex/river/module/service"
 	"github.com/cloudapex/river/mqrpc"
@@ -36,8 +36,8 @@ import (
 type ModuleBase struct {
 	context.Context
 
-	App  module.IApp
-	Impl module.IRPCModule
+	App  app.IApp
+	Impl app.IRPCModule
 
 	serviceStopeds chan bool
 	exit           context.CancelFunc
@@ -47,7 +47,7 @@ type ModuleBase struct {
 }
 
 // Init 模块初始化(在OnInit中调用)
-func (this *ModuleBase) Init(impl module.IRPCModule, app module.IApp, settings *conf.ModuleSettings, opt ...server.Option) {
+func (this *ModuleBase) Init(impl app.IRPCModule, app app.IApp, settings *conf.ModuleSettings, opt ...server.Option) {
 	// 初始化模块
 	this.App = app
 	this.Impl = impl
@@ -116,7 +116,7 @@ func (this *ModuleBase) Init(impl module.IRPCModule, app module.IApp, settings *
 }
 
 // OnInit 当模块初始化时调用
-func (this *ModuleBase) OnInit(app module.IApp, settings *conf.ModuleSettings) {
+func (this *ModuleBase) OnInit(app app.IApp, settings *conf.ModuleSettings) {
 	panic("ModuleBase: OnInit() must be implemented")
 }
 
@@ -133,12 +133,12 @@ func (this *ModuleBase) OnDestroy() {
 }
 
 // GetApp 获取app
-func (this *ModuleBase) GetApp() module.IApp {
+func (this *ModuleBase) GetApp() app.IApp {
 	return this.App
 }
 
 // GetImpl 获取子类
-func (this *ModuleBase) GetImpl() module.IRPCModule {
+func (this *ModuleBase) GetImpl() app.IRPCModule {
 	return this.Impl
 }
 
@@ -165,28 +165,28 @@ func (this *ModuleBase) GetModuleSettings() *conf.ModuleSettings {
 func (this *ModuleBase) OnConfChanged(settings *conf.ModuleSettings) {}
 
 // OnAppConfigurationLoaded 当应用配置加载完成时调用
-func (this *ModuleBase) OnAppConfigurationLoaded(app module.IApp) {
+func (this *ModuleBase) OnAppConfigurationLoaded(app app.IApp) {
 	// 当App初始化时调用，这个接口不管这个模块是否在这个进程运行都会调用
 	this.App = app
 }
 
 // GetRouteServer 获取服务实例(通过服务ID|服务类型,可设置选择器过滤)
-func (this *ModuleBase) GetRouteServer(service string, opts ...selector.SelectOption) (s module.IServerSession, err error) {
+func (this *ModuleBase) GetRouteServer(service string, opts ...selector.SelectOption) (s app.IServerSession, err error) {
 	return this.App.GetRouteServer(service, opts...)
 }
 
 // GetServerByID 通过服务ID(moduleType@id)获取服务实例
-func (this *ModuleBase) GetServerByID(serverID string) (module.IServerSession, error) {
+func (this *ModuleBase) GetServerByID(serverID string) (app.IServerSession, error) {
 	return this.App.GetServerByID(serverID)
 }
 
 // GetServersByType 通过服务类型(moduleType)获取服务实例列表
-func (this *ModuleBase) GetServersByType(serviceName string) []module.IServerSession {
+func (this *ModuleBase) GetServersByType(serviceName string) []app.IServerSession {
 	return this.App.GetServersByType(serviceName)
 }
 
 // GetServerBySelector 通过服务类型(moduleType)获取服务实例(可设置选择器)
-func (this *ModuleBase) GetServerBySelector(serviceName string, opts ...selector.SelectOption) (module.IServerSession, error) {
+func (this *ModuleBase) GetServerBySelector(serviceName string, opts ...selector.SelectOption) (app.IServerSession, error) {
 	return this.App.GetServerBySelector(serviceName, opts...)
 }
 

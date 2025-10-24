@@ -5,17 +5,17 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/cloudapex/river/app"
 	httpgateapi "github.com/cloudapex/river/gate/http/api"
 	"github.com/cloudapex/river/gate/http/errors"
 	go_api "github.com/cloudapex/river/gate/http/proto"
-	"github.com/cloudapex/river/module"
 	"github.com/cloudapex/river/mqrpc"
 )
 
 // APIHandler 网关handler
 type APIHandler struct {
 	Opts Options
-	App  module.IApp
+	App  app.IApp
 }
 
 // API handler is the default handler which takes api.Request and returns api.Response
@@ -68,7 +68,7 @@ func (a *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // NewHandler 创建网关
-func NewHandler(app module.IApp, opts ...Option) http.Handler {
+func NewHandler(app app.IApp, opts ...Option) http.Handler {
 	options := NewOptions(app, opts...)
 	return &APIHandler{
 		Opts: options,

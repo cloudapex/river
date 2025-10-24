@@ -17,14 +17,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/conf"
 	"github.com/cloudapex/river/gate"
-	"github.com/cloudapex/river/module"
 	modulebase "github.com/cloudapex/river/module/base"
 	"github.com/cloudapex/river/network"
 )
 
-var _ module.IRPCModule = &ModuleGate{}
+var _ app.IRPCModule = &ModuleGate{}
 
 type ModuleGate struct {
 	modulebase.ModuleBase
@@ -43,7 +43,7 @@ type ModuleGate struct {
 	sendMessageHook gate.SendMessageHook // 发送消息时的钩子回调
 }
 
-func (this *ModuleGate) Init(subclass module.IRPCModule, app module.IApp, settings *conf.ModuleSettings, opts ...gate.Option) {
+func (this *ModuleGate) Init(subclass app.IRPCModule, app app.IApp, settings *conf.ModuleSettings, opts ...gate.Option) {
 	this.opts = gate.NewOptions(opts...)
 	this.ModuleBase.Init(subclass, app, settings, this.opts.Opts...) // 这是必须的
 	if this.opts.WsAddr == "" {
@@ -106,7 +106,7 @@ func (this *ModuleGate) GetType() string { return "Gate" }
 
 func (this *ModuleGate) Version() string { return "1.0.0" }
 
-func (this *ModuleGate) OnAppConfigurationLoaded(app module.IApp) {
+func (this *ModuleGate) OnAppConfigurationLoaded(app app.IApp) {
 	this.ModuleBase.OnAppConfigurationLoaded(app) // 这是必须的
 }
 func (this *ModuleGate) OnConfChanged(settings *conf.ModuleSettings) {}

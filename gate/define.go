@@ -19,8 +19,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/log"
-	"github.com/cloudapex/river/module"
 	"github.com/cloudapex/river/mqrpc"
 	"github.com/cloudapex/river/network"
 )
@@ -49,7 +49,7 @@ type Pack struct {
 
 // IGate 网关代理定义
 type IGate interface {
-	module.IRPCModule
+	app.IRPCModule
 
 	Options() Options
 
@@ -104,8 +104,8 @@ type ISession interface {
 	mqrpc.Marshaler
 
 	// for module.CtxSessionSetApp
-	GetApp() module.IApp
-	SetApp(module.IApp)
+	GetApp() app.IApp
+	SetApp(app.IApp)
 
 	// --------------- 固定属性区(Gate管理,理论上不可更改)
 

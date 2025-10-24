@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/gate"
 	"github.com/cloudapex/river/log"
-	"github.com/cloudapex/river/module"
 	"github.com/cloudapex/river/mqrpc"
 	"github.com/pkg/errors"
 )
@@ -25,7 +25,7 @@ var RPCParamProtocolMarshalType = "ProtocolMarshal"
 // 如随机到服务节点Hostname可以用modulus,cache,random等通用规则
 // 例如:
 // im://modulus/remove_feeds_member?msg_id=1002
-type FSelector func(session gate.ISession, topic string, u *url.URL) (s module.IServerSession, err error)
+type FSelector func(session gate.ISession, topic string, u *url.URL) (s app.IServerSession, err error)
 
 // FDataParsing 指定数据解析函数
 // 返回值如bean！=nil err==nil则会向后端模块传入 func(session,bean)(result, error)
@@ -36,7 +36,7 @@ type FDataParsing func(topic string, u *url.URL, msg []byte) (bean interface{}, 
 type Option func(*URIRoute)
 
 // NewURIRoute NewURIRoute
-func NewURIRoute(module module.IRPCModule, opts ...Option) *URIRoute {
+func NewURIRoute(module app.IRPCModule, opts ...Option) *URIRoute {
 	route := &URIRoute{
 		module:      module,
 		CallTimeOut: module.GetApp().Options().RPCExpired,
@@ -70,7 +70,7 @@ func CallTimeOut(t time.Duration) Option {
 
 // URIRoute URIRoute
 type URIRoute struct {
-	module      module.IRPCModule
+	module      app.IRPCModule
 	Selector    FSelector
 	DataParsing FDataParsing
 	CallTimeOut time.Duration
@@ -97,7 +97,7 @@ func (u *URIRoute) OnRoute(session gate.ISession, topic string, msg []byte) (boo
 	argsType = make([]string, 2)
 	args = make([][]byte, 2)
 	session.SetTopic(topic)
-	var serverSession module.IServerSession
+	var serverSession app.IServerSession
 	if u.Selector != nil {
 		ss, err := u.Selector(session, topic, uu)
 		if err != nil {

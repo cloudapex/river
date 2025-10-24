@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cloudapex/river/module"
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/registry"
 	"github.com/cloudapex/river/selector"
 )
@@ -34,11 +34,11 @@ type Service struct {
 	// hander
 	Hander string
 	// node
-	SrvSession module.IServerSession
+	SrvSession app.IServerSession
 }
 
 // DefaultRoute 默认路由规则
-var DefaultRoute = func(app module.IApp, r *http.Request) (*Service, error) {
+var DefaultRoute = func(app app.IApp, r *http.Request) (*Service, error) {
 	if r.URL.Path == "" {
 		return nil, errors.New("path is nil")
 	}
@@ -81,7 +81,7 @@ var DefaultRoute = func(app module.IApp, r *http.Request) (*Service, error) {
 }
 
 // Route 路由器定义
-type Route func(app module.IApp, r *http.Request) (*Service, error)
+type Route func(app app.IApp, r *http.Request) (*Service, error)
 
 // Option 配置
 type Option func(*Options)
@@ -93,7 +93,7 @@ type Options struct {
 }
 
 // NewOptions 创建配置
-func NewOptions(app module.IApp, opts ...Option) Options {
+func NewOptions(app app.IApp, opts ...Option) Options {
 	opt := Options{
 		Route:   DefaultRoute,
 		TimeOut: app.Options().RPCExpired,

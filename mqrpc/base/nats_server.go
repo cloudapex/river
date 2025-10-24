@@ -19,8 +19,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/log"
-	"github.com/cloudapex/river/module"
 	"github.com/cloudapex/river/mqrpc"
 	rpcpb "github.com/cloudapex/river/mqrpc/pb"
 	"github.com/nats-io/nats.go"
@@ -30,7 +30,7 @@ import (
 type NatsServer struct {
 	call_chan chan mqrpc.CallInfo
 	addr      string
-	app       module.IApp
+	app       app.IApp
 	server    *RPCServer
 	done      chan bool
 	stopeds   chan bool
@@ -55,7 +55,7 @@ func setAddrs(addrs []string) []string {
 	return cAddrs
 }
 
-func NewNatsServer(app module.IApp, s *RPCServer) (*NatsServer, error) {
+func NewNatsServer(app app.IApp, s *RPCServer) (*NatsServer, error) {
 	server := new(NatsServer)
 	server.server = s
 	server.done = make(chan bool)

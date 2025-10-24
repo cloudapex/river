@@ -7,18 +7,18 @@ package modules
 import (
 	"time"
 
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/conf"
-	"github.com/cloudapex/river/module"
 	timewheel "github.com/cloudapex/river/module/modules/timer"
 )
 
-var TimerModule = func() module.IModule {
+var TimerModule = func() app.IModule {
 	Timer := new(Timer)
 	return Timer
 }
 
 type Timer struct {
-	module.IModule
+	app.IModule
 }
 
 func (m *Timer) GetType() string {
@@ -26,7 +26,7 @@ func (m *Timer) GetType() string {
 	return "Timer"
 }
 
-func (m *Timer) OnInit(app module.IApp, settings *conf.ModuleSettings) {
+func (m *Timer) OnInit(app app.IApp, settings *conf.ModuleSettings) {
 	timewheel.SetTimeWheel(timewheel.New(10*time.Millisecond, 36))
 	// 时间轮使用方式
 	//import "github.com/cloudapex/river/module/modules/timer"

@@ -6,7 +6,7 @@ type defaultSelector struct {
 	so Options
 }
 
-func (r *defaultSelector) Init(opts ...Option) error {
+func (r *defaultSelector) Apply(opts ...Option) error {
 	for _, o := range opts {
 		o(&r.so)
 	}

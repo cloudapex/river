@@ -317,7 +317,7 @@ func (c *cacheSelector) watch(w registry.Watcher) error {
 	}
 }
 
-func (c *cacheSelector) Init(opts ...selector.Option) error {
+func (c *cacheSelector) Apply(opts ...selector.Option) error {
 	for _, o := range opts {
 		o(&c.so)
 	}

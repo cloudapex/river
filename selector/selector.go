@@ -11,7 +11,7 @@ import (
 // and mark their status. This allows host pools and other things
 // to be built using various algorithms.
 type Selector interface {
-	Init(opts ...Option) error
+	Apply(opts ...Option) error
 	Options() Options
 	// Select returns a function which should return the next node
 	Select(service string, opts ...SelectOption) (Next, error)

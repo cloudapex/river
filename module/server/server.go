@@ -5,9 +5,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/conf"
 	"github.com/cloudapex/river/log"
-	"github.com/cloudapex/river/module"
 	"github.com/cloudapex/river/mqrpc"
 	rpcbase "github.com/cloudapex/river/mqrpc/base"
 	"github.com/cloudapex/river/mqtools/lib/addr"
@@ -49,7 +49,7 @@ func (s *server) UpdMetadata(key, val string) {
 	s.opts.Metadata[key] = val
 	s.RUnlock()
 }
-func (s *server) OnInit(module module.IModule, app module.IApp, settings *conf.ModuleSettings) error {
+func (s *server) OnInit(module app.IModule, app app.IApp, settings *conf.ModuleSettings) error {
 	server, err := rpcbase.NewRPCServer(app, module) // 默认会创建一个本地的RPC
 	if err != nil {
 		log.Warning("Dial: %s", err)
