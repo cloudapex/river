@@ -1,4 +1,4 @@
-// Copyright 2021 mqant Author. All Rights Reserved.
+// Copyright 2021 river Author. All Rights Reserved.
 //
 
 //    AES

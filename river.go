@@ -1,4 +1,4 @@
-// Copyright 2017 mqant Author. All Rights Reserved.
+// Copyright 2017 river Author. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package mqant mqant
+// Package river river
 package river
 
 import (
@@ -104,6 +104,20 @@ func (this *DefaultApp) loadConfig() error {
 	return nil
 }
 
+// 初始化 logs
+func (this *DefaultApp) initLogs() error {
+	// init log
+	log.Init(log.WithDebug(this.opts.Debug),
+		log.WithProcessID(this.opts.ProcessEnv),
+		log.WithBiDir(this.opts.BIDir),
+		log.WithLogDir(this.opts.LogDir),
+		log.WithLogFileName(this.opts.LogFileName),
+		log.WithBiSetting(conf.Conf.BI),
+		log.WithBIFileName(this.opts.BIFileName),
+		log.WithLogSetting(conf.Conf.Log))
+	return nil
+}
+
 // 初始化 nats
 func (this *DefaultApp) initNats() error {
 	if this.opts.Nats == nil {
@@ -135,16 +149,13 @@ func (this *DefaultApp) Run(mods ...app.IModule) error {
 	}
 
 	// init log
-	log.Init(log.WithDebug(this.opts.Debug),
-		log.WithProcessID(this.opts.ProcessEnv),
-		log.WithBiDir(this.opts.BIDir),
-		log.WithLogDir(this.opts.LogDir),
-		log.WithLogFileName(this.opts.LogFileName),
-		log.WithBiSetting(conf.Conf.BI),
-		log.WithBIFileName(this.opts.BIFileName),
-		log.WithLogSetting(conf.Conf.Log))
+	err = this.initLogs()
+	if err != nil {
+		return err
+	}
 
-	if this.configurationLoaded != nil { // callback
+	// callback
+	if this.configurationLoaded != nil {
 		this.configurationLoaded(this)
 	}
 
@@ -153,7 +164,9 @@ func (this *DefaultApp) Run(mods ...app.IModule) error {
 	if err != nil {
 		return err
 	}
-	log.Info("mqant %v starting...", this.opts.Version)
+
+	// start modules
+	log.Info("river %v starting...", this.opts.Version)
 
 	// 1 RegisterRunMod
 	manager := modulebase.NewModuleManager()
@@ -173,7 +186,7 @@ func (this *DefaultApp) Run(mods ...app.IModule) error {
 	if this.startup != nil {
 		this.startup(this)
 	}
-	log.Info("mqant %v started", this.opts.Version)
+	log.Info("river %v started", this.opts.Version)
 
 	// close
 	c := make(chan os.Signal, 1)
@@ -192,9 +205,9 @@ func (this *DefaultApp) Run(mods ...app.IModule) error {
 	}()
 	select {
 	case <-timeout.C:
-		panic(fmt.Sprintf("mqant close timeout (signal: %v)", sig))
+		panic(fmt.Sprintf("river close timeout (signal: %v)", sig))
 	case <-wait:
-		log.Info("mqant closing down (signal: %v)", sig)
+		log.Info("river closing down (signal: %v)", sig)
 	}
 	log.BiBeego().Close()
 	log.LogBeego().Close()

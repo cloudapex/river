@@ -1,5 +1,5 @@
 # topic uri路由器
-mqant gate网关的默认路由规则为
+river gate网关的默认路由规则为
 
     [moduleType@moduleID]/[handler]/[msgid]
 
