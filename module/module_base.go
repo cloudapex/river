@@ -22,13 +22,14 @@ import (
 type ModuleBase struct {
 	context.Context
 
-	Impl app.IRPCModule
+	Impl     app.IRPCModule
+	settings *conf.ModuleSettings
 
 	serviceStopeds chan bool
 	exit           context.CancelFunc
-	settings       *conf.ModuleSettings
-	service        service.Service // 内含server
-	listener       mqrpc.RPCListener
+
+	service  service.Service // 内含server
+	listener mqrpc.RPCListener
 }
 
 // Init 模块初始化(在OnInit中调用)
@@ -37,7 +38,7 @@ func (this *ModuleBase) Init(impl app.IRPCModule, settings *conf.ModuleSettings,
 	this.Impl = impl
 	this.settings = settings
 
-	// 创建一个远程调用的RPC
+	// 创建一个供远程调用的RPCService
 	opts := server.Options{
 		Metadata: map[string]string{},
 	}
@@ -106,14 +107,18 @@ func (this *ModuleBase) OnInit(settings *conf.ModuleSettings) {
 
 // OnDestroy 当模块注销时调用
 func (this *ModuleBase) OnDestroy() {
-	//注销模块
-	//一定别忘了关闭RPC
 	this.exit()
+
 	select {
 	case <-this.serviceStopeds:
 		// 等待注册中心注销完成
 	}
-	_ = this.GetServer().OnDestroy()
+	_ = this.GetServer().OnDestroy() //一定别忘了关闭RPC
+}
+
+// SetListener  mqrpc.RPCListener
+func (this *ModuleBase) SetListener(listener mqrpc.RPCListener) {
+	this.listener = listener
 }
 
 // GetImpl 获取子类
@@ -135,7 +140,7 @@ func (this *ModuleBase) GetServerID() string {
 	return "no server"
 }
 
-// GetModuleSettings  获取Config.Module[x].Settings
+// GetModuleSettings  获取Config.Module[typ].Settings
 func (this *ModuleBase) GetModuleSettings() *conf.ModuleSettings {
 	return this.settings
 }
@@ -184,11 +189,6 @@ func (this *ModuleBase) CallBroadcast(ctx context.Context, moduleType, _func str
 }
 
 // ================= RPCListener[监听事件]
-
-// SetListener  mqrpc.RPCListener
-func (this *ModuleBase) SetListener(listener mqrpc.RPCListener) {
-	this.listener = listener
-}
 
 // NoFoundFunction  当hander未找到时调用
 func (this *ModuleBase) NoFoundFunction(fn string) (*mqrpc.FunctionInfo, error) {

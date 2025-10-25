@@ -357,7 +357,7 @@ func (this *DefaultApp) getServerSessionSafe(node *registry.Node, moduleType str
 		return session.(app.IServerSession), nil
 	}
 	// new
-	s, err := module.NewModuleServer(moduleType, node)
+	s, err := module.NewModuleSession(moduleType, node)
 	if err != nil {
 		return nil, err
 	}
