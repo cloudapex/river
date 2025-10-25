@@ -28,7 +28,7 @@ func (a *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(er.Error()))
 		return
 	}
-	server, err := a.Opts.Route(a.App, r)
+	server, err := a.Opts.Route(r)
 	if err != nil {
 		er := errors.InternalServerError("httpgateway", err.Error())
 		w.Header().Set("Content-Type", "application/json")
@@ -68,10 +68,9 @@ func (a *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // NewHandler 创建网关
-func NewHandler(app app.IApp, opts ...Option) http.Handler {
-	options := NewOptions(app, opts...)
+func NewHandler(opts ...Option) http.Handler {
+	options := NewOptions(opts...)
 	return &APIHandler{
 		Opts: options,
-		App:  app,
 	}
 }

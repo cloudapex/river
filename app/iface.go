@@ -13,7 +13,9 @@ import (
 )
 
 // default app instance
-var Default IApp = nil
+var DefaultApp IApp = nil
+
+func App() IApp { return DefaultApp }
 
 // IApp mqant应用定义
 type IApp interface {
@@ -39,16 +41,16 @@ type IApp interface {
 	// UpdateOptions 允许再次更新应用配置(before app.Run)
 	UpdateOptions(opts ...Option) error
 	// 设置服务路由器(动态转换service名称)
-	SetServiceRoute(fn func(app IApp, route string) string) error
+	SetServiceRoute(fn func(route string) string) error
 
 	// 获取服务实例(通过服务ID|服务类型,可设置选择器过滤)
-	GetRouteServer(service string, opts ...selector.SelectOption) (IServerSession, error) //获取经过筛选过的服务
-	// 通过服务ID(moduleType@id)获取服务实例
+	GetRouteServer(service string, opts ...selector.SelectOption) (IServerSession, error)
+	// 获取服务实例(通过服务ID(moduleType@id))
 	GetServerByID(serverID string) (IServerSession, error)
-	// 通过服务类型(moduleType)获取服务实例列表
-	GetServersByType(serviceName string) []IServerSession
-	// 通过服务类型(moduleType)获取服务实例(可设置选择器)
+	// 获取服务实例(通过服务类型(moduleType))(可设置选择器过滤)
 	GetServerBySelector(serviceName string, opts ...selector.SelectOption) (IServerSession, error)
+	// 获取多个服务实例(通过服务类型(moduleType))
+	GetServersByType(serviceName string) []IServerSession
 
 	// Call RPC调用(需要等待结果)
 	Call(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (interface{}, error)
@@ -58,25 +60,23 @@ type IApp interface {
 	CallBroadcast(ctx context.Context, moduleName, _func string, params ...interface{})
 
 	// 回调(hook)
-	OnConfigurationLoaded(func(app IApp)) error                               // 设置应用启动配置初始化完成后回调
-	OnModuleInited(func(app IApp, module IModule)) error                      // 设置每个模块初始化完成后回调
-	GetModuleInited() func(app IApp, module IModule)                          // 获取每个模块初始化完成后回调函数
-	OnStartup(func(app IApp)) error                                           // 设置应用启动完成后回调
-	OnServiceDeleted(_func func(app IApp, moduleName, serverId string)) error // 设置当模块服务断开删除时回调
+	OnConfigurationLoaded(func()) error                             // 设置应用启动配置初始化完成后回调
+	OnModuleInited(func(module IModule)) error                      // 设置每个模块初始化完成后回调
+	GetModuleInited() func(module IModule)                          // 获取每个模块初始化完成后回调函数
+	OnStartup(func()) error                                         // 设置应用启动完成后回调
+	OnServiceDeleted(_func func(moduleName, serverId string)) error // 设置当模块服务断开删除时回调
 }
 
 // IModule 基本模块定义
 type IModule interface {
-	GetApp() IApp
-
 	GetType() string // 模块类型
 	Version() string // 模块版本
 
 	Run(closeSig chan bool)
 
-	OnInit(app IApp, settings *conf.ModuleSettings) // 只需最终类实现(内部调用层层调用base.Init)即可
+	OnInit(settings *conf.ModuleSettings) // 只需最终类实现(内部调用层层调用base.Init)即可
 	OnDestroy()
-	OnAppConfigurationLoaded(app IApp)           // 当App初始化时调用，这个接口不管这个模块是否在这个进程运行都会调用
+	OnAppConfigurationLoaded()                   // 当App初始化时调用，这个接口不管这个模块是否在这个进程运行都会调用
 	OnConfChanged(settings *conf.ModuleSettings) // 为以后动态服务发现做准备(目前没用)
 }
 
@@ -107,7 +107,6 @@ type IServerSession interface {
 	GetID() string
 	GetName() string
 	GetRPC() mqrpc.RPCClient
-	GetApp() IApp
 
 	GetNode() *registry.Node
 	SetNode(node *registry.Node) (err error)
@@ -127,10 +126,10 @@ type ICtxTransSetApp interface {
 type FileNameHandler func(logdir, prefix, processID, suffix string) string
 
 // ClientRPCHandler 调用方RPC监控
-type ClientRPCHandler func(app IApp, server registry.Node, rpcinfo *rpcpb.RPCInfo, result interface{}, err error, exec_time int64)
+type ClientRPCHandler func(server registry.Node, rpcinfo *rpcpb.RPCInfo, result interface{}, err error, exec_time int64)
 
 // ServerRPCHandler 服务方RPC监控
-type ServerRPCHandler func(app IApp, module IModule, callInfo *mqrpc.CallInfo)
+type ServerRPCHandler func(module IModule, callInfo *mqrpc.CallInfo)
 
 // ServerRPCHandler 服务方RPC监控
-type RpcCompleteHandler func(app IApp, module IModule, callInfo *mqrpc.CallInfo, input []interface{}, out []interface{}, execTime time.Duration)
+type RpcCompleteHandler func(module IModule, callInfo *mqrpc.CallInfo, input []interface{}, out []interface{}, execTime time.Duration)

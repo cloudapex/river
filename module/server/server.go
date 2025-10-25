@@ -49,8 +49,8 @@ func (s *server) UpdMetadata(key, val string) {
 	s.opts.Metadata[key] = val
 	s.RUnlock()
 }
-func (s *server) OnInit(module app.IModule, app app.IApp, settings *conf.ModuleSettings) error {
-	server, err := rpcbase.NewRPCServer(app, module) // 默认会创建一个本地的RPC
+func (s *server) OnInit(module app.IModule, settings *conf.ModuleSettings) error {
+	server, err := rpcbase.NewRPCServer(module) // 默认会创建一个本地的RPC
 	if err != nil {
 		log.Warning("Dial: %s", err)
 	}

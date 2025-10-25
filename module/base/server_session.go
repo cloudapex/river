@@ -26,13 +26,12 @@ import (
 )
 
 // NewServerSession 创建一个节点实例(rpcClient)
-func NewServerSession(app app.IApp, name string, node *registry.Node) (app.IServerSession, error) {
+func NewServerSession(name string, node *registry.Node) (app.IServerSession, error) {
 	session := &serverSession{
 		name: name,
 		node: node,
-		app:  app,
 	}
-	rpc, err := rpcbase.NewRPCClient(app, session)
+	rpc, err := rpcbase.NewRPCClient(session)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +44,6 @@ type serverSession struct {
 	node *registry.Node
 	name string
 	rpc  mqrpc.RPCClient
-	app  app.IApp
 }
 
 func (this *serverSession) GetID() string {
@@ -59,9 +57,6 @@ func (this *serverSession) GetRPC() mqrpc.RPCClient {
 	return this.rpc
 }
 
-func (this *serverSession) GetApp() app.IApp {
-	return this.app
-}
 func (this *serverSession) GetNode() *registry.Node {
 	this.mu.RLock()
 	defer this.mu.RUnlock()

@@ -147,7 +147,7 @@ func (this *handler) OnRpcBind(ctx context.Context, sessionId string, userId str
 		data, err := storager.Query(userId)
 		if err == nil && data != nil {
 			// 有已持久化的数据,可能是上一次连接保存的
-			impSession, err := NewSession(this.gate.GetApp(), data)
+			impSession, err := NewSession(data)
 			if err == nil {
 				// 合并两个map 并且以 agent.(Agent).GetSession().Settings 已有的优先
 				agent.(gate.IAgent).GetSession().SetSettings(impSession.CloneSettings())

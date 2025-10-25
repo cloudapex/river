@@ -103,10 +103,6 @@ type GateHandler interface {
 type ISession interface {
 	mqrpc.Marshaler
 
-	// for module.CtxSessionSetApp
-	GetApp() app.IApp
-	SetApp(app.IApp)
-
 	// --------------- 固定属性区(Gate管理,理论上不可更改)
 
 	GetIP() string

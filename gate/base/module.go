@@ -43,9 +43,9 @@ type ModuleGate struct {
 	sendMessageHook gate.SendMessageHook // 发送消息时的钩子回调
 }
 
-func (this *ModuleGate) Init(subclass app.IRPCModule, app app.IApp, settings *conf.ModuleSettings, opts ...gate.Option) {
+func (this *ModuleGate) Init(subclass app.IRPCModule, settings *conf.ModuleSettings, opts ...gate.Option) {
 	this.opts = gate.NewOptions(opts...)
-	this.ModuleBase.Init(subclass, app, settings, this.opts.Opts...) // 这是必须的
+	this.ModuleBase.Init(subclass, settings, this.opts.Opts...) // 这是必须的
 	if this.opts.WsAddr == "" {
 		if WSAddr, ok := settings.Settings["WSAddr"]; ok { // 可以从Settings中配置
 			this.opts.WsAddr = WSAddr.(string)
@@ -106,8 +106,8 @@ func (this *ModuleGate) GetType() string { return "Gate" }
 
 func (this *ModuleGate) Version() string { return "1.0.0" }
 
-func (this *ModuleGate) OnAppConfigurationLoaded(app app.IApp) {
-	this.ModuleBase.OnAppConfigurationLoaded(app) // 这是必须的
+func (this *ModuleGate) OnAppConfigurationLoaded() {
+	this.ModuleBase.OnAppConfigurationLoaded() // 这是必须的
 }
 func (this *ModuleGate) OnConfChanged(settings *conf.ModuleSettings) {}
 

@@ -39,7 +39,7 @@ type Option func(*URIRoute)
 func NewURIRoute(module app.IRPCModule, opts ...Option) *URIRoute {
 	route := &URIRoute{
 		module:      module,
-		CallTimeOut: module.GetApp().Options().RPCExpired,
+		CallTimeOut: app.App().Options().RPCExpired,
 	}
 	for _, o := range opts {
 		o(route)

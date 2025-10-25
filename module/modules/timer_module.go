@@ -26,7 +26,7 @@ func (m *Timer) GetType() string {
 	return "Timer"
 }
 
-func (m *Timer) OnInit(app app.IApp, settings *conf.ModuleSettings) {
+func (m *Timer) OnInit(settings *conf.ModuleSettings) {
 	timewheel.SetTimeWheel(timewheel.New(10*time.Millisecond, 36))
 	// 时间轮使用方式
 	//import "github.com/cloudapex/river/module/modules/timer"

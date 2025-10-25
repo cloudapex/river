@@ -28,14 +28,12 @@ import (
 )
 
 type RPCClient struct {
-	app         app.IApp
 	nats_client *NatsClient
 }
 
-func NewRPCClient(app app.IApp, session app.IServerSession) (mqrpc.RPCClient, error) {
+func NewRPCClient(session app.IServerSession) (mqrpc.RPCClient, error) {
 	rpc_client := new(RPCClient)
-	rpc_client.app = app
-	nats_client, err := NewNatsClient(app, session)
+	nats_client, err := NewNatsClient(session)
 	if err != nil {
 		log.Error("Dial: %s", err)
 		return nil, err
@@ -64,7 +62,7 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...interface{
 	}
 	start := time.Now()
 	r, err := c.CallArgs(ctx, _func, argsType, args)
-	if c.app.Config().RpcLog {
+	if app.App().Config().RpcLog {
 		span, _ := ctx.Value(mqrpc.ContextTransTrace).(log.TraceSpan)
 		log.TInfo(span, "rpc Call ServerId = %v Func = %v Elapsed = %v Result = %v ERROR = %v", c.nats_client.session.GetID(), _func, time.Since(start), r, err)
 	}
@@ -87,7 +85,7 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argsType []strin
 	rpcInfo := &rpcpb.RPCInfo{
 		Fn:       *proto.String(_func),
 		Reply:    *proto.Bool(true),
-		Expired:  *proto.Int64((start.UTC().Add(c.app.Options().RPCExpired).UnixNano()) / 1000000),
+		Expired:  *proto.Int64((start.UTC().Add(app.App().Options().RPCExpired).UnixNano()) / 1000000),
 		Cid:      *proto.String(correlation_id),
 		Args:     args,
 		ArgsType: argsType,
@@ -96,9 +94,9 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argsType []strin
 	}
 	defer func() {
 		//异常日志都应该打印
-		if c.app.Options().ClientRPChandler != nil {
+		if app.App().Options().ClientRPChandler != nil {
 			exec_time := time.Since(start).Nanoseconds()
-			c.app.Options().ClientRPChandler(c.app, *c.nats_client.session.GetNode(), rpcInfo, result, err, exec_time)
+			app.App().Options().ClientRPChandler(*c.nats_client.session.GetNode(), rpcInfo, result, err, exec_time)
 		}
 	}()
 	callInfo := &mqrpc.CallInfo{
@@ -117,7 +115,7 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argsType []strin
 	// 没有设置超时的话使用默认超时
 	var cancel context.CancelFunc
 	if _, ok := ctx.Deadline(); !ok {
-		ctx, cancel = context.WithTimeout(ctx, c.app.Options().RPCExpired)
+		ctx, cancel = context.WithTimeout(ctx, app.App().Options().RPCExpired)
 	}
 	defer func() {
 		if cancel != nil {
@@ -140,7 +138,7 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argsType []strin
 		_ = c.nats_client.Delete(rpcInfo.Cid)
 		c.close_callback_chan(callback)
 		return nil, fmt.Errorf("deadline exceeded")
-		//case <-time.After(time.Second * time.Duration(c.app.GetSettings().rpc.RPCExpired)):
+		//case <-time.After(time.Second * time.Duration(app.App().GetSettings().rpc.RPCExpired)):
 		//	close(callback)
 		//	c.nats_client.Delete(rpcInfo.Cid)
 		//	return nil, "deadline exceeded"
@@ -159,7 +157,7 @@ func (c *RPCClient) CallNR(ctx context.Context, _func string, params ...interfac
 	}
 	start := time.Now()
 	err = c.CallNRArgs(ctx, _func, argsType, args)
-	if c.app.Config().RpcLog {
+	if app.App().Config().RpcLog {
 		span, _ := ctx.Value(mqrpc.ContextTransTrace).(log.TraceSpan)
 		log.TInfo(span, "rpc CallNR ServerId = %v Func = %v Elapsed = %v ERROR = %v", c.nats_client.session.GetID(), _func, time.Since(start), err)
 	}
@@ -178,7 +176,7 @@ func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argsType []str
 	rpcInfo := &rpcpb.RPCInfo{
 		Fn:       *proto.String(_func),
 		Reply:    *proto.Bool(false),
-		Expired:  *proto.Int64((time.Now().UTC().Add(c.app.Options().RPCExpired).UnixNano()) / 1000000),
+		Expired:  *proto.Int64((time.Now().UTC().Add(app.App().Options().RPCExpired).UnixNano()) / 1000000),
 		Cid:      *proto.String(correlation_id),
 		Args:     args,
 		ArgsType: argsType,

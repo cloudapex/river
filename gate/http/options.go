@@ -38,7 +38,7 @@ type Service struct {
 }
 
 // DefaultRoute 默认路由规则
-var DefaultRoute = func(app app.IApp, r *http.Request) (*Service, error) {
+var DefaultRoute = func(r *http.Request) (*Service, error) {
 	if r.URL.Path == "" {
 		return nil, errors.New("path is nil")
 	}
@@ -50,7 +50,7 @@ var DefaultRoute = func(app app.IApp, r *http.Request) (*Service, error) {
 	if server == "" {
 		return nil, errors.New("server is nil")
 	}
-	session, err := app.GetRouteServer(server,
+	session, err := app.App().GetRouteServer(server,
 		selector.WithStrategy(func(services []*registry.Service) selector.Next {
 			var nodes []*registry.Node
 
@@ -81,7 +81,7 @@ var DefaultRoute = func(app app.IApp, r *http.Request) (*Service, error) {
 }
 
 // Route 路由器定义
-type Route func(app app.IApp, r *http.Request) (*Service, error)
+type Route func(r *http.Request) (*Service, error)
 
 // Option 配置
 type Option func(*Options)
@@ -93,10 +93,10 @@ type Options struct {
 }
 
 // NewOptions 创建配置
-func NewOptions(app app.IApp, opts ...Option) Options {
+func NewOptions(opts ...Option) Options {
 	opt := Options{
 		Route:   DefaultRoute,
-		TimeOut: app.Options().RPCExpired,
+		TimeOut: app.App().Options().RPCExpired,
 	}
 
 	for _, o := range opts {

@@ -30,7 +30,6 @@ import (
 
 type RPCServer struct {
 	module         app.IModule
-	app            app.IApp
 	functions      map[string]*mqrpc.FunctionInfo
 	nats_server    *NatsServer
 	mq_chan        chan mqrpc.CallInfo //接收到请求信息的队列
@@ -41,22 +40,21 @@ type RPCServer struct {
 	executing      int64                  //正在执行的goroutine数量
 }
 
-func NewRPCServer(app app.IApp, module app.IModule) (mqrpc.RPCServer, error) {
+func NewRPCServer(module app.IModule) (mqrpc.RPCServer, error) {
 	rpc_server := new(RPCServer)
-	rpc_server.app = app
 	rpc_server.module = module
 	rpc_server.call_chan_done = make(chan error)
 	rpc_server.functions = make(map[string]*mqrpc.FunctionInfo)
 	rpc_server.mq_chan = make(chan mqrpc.CallInfo)
 
-	nats_server, err := NewNatsServer(app, rpc_server)
+	nats_server, err := NewNatsServer(rpc_server)
 	if err != nil {
 		log.Error("AMQPServer Dial: %s", err)
 	}
 	rpc_server.nats_server = nats_server
 
 	//go rpc_server.on_call_handle(rpc_server.mq_chan, rpc_server.call_chan_done)
-	maxCoroutine := uint32(app.Options().RPCMaxCoroutine)
+	maxCoroutine := uint32(app.App().Options().RPCMaxCoroutine)
 	if rpc_server.control == nil && maxCoroutine > 0 {
 		rpc_server.control = NewGoroutineControl(maxCoroutine)
 	}
@@ -181,8 +179,8 @@ func (s *RPCServer) doCallback(callInfo *mqrpc.CallInfo) {
 			log.Warning("rpc callback erro :\n%s", callInfo.Result.Error)
 		}
 	}
-	if s.app.Options().ServerRPCHandler != nil {
-		s.app.Options().ServerRPCHandler(s.app, s.module, callInfo)
+	if app.App().Options().ServerRPCHandler != nil {
+		app.App().Options().ServerRPCHandler(s.module, callInfo)
 	}
 }
 
@@ -275,7 +273,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 					for k, v := range kvs {
 						_v := v
 						if needSet, ok := v.(app.ICtxTransSetApp); ok {
-							needSet.SetApp(s.app)
+							needSet.SetApp(app.App())
 						}
 						if traceSpan, ok := v.(log.TraceSpan); ok {
 							traceSpan = traceSpan.ExtractSpan()
@@ -357,8 +355,8 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 			rs[i] = v.Interface()
 		}
 	}
-	if s.app.Options().RpcCompleteHandler != nil {
-		s.app.Options().RpcCompleteHandler(s.app, s.module, callInfo, input, rs, time.Since(start))
+	if app.App().Options().RpcCompleteHandler != nil {
+		app.App().Options().RpcCompleteHandler(s.module, callInfo, input, rs, time.Since(start))
 	}
 	var rerr string
 	switch e := rs[1].(type) {
@@ -388,7 +386,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 	callInfo.Result = resultInfo
 	callInfo.ExecTime = time.Since(start).Nanoseconds()
 	s.doCallback(callInfo)
-	if s.app.Config().RpcLog {
+	if app.App().Config().RpcLog {
 		log.TInfo(traceSpan, "rpc Exec ModuleType = %v Func = %v Elapsed = %v", s.module.GetType(), callInfo.RPCInfo.Fn, time.Since(start))
 	}
 	if s.listener != nil {

@@ -15,7 +15,7 @@ type Server interface {
 	ID() string // 服务节点ID
 	Options() Options
 	UpdMetadata(key, val string) // 更新元数据(正常需要等到下次注册时生效,如果要立即生效还需要调用ServiceRegister)
-	OnInit(module app.IModule, app app.IApp, settings *conf.ModuleSettings) error
+	OnInit(module app.IModule, settings *conf.ModuleSettings) error
 	OnDestroy() error
 
 	Register(id string, f interface{})   // 注册RPC方法

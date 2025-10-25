@@ -22,6 +22,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/gate"
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/mqtools"
@@ -89,7 +90,7 @@ func (this *agentBase) Run() (err error) {
 	}()
 
 	addr := this.conn.RemoteAddr()
-	this.session, err = NewSessionByMap(this.gate.GetApp(), map[string]interface{}{
+	this.session, err = NewSessionByMap(map[string]interface{}{
 		"IP":        addr.String(),
 		"Network":   addr.Network(),
 		"SessionId": mqtools.GenerateID().String(),
@@ -242,14 +243,14 @@ func (this *agentBase) OnHandRecvPack(pack *gate.Pack) error {
 	// 优先在已绑定的Module中提供服务
 	serverId, _ := this.session.Get(moduleTyp)
 	if serverId != "" {
-		if server, _ := this.gate.GetApp().GetServerByID(serverId); server != nil {
+		if server, _ := app.App().GetServerByID(serverId); server != nil {
 			_, err := server.Call(this.session.GenRPCContext(), gate.RPC_CLIENT_MSG, msgId, pack.Body)
 			return err
 		}
 	}
 
 	// 然后按照默认路由规则随机取得Module服务
-	server, err := this.gate.GetApp().GetRouteServer(moduleTyp)
+	server, err := app.App().GetRouteServer(moduleTyp)
 	if err != nil {
 		return fmt.Errorf("Service(moduleType:%s) not found", moduleTyp)
 	}

@@ -32,7 +32,6 @@ func NewModuleManager() *ModuleManager {
 
 // ModuleManager 模块管理器
 type ModuleManager struct {
-	app     app.IApp
 	mods    []*moduleUnit
 	runMods []*moduleUnit // 真正运行的modules
 }
@@ -64,13 +63,12 @@ func (this *ModuleManager) RegisterRunMod(mi app.IModule) {
 }
 
 // Init 初始化
-func (this *ModuleManager) Init(app app.IApp, processEnv string) {
+func (this *ModuleManager) Init(processEnv string) {
 	log.Info("This server process run ProcessEnvGroup is [%s]", processEnv)
-	this.app = app
 	this.CheckModuleSettings() // 配置文件规则检查(没通过的话直接panic)
 	for i := 0; i < len(this.mods); i++ {
 		// 代码中注册的module到配置中匹配
-		for typ, modSettings := range app.Config().Module {
+		for typ, modSettings := range app.App().Config().Module {
 			if this.mods[i].mi.GetType() == typ { // this.mods[i]匹配Conf.ModuleType
 				for _, setting := range modSettings {
 					// 这里可能有BUG 公网IP和局域网IP处理方式可能不一样,先不管
@@ -86,10 +84,10 @@ func (this *ModuleManager) Init(app app.IApp, processEnv string) {
 
 	for i := 0; i < len(this.runMods); i++ {
 		m := this.runMods[i]
-		m.mi.OnInit(app, m.settings)
+		m.mi.OnInit(m.settings)
 
-		if app.GetModuleInited() != nil {
-			app.GetModuleInited()(app, m.mi)
+		if app.App().GetModuleInited() != nil {
+			app.App().GetModuleInited()(m.mi)
 		}
 
 		m.wg.Add(1)
@@ -109,7 +107,7 @@ func (this *ModuleManager) Init(app app.IApp, processEnv string) {
 // CheckModuleSettings module配置文件规则检查(ID全局必须唯一) 且 每一个类型的Module列表中ProcessID不能重复
 func (this *ModuleManager) CheckModuleSettings() {
 	gid := map[string]string{} // 用来保存全局ID-ModuleType
-	for typ, modSettings := range this.app.Config().Module {
+	for typ, modSettings := range app.App().Config().Module {
 		pid := map[string]string{} //用来保存模块中的 ProcessID-ID
 		for _, setting := range modSettings {
 			if Stype, ok := gid[setting.ID]; ok {
