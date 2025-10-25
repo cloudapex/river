@@ -100,6 +100,7 @@ type IRPCModule interface {
 
 	Call(ctx context.Context, moduleType, _func string, params mqrpc.ParamOption, opts ...selector.SelectOption) (interface{}, error)
 	CallNR(ctx context.Context, moduleType, _func string, params ...interface{}) error
+	CallBroadcast(ctx context.Context, moduleName, _func string, params ...interface{})
 }
 
 // IServerSession 服务代理

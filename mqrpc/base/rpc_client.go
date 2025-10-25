@@ -23,7 +23,7 @@ import (
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/mqrpc"
 	rpcpb "github.com/cloudapex/river/mqrpc/pb"
-	"github.com/cloudapex/river/mqtools/uuid"
+	"github.com/cloudapex/river/tools/uuid"
 	"google.golang.org/protobuf/proto"
 )
 

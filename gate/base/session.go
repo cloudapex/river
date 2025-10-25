@@ -1,17 +1,3 @@
-// Copyright 2014 river Author. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 // Package basegate gate.Session
 package gatebase
 
@@ -25,7 +11,7 @@ import (
 	"github.com/cloudapex/river/gate"
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/mqrpc"
-	"github.com/cloudapex/river/mqtools"
+	"github.com/cloudapex/river/tools"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -257,7 +243,7 @@ func (s *sessionAgent) Clone() gate.ISession {
 			SessionId: s.session.SessionId,
 			ServerId:  s.session.ServerId,
 			TraceId:   s.session.TraceId,
-			SpanId:    mqtools.GenerateID().String(),
+			SpanId:    tools.GenerateID().String(),
 			Settings:  tmp,
 		},
 	}
@@ -292,8 +278,8 @@ func (s *sessionAgent) GenRPCContext() context.Context {
 
 // ========== TraceLog 部分
 func (s *sessionAgent) UpdTraceSpan() {
-	s.session.TraceId = mqtools.GenerateID().String()
-	s.session.SpanId = mqtools.GenerateID().String()
+	s.session.TraceId = tools.GenerateID().String()
+	s.session.SpanId = tools.GenerateID().String()
 }
 func (s *sessionAgent) GetTraceSpan() log.TraceSpan {
 	return log.CreateTrace(s.session.TraceId, s.session.SpanId)

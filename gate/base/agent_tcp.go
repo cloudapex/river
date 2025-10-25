@@ -7,7 +7,7 @@ import (
 	"io"
 
 	"github.com/cloudapex/river/gate"
-	"github.com/cloudapex/river/mqtools/aes"
+	"github.com/cloudapex/river/tools/aes"
 )
 
 func NewTCPAgent() gate.IAgent {

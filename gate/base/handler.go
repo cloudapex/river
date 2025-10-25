@@ -1,17 +1,3 @@
-// Copyright 2014 river Author. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 // Package basegate handler
 package gatebase
 
@@ -23,7 +9,7 @@ import (
 
 	"github.com/cloudapex/river/gate"
 	"github.com/cloudapex/river/log"
-	"github.com/cloudapex/river/mqtools"
+	"github.com/cloudapex/river/tools"
 	"github.com/pkg/errors"
 )
 
@@ -77,7 +63,7 @@ func (this *handler) GetAgent(sessionId string) (gate.IAgent, error) {
 // 当连接建立(握手成功)
 func (this *handler) Connect(a gate.IAgent) {
 	defer func() {
-		if err := mqtools.Catch(recover()); err != nil {
+		if err := tools.Catch(recover()); err != nil {
 			log.Error("gateHandler Connect(agent) panic:%v", err)
 		}
 	}()
@@ -101,7 +87,7 @@ func (this *handler) Connect(a gate.IAgent) {
 // 当连接关闭(客户端主动关闭或者异常断开)
 func (this *handler) DisConnect(a gate.IAgent) {
 	defer func() {
-		if err := mqtools.Catch(recover()); err != nil {
+		if err := tools.Catch(recover()); err != nil {
 			log.Error("handler DisConnect panic:%v", err)
 		}
 		if a.GetSession() != nil {

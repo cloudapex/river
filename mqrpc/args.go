@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/cloudapex/river/log"
-	"github.com/cloudapex/river/mqtools"
+	"github.com/cloudapex/river/tools"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -55,25 +55,25 @@ func Args2Bytes(arg interface{}) (string, []byte, error) {
 	case string:
 		return STRING, []byte(v2), nil
 	case bool:
-		return BOOL, mqtools.BoolToBytes(v2), nil
+		return BOOL, tools.BoolToBytes(v2), nil
 	case int32:
-		return INT, mqtools.Int32ToBytes(v2), nil
+		return INT, tools.Int32ToBytes(v2), nil
 	case int64:
-		return LONG, mqtools.Int64ToBytes(v2), nil
+		return LONG, tools.Int64ToBytes(v2), nil
 	case float32:
-		return FLOAT, mqtools.Float32ToBytes(v2), nil
+		return FLOAT, tools.Float32ToBytes(v2), nil
 	case float64:
-		return DOUBLE, mqtools.Float64ToBytes(v2), nil
+		return DOUBLE, tools.Float64ToBytes(v2), nil
 	case []byte:
 		return BYTES, v2, nil
 	case map[string]interface{}:
-		bytes, err := mqtools.MapToBytes(v2)
+		bytes, err := tools.MapToBytes(v2)
 		if err != nil {
 			return MAP, nil, err
 		}
 		return MAP, bytes, nil
 	case map[string]string:
-		bytes, err := mqtools.MapToBytesString(v2)
+		bytes, err := tools.MapToBytesString(v2)
 		if err != nil {
 			return MAPSTR, nil, err
 		}
@@ -94,7 +94,7 @@ func Args2Bytes(arg interface{}) (string, []byte, error) {
 				}
 				maps[string(k)] = b
 			}
-			bytes, err := mqtools.MapToBytes(maps)
+			bytes, err := tools.MapToBytes(maps)
 			if err != nil {
 				return Context, nil, err
 			}
@@ -147,25 +147,25 @@ func Bytes2Args(argsType string, args []byte) (interface{}, error) {
 	case argsType == STRING:
 		return string(args), nil
 	case argsType == BOOL:
-		return mqtools.BytesToBool(args), nil
+		return tools.BytesToBool(args), nil
 	case argsType == INT:
-		return mqtools.BytesToInt32(args), nil
+		return tools.BytesToInt32(args), nil
 	case argsType == LONG:
-		return mqtools.BytesToInt64(args), nil
+		return tools.BytesToInt64(args), nil
 	case argsType == FLOAT:
-		return mqtools.BytesToFloat32(args), nil
+		return tools.BytesToFloat32(args), nil
 	case argsType == DOUBLE:
-		return mqtools.BytesToFloat64(args), nil
+		return tools.BytesToFloat64(args), nil
 	case argsType == BYTES:
 		return args, nil
 	case argsType == MAP:
-		mps, err := mqtools.BytesToMap(args)
+		mps, err := tools.BytesToMap(args)
 		if err != nil {
 			return nil, err
 		}
 		return mps, nil
 	case argsType == MAPSTR:
-		mps, err := mqtools.BytesToMapString(args)
+		mps, err := tools.BytesToMapString(args)
 		if err != nil {
 			return nil, err
 		}
@@ -178,7 +178,7 @@ func Bytes2Args(argsType string, args []byte) (interface{}, error) {
 		}
 		return trace.ExtractSpan(), nil
 	case argsType == Context:
-		mps, err := mqtools.BytesToMap(args)
+		mps, err := tools.BytesToMap(args)
 		if err != nil {
 			return nil, err
 		}

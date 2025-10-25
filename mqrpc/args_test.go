@@ -10,7 +10,7 @@ import (
 	"time"
 
 	rpcpb "github.com/cloudapex/river/mqrpc/pb"
-	"github.com/cloudapex/river/mqtools/uuid"
+	"github.com/cloudapex/river/tools/uuid"
 	"google.golang.org/protobuf/proto"
 )
 

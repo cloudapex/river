@@ -20,14 +20,14 @@ import (
 	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/conf"
 	"github.com/cloudapex/river/gate"
-	modulebase "github.com/cloudapex/river/module/base"
+	"github.com/cloudapex/river/module"
 	"github.com/cloudapex/river/network"
 )
 
 var _ app.IRPCModule = &ModuleGate{}
 
 type ModuleGate struct {
-	modulebase.ModuleBase
+	module.ModuleBase
 
 	opts gate.Options
 

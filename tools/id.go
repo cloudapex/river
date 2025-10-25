@@ -1,4 +1,4 @@
-package mqtools
+package tools
 
 import (
 	"crypto/aes"

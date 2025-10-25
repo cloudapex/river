@@ -23,14 +23,14 @@ import (
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/mqrpc"
 	rpcpb "github.com/cloudapex/river/mqrpc/pb"
-	"github.com/cloudapex/river/mqtools"
+	"github.com/cloudapex/river/tools"
 	"github.com/nats-io/nats.go"
 	"google.golang.org/protobuf/proto"
 )
 
 type NatsClient struct {
 	//callinfos map[string]*ClinetCallInfo
-	callinfos         *mqtools.BeeMap
+	callinfos         *tools.BeeMap
 	cmutex            sync.Mutex //操作callinfos的锁
 	callbackqueueName string
 	done              chan error
@@ -42,7 +42,7 @@ type NatsClient struct {
 func NewNatsClient(session app.IServerSession) (client *NatsClient, err error) {
 	client = new(NatsClient)
 	client.session = session
-	client.callinfos = mqtools.NewBeeMap()
+	client.callinfos = tools.NewBeeMap()
 	client.callbackqueueName = nats.NewInbox()
 	client.done = make(chan error)
 	client.isClose = false

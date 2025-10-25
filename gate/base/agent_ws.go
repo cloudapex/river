@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/cloudapex/river/gate"
-	"github.com/cloudapex/river/mqtools/aes"
+	"github.com/cloudapex/river/tools/aes"
 )
 
 func NewWSAgent() gate.IAgent {

@@ -1,19 +1,5 @@
-// Copyright 2014 loolgame Author. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 // Package basemodule  模块管理器
-package modulebase
+package module
 
 import (
 	"fmt"
@@ -22,7 +8,7 @@ import (
 	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/conf"
 	"github.com/cloudapex/river/log"
-	"github.com/cloudapex/river/mqtools"
+	"github.com/cloudapex/river/tools"
 )
 
 // NewModuleManager 新建模块管理器
@@ -93,7 +79,7 @@ func (this *ModuleManager) Init(processEnv string) {
 		m.wg.Add(1)
 		go func(unit *moduleUnit) {
 			defer func() {
-				if err := mqtools.Catch(recover()); err != nil {
+				if err := tools.Catch(recover()); err != nil {
 					log.Error("module[%q] run panic: %v", unit.mi.GetType(), err)
 				}
 			}()
@@ -135,7 +121,7 @@ func (this *ModuleManager) Destroy() {
 		m.wg.Wait()
 		func(unit *moduleUnit) {
 			defer func() {
-				if err := mqtools.Catch(recover()); err != nil {
+				if err := tools.Catch(recover()); err != nil {
 					log.Error("module[%q] destroy panic: %v", unit.mi.GetType(), err)
 				}
 			}()

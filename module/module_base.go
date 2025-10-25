@@ -1,19 +1,5 @@
-// Copyright 2014 mqantserver Author. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 // Package basemodule BaseModule定义
-package modulebase
+package module
 
 import (
 	"context"
@@ -27,8 +13,8 @@ import (
 	"github.com/cloudapex/river/module/service"
 	"github.com/cloudapex/river/mqrpc"
 	rpcpb "github.com/cloudapex/river/mqrpc/pb"
-	"github.com/cloudapex/river/mqtools"
 	"github.com/cloudapex/river/selector"
+	"github.com/cloudapex/river/tools"
 	"github.com/pkg/errors"
 )
 
@@ -78,7 +64,7 @@ func (this *ModuleBase) Init(impl app.IRPCModule, settings *conf.ModuleSettings,
 		if settings.ID != "" {
 			opt = append(opt, server.ID(settings.ID))
 		} else {
-			opt = append(opt, server.ID(mqtools.GenerateID().String()))
+			opt = append(opt, server.ID(tools.GenerateID().String()))
 		}
 	}
 
@@ -190,6 +176,11 @@ func (this *ModuleBase) Call(ctx context.Context, moduleType, _func string, para
 // CallNR  RPC调用(需要等待结果)
 func (this *ModuleBase) CallNR(ctx context.Context, moduleType, _func string, params ...interface{}) (err error) {
 	return app.App().CallNR(ctx, moduleType, _func, params...)
+}
+
+// CallBroadcast RPC调用(群发,无需等待结果)
+func (this *ModuleBase) CallBroadcast(ctx context.Context, moduleType, _func string, params ...interface{}) {
+	app.App().CallBroadcast(ctx, moduleType, _func, params...)
 }
 
 // ================= RPCListener[监听事件]

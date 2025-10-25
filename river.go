@@ -29,7 +29,7 @@ import (
 	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/conf"
 	"github.com/cloudapex/river/log"
-	modulebase "github.com/cloudapex/river/module/base"
+	"github.com/cloudapex/river/module"
 	"github.com/cloudapex/river/module/modules"
 	"github.com/cloudapex/river/mqrpc"
 	"github.com/cloudapex/river/registry"
@@ -52,7 +52,7 @@ func CreateApp(opts ...app.Option) app.IApp {
 func NewApp(opts ...app.Option) app.IApp {
 	out := &DefaultApp{
 		opts:    app.NewOptions(opts...),
-		manager: modulebase.NewModuleManager(),
+		manager: module.NewModuleManager(),
 	}
 	return out
 }
@@ -61,7 +61,7 @@ func NewApp(opts ...app.Option) app.IApp {
 type DefaultApp struct {
 	opts app.Options
 
-	manager *modulebase.ModuleManager
+	manager *module.ModuleManager
 
 	serverList sync.Map
 
@@ -357,7 +357,7 @@ func (this *DefaultApp) getServerSessionSafe(node *registry.Node, moduleType str
 		return session.(app.IServerSession), nil
 	}
 	// new
-	s, err := modulebase.NewServerSession(moduleType, node)
+	s, err := module.NewModuleServer(moduleType, node)
 	if err != nil {
 		return nil, err
 	}
@@ -387,7 +387,7 @@ func (this *DefaultApp) CallNR(ctx context.Context, moduleType, _func string, pa
 	return server.CallNR(ctx, _func, params...)
 }
 
-// Call RPC调用(群发,无需等待结果)
+// CallBroadcast RPC调用(群发,无需等待结果)
 func (this *DefaultApp) CallBroadcast(ctx context.Context, moduleName, _func string, params ...interface{}) {
 	listSvr := this.GetServersByType(moduleName)
 	for _, svr := range listSvr {

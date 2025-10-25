@@ -1,17 +1,3 @@
-// Copyright 2014 river Author. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 // Package log 日志结构定义
 package log
 
@@ -19,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/cloudapex/river/mqtools"
+	"github.com/cloudapex/river/tools"
 )
 
 // TraceSpan A SpanID refers to a single span.
@@ -62,7 +48,7 @@ func (t *TraceSpanImp) SpanID() string {
 func (t *TraceSpanImp) ExtractSpan() TraceSpan {
 	return &TraceSpanImp{
 		Trace: t.Trace,
-		Span:  mqtools.GenerateID().String(),
+		Span:  tools.GenerateID().String(),
 	}
 }
 func (t *TraceSpanImp) Marshal() ([]byte, error) {

@@ -25,9 +25,9 @@ import (
 	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/gate"
 	"github.com/cloudapex/river/log"
-	"github.com/cloudapex/river/mqtools"
-	"github.com/cloudapex/river/mqtools/aes"
 	"github.com/cloudapex/river/network"
+	"github.com/cloudapex/river/tools"
+	"github.com/cloudapex/river/tools/aes"
 )
 
 type agentBase struct {
@@ -83,7 +83,7 @@ func (this *agentBase) Destroy() { // 没用
 }
 func (this *agentBase) Run() (err error) {
 	defer func() {
-		if err := mqtools.Catch(recover()); err != nil {
+		if err := tools.Catch(recover()); err != nil {
 			log.Error("agent.recvLoop() panic:%v", err)
 		}
 		this.Close()
@@ -93,7 +93,7 @@ func (this *agentBase) Run() (err error) {
 	this.session, err = NewSessionByMap(map[string]interface{}{
 		"IP":        addr.String(),
 		"Network":   addr.Network(),
-		"SessionId": mqtools.GenerateID().String(),
+		"SessionId": tools.GenerateID().String(),
 		"ServerId":  this.gate.GetServerID(),
 		"Settings":  make(map[string]string),
 	})
@@ -132,7 +132,7 @@ func (this *agentBase) GetSession() gate.ISession { return this.session }
 // ========== 处理发送
 func (this *agentBase) sendLoop() {
 	defer func() {
-		if err := mqtools.Catch(recover()); err != nil {
+		if err := tools.Catch(recover()); err != nil {
 			log.Error("agent.sendLoop() panic:%v")
 		}
 		this.Close()
