@@ -46,7 +46,7 @@ type MQServer interface {
 type CallInfo struct {
 	RPCInfo  *rpcpb.RPCInfo
 	Result   *rpcpb.ResultInfo
-	Props    map[string]interface{}
+	Props    map[string]any
 	ExecTime int64
 	Agent    MQServer //代理者  AMQPServer / LocalServer 都继承 Callback(callinfo CallInfo)(error) 方法
 }
@@ -88,18 +88,18 @@ type RPCServer interface {
 	SetListener(listener RPCListener) // 设置监听器
 	SetGoroutineControl(control GoroutineControl)
 	GetExecuting() int64
-	Register(id string, f interface{})   // 注册RPC方法,f第一个参数必须为context.Context(单线程)
-	RegisterGO(id string, f interface{}) // 注册RPC方法,f第一个参数必须为context.Context(多线程)
+	Register(id string, f any)   // 注册RPC方法,f第一个参数必须为context.Context(单线程)
+	RegisterGO(id string, f any) // 注册RPC方法,f第一个参数必须为context.Context(多线程)
 	Done() (err error)
 }
 
 // RPCClient 客户端定义
 type RPCClient interface {
 	Done() (err error)
-	Call(ctx context.Context, _func string, params ...interface{}) (interface{}, error)
-	CallArgs(ctx context.Context, _func string, argsType []string, args [][]byte) (interface{}, error) // ctx参数必须装进args中
-	CallNR(ctx context.Context, _func string, params ...interface{}) (err error)
-	CallNRArgs(ctx context.Context, _func string, argsType []string, args [][]byte) (err error) // ctx参数必须装进args中
+	Call(ctx context.Context, _func string, params ...any) (any, error)
+	CallArgs(ctx context.Context, _func string, argTypes []string, args [][]byte) (any, error) // ctx参数必须装进args中
+	CallNR(ctx context.Context, _func string, params ...any) (err error)
+	CallNRArgs(ctx context.Context, _func string, argTypes []string, args [][]byte) (err error) // ctx参数必须装进args中
 }
 
 // Marshaler is a simple encoding interface used for the broker/transport
@@ -119,7 +119,7 @@ type RPCSerialize interface {
 	@return p 解析成功得到的数据, 如果无法解析该类型,或者解析失败 返回nil即可
 	@return err 无法解析该类型,或者解析失败 返回错误信息
 	*/
-	Serialize(param interface{}) (ptype string, p []byte, err error)
+	Serialize(param any) (ptype string, p []byte, err error)
 	/**
 	反序列化 []byte-->结构体
 	ptype 参数类型 与Serialize函数中ptype 对应
@@ -127,7 +127,7 @@ type RPCSerialize interface {
 	@return param 解析成功得到的数据结构
 	@return err 无法解析该类型,或者解析失败 返回错误信息
 	*/
-	Deserialize(ptype string, b []byte) (param interface{}, err error)
+	Deserialize(ptype string, b []byte) (param any, err error)
 	/**
 	返回这个接口能够处理的所有类型
 	*/
@@ -135,11 +135,11 @@ type RPCSerialize interface {
 }
 
 // ParamOption ParamOption
-type ParamOption func() []interface{}
+type ParamOption func() []any
 
 // Param 请求参数包装器
-func Param(params ...interface{}) ParamOption {
-	return func() []interface{} {
+func Param(params ...any) ParamOption {
+	return func() []any {
 		return params
 	}
 }

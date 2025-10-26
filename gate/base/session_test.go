@@ -47,7 +47,7 @@ func TestSession(t *testing.T) {
 }
 
 func TestSessionagent_Serializable(t *testing.T) {
-	session, err := NewSessionByMap(map[string]interface{}{
+	session, err := NewSessionByMap(map[string]any{
 		"IP": "IP",
 	})
 	if err != nil {

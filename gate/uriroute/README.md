@@ -42,7 +42,7 @@ river gate网关的默认路由规则为
             }
             return this.GetRouteServer(moduleType)
         }),
-        uriRoute.DataParsing(func(topic string, u *url.URL, msg []byte) (bean interface{}, err error) {
+        uriRoute.DataParsing(func(topic string, u *url.URL, msg []byte) (bean any, err error) {
             //根据topic解析msg为指定的结构体
             //结构体必须满足mqant的参数传递标准
             //例如mqrpc.Marshaler

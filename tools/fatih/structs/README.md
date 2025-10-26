@@ -1,7 +1,7 @@
 # Structs [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/fatih/structs) [![Build Status](http://img.shields.io/travis/fatih/structs.svg?style=flat-square)](https://travis-ci.org/fatih/structs) [![Coverage Status](http://img.shields.io/coveralls/fatih/structs.svg?style=flat-square)](https://coveralls.io/r/fatih/structs)
 
 Structs contains various utilities to work with Go (Golang) structs. It was
-initially used by me to convert a struct into a `map[string]interface{}`. With
+initially used by me to convert a struct into a `map[string]any`. With
 time I've added other utilities for structs.  It's basically a high level
 package based on primitives from the reflect package. Feel free to add new
 functions or improve the existing code.
@@ -35,11 +35,11 @@ server := &Server{
 ```
 
 ```go
-// Convert a struct to a map[string]interface{}
+// Convert a struct to a map[string]any
 // => {"Name":"gopher", "ID":123456, "Enabled":true}
 m := structs.Map(server)
 
-// Convert the values of a struct to a []interface{}
+// Convert the values of a struct to a []any
 // => ["gopher", 123456, true]
 v := structs.Values(server)
 
@@ -74,8 +74,8 @@ structs (such as retrieving a single Field).
 // Create a new struct type:
 s := structs.New(server)
 
-m := s.Map()              // Get a map[string]interface{}
-v := s.Values()           // Get a []interface{}
+m := s.Map()              // Get a map[string]any
+v := s.Values()           // Get a []any
 f := s.Fields()           // Get a []*Field
 n := s.Names()            // Get a []string
 f := s.Field(name)        // Get a *Field based on the given field name

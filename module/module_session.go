@@ -57,21 +57,21 @@ func (this *moduleServerSession) SetNode(node *registry.Node) (err error) {
 }
 
 // 消息请求 需要回复
-func (this *moduleServerSession) Call(ctx context.Context, _func string, params ...interface{}) (interface{}, error) {
+func (this *moduleServerSession) Call(ctx context.Context, _func string, params ...any) (any, error) {
 	return this.rpc.Call(ctx, _func, params...)
 }
 
 // 消息请求 不需要回复
-func (this *moduleServerSession) CallNR(ctx context.Context, _func string, params ...interface{}) (err error) {
+func (this *moduleServerSession) CallNR(ctx context.Context, _func string, params ...any) (err error) {
 	return this.rpc.CallNR(ctx, _func, params...)
 }
 
 // 消息请求 需要回复
-func (this *moduleServerSession) CallArgs(ctx context.Context, _func string, argsType []string, args [][]byte) (interface{}, error) {
-	return this.rpc.CallArgs(ctx, _func, argsType, args)
+func (this *moduleServerSession) CallArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (any, error) {
+	return this.rpc.CallArgs(ctx, _func, argTypes, argDatas)
 }
 
 // 消息请求 不需要回复
-func (this *moduleServerSession) CallNRArgs(ctx context.Context, _func string, argsType []string, args [][]byte) (err error) {
-	return this.rpc.CallNRArgs(ctx, _func, argsType, args)
+func (this *moduleServerSession) CallNRArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (err error) {
+	return this.rpc.CallNRArgs(ctx, _func, argTypes, argDatas)
 }

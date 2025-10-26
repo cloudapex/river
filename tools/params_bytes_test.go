@@ -17,7 +17,7 @@ import (
 	"testing"
 )
 
-func assertEqual(t *testing.T, val interface{}, exp interface{}) {
+func assertEqual(t *testing.T, val any, exp any) {
 	if val != exp {
 		t.Errorf("Expected %v, got %v.", exp, val)
 	}

@@ -49,28 +49,28 @@ func (c *RPCClient) Done() (err error) {
 	return
 }
 
-func (c *RPCClient) Call(ctx context.Context, _func string, params ...interface{}) (interface{}, error) {
-	var argsType []string = make([]string, len(params)+1)
-	var args [][]byte = make([][]byte, len(params)+1)
-	params = append([]interface{}{ctx}, params...)
-	for k, param := range params {
+func (c *RPCClient) Call(ctx context.Context, _func string, params ...any) (any, error) {
+	var argTypes []string = make([]string, len(params)+1)
+	var argDatas [][]byte = make([][]byte, len(params)+1)
+	params = append([]any{ctx}, params...)
+	for k, arg := range params {
 		var err error = nil
-		argsType[k], args[k], err = mqrpc.Args2Bytes(param)
+		argTypes[k], argDatas[k], err = mqrpc.ArgToData(arg)
 		if err != nil {
 			return nil, fmt.Errorf("args[%d] error %s", k, err.Error())
 		}
 	}
 	start := time.Now()
-	r, err := c.CallArgs(ctx, _func, argsType, args)
+	r, err := c.CallArgs(ctx, _func, argTypes, argDatas)
 	if app.App().Config().RpcLog {
 		span, _ := ctx.Value(mqrpc.ContextTransTrace).(log.TraceSpan)
 		log.TInfo(span, "rpc Call ServerId = %v Func = %v Elapsed = %v Result = %v ERROR = %v", c.nats_client.session.GetID(), _func, time.Since(start), r, err)
 	}
 	return r, err
 }
-func (c *RPCClient) CallArgs(ctx context.Context, _func string, argsType []string, args [][]byte) (interface{}, error) {
+func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (any, error) {
 	var err error
-	var result interface{}
+	var result any
 
 	caller, _ := os.Hostname()
 	if ctx != nil {
@@ -87,8 +87,8 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argsType []strin
 		Reply:    *proto.Bool(true),
 		Expired:  *proto.Int64((start.UTC().Add(app.App().Options().RPCExpired).UnixNano()) / 1000000),
 		Cid:      *proto.String(correlation_id),
-		Args:     args,
-		ArgsType: argsType,
+		Args:     argDatas,
+		ArgsType: argTypes,
 		Caller:   *proto.String(caller),
 		Hostname: *proto.String(caller),
 	}
@@ -128,7 +128,7 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argsType []strin
 		if !ok {
 			return nil, fmt.Errorf("client closed")
 		}
-		result, err = mqrpc.Bytes2Args(resultInfo.ResultType, resultInfo.Result)
+		result, err = mqrpc.DataToArg(resultInfo.ResultType, resultInfo.Result)
 		if err != nil {
 			return nil, err
 		}
@@ -145,25 +145,25 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argsType []strin
 	}
 }
 
-func (c *RPCClient) CallNR(ctx context.Context, _func string, params ...interface{}) (err error) {
-	var argsType []string = make([]string, len(params)+1)
-	var args [][]byte = make([][]byte, len(params)+1)
-	params = append([]interface{}{ctx}, params...)
-	for k, param := range params {
-		argsType[k], args[k], err = mqrpc.Args2Bytes(param)
+func (c *RPCClient) CallNR(ctx context.Context, _func string, params ...any) (err error) {
+	var argTypes []string = make([]string, len(params)+1)
+	var argDatas [][]byte = make([][]byte, len(params)+1)
+	params = append([]any{ctx}, params...)
+	for k, arg := range params {
+		argTypes[k], argDatas[k], err = mqrpc.ArgToData(arg)
 		if err != nil {
 			return fmt.Errorf("args[%d] error %s", k, err.Error())
 		}
 	}
 	start := time.Now()
-	err = c.CallNRArgs(ctx, _func, argsType, args)
+	err = c.CallNRArgs(ctx, _func, argTypes, argDatas)
 	if app.App().Config().RpcLog {
 		span, _ := ctx.Value(mqrpc.ContextTransTrace).(log.TraceSpan)
 		log.TInfo(span, "rpc CallNR ServerId = %v Func = %v Elapsed = %v ERROR = %v", c.nats_client.session.GetID(), _func, time.Since(start), err)
 	}
 	return err
 }
-func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argsType []string, args [][]byte) (err error) {
+func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (err error) {
 	caller, _ := os.Hostname()
 	if ctx != nil {
 		cr, ok := ctx.Value("caller").(string)
@@ -178,8 +178,8 @@ func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argsType []str
 		Reply:    *proto.Bool(false),
 		Expired:  *proto.Int64((time.Now().UTC().Add(app.App().Options().RPCExpired).UnixNano()) / 1000000),
 		Cid:      *proto.String(correlation_id),
-		Args:     args,
-		ArgsType: argsType,
+		Args:     argDatas,
+		ArgsType: argTypes,
 		Caller:   *proto.String(caller),
 		Hostname: *proto.String(caller),
 	}

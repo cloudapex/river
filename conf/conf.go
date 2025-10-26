@@ -24,12 +24,12 @@ func LoadConfig(Path string) {
 
 // Config 配置结构体
 type Config struct {
-	Log      map[string]interface{} // 不用定制
-	BI       map[string]interface{} // 不用定制
+	Log      map[string]any // 不用定制
+	BI       map[string]any // 不用定制
 	RpcLog   bool
 	Module   map[string][]*ModuleSettings
 	Nats     Nats
-	Settings map[string]interface{}
+	Settings map[string]any
 }
 
 // ModuleSettings 模块配置
@@ -37,7 +37,7 @@ type ModuleSettings struct {
 	ID         string `json:"ID"` // 节点id(指@符号后面的值)
 	Host       string // 没啥用
 	ProcessEnv string
-	Settings   map[string]interface{}
+	Settings   map[string]any
 }
 
 // Nats nats配置

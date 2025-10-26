@@ -87,7 +87,7 @@ func ExampleMap_omitNested() {
 	type Server struct {
 		Name string    `structs:"server_name"`
 		ID   int32     `structs:"server_id"`
-		Time time.Time `structs:"time,omitnested"` // do not convert to map[string]interface{}
+		Time time.Time `structs:"time,omitnested"` // do not convert to map[string]any
 	}
 
 	const shortForm = "2006-Jan-02"

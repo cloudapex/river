@@ -33,7 +33,7 @@ type handler struct {
 
 // 当服务关闭时释放
 func (this *handler) OnDestroy() {
-	this.sessions.Range(func(key, value interface{}) bool {
+	this.sessions.Range(func(key, value any) bool {
 		value.(gate.IAgent).Close()
 		this.sessions.Delete(key)
 		return true
@@ -255,7 +255,7 @@ func (this *handler) OnRpcClose(ctx context.Context, sessionId string) (bool, er
 // broadcast message to all session of the gate
 func (this *handler) OnRpcBroadcast(ctx context.Context, topic string, body []byte) (int64, error) {
 	var count int64 = 0
-	this.sessions.Range(func(key, agent interface{}) bool {
+	this.sessions.Range(func(key, agent any) bool {
 		e := agent.(gate.IAgent).SendPack(&gate.Pack{Topic: topic, Body: body})
 		if e != nil {
 			log.Warning("WriteMsg error:", e.Error())

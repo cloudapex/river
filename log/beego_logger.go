@@ -9,7 +9,7 @@ import (
 )
 
 // NewBeegoLogger beego
-func NewBeegoLogger(debug bool, ProcessID string, Logdir string, settings map[string]interface{}, logFilePath func(logdir, prefix, processID, suffix string) string) *logs.BeeLogger {
+func NewBeegoLogger(debug bool, ProcessID string, Logdir string, settings map[string]any, logFilePath func(logdir, prefix, processID, suffix string) string) *logs.BeeLogger {
 	log := logs.NewLogger()
 	log.ProcessID = ProcessID
 	log.EnableFuncCallDepth(true)
@@ -23,7 +23,7 @@ func NewBeegoLogger(debug bool, ProcessID string, Logdir string, settings map[st
 		log.SetContentType(contenttype.(string))
 	}
 	if f, ok := settings["file"]; ok {
-		ff := f.(map[string]interface{})
+		ff := f.(map[string]any)
 		Prefix := ""
 		if prefix, ok := ff["prefix"]; ok {
 			Prefix = prefix.(string)
@@ -43,7 +43,7 @@ func NewBeegoLogger(debug bool, ProcessID string, Logdir string, settings map[st
 		log.SetLogger(logs.AdapterFile, string(config))
 	}
 	if f, ok := settings["multifile"]; ok {
-		multifile := f.(map[string]interface{})
+		multifile := f.(map[string]any)
 		Prefix := ""
 		if prefix, ok := multifile["prefix"]; ok {
 			Prefix = prefix.(string)

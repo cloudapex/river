@@ -17,7 +17,7 @@ import (
 
 func init() {
 	mqrpc.RegistContextTransValue(gate.ContextTransSession, func() mqrpc.Marshaler {
-		s, _ := NewSessionByMap(map[string]interface{}{})
+		s, _ := NewSessionByMap(map[string]any{})
 		return s
 	})
 }
@@ -38,7 +38,7 @@ func NewSession(data []byte) (gate.ISession, error) {
 }
 
 // NewSessionByMap NewSessionByMap
-func NewSessionByMap(data map[string]interface{}) (gate.ISession, error) {
+func NewSessionByMap(data map[string]any) (gate.ISession, error) {
 	agent := &sessionAgent{
 		session: new(SessionImp),
 		lock:    new(sync.RWMutex),
@@ -56,7 +56,7 @@ func NewSessionByMap(data map[string]interface{}) (gate.ISession, error) {
 type sessionAgent struct {
 	session  *SessionImp
 	lock     *sync.RWMutex // for session.UserId and session.Setting
-	userdata interface{}
+	userdata any
 	// guestJudger func(session gate.ISession) bool
 }
 
@@ -69,7 +69,7 @@ func (s *sessionAgent) initByDat(data []byte) error {
 	s.session = se
 	return nil
 }
-func (s *sessionAgent) initByMap(datas map[string]interface{}) error {
+func (s *sessionAgent) initByMap(datas map[string]any) error {
 	userId := datas["UserId"]
 	if userId != nil {
 		s.session.UserId = userId.(string)
@@ -102,18 +102,18 @@ func (s *sessionAgent) initByMap(datas map[string]interface{}) error {
 	return nil
 }
 
-func (s *sessionAgent) GetIP() string                     { return s.session.IP }
-func (s *sessionAgent) SetIP(ip string)                   { s.session.IP = ip }
-func (s *sessionAgent) GetTopic() string                  { return s.session.Topic }
-func (s *sessionAgent) SetTopic(topic string)             { s.session.Topic = topic }
-func (s *sessionAgent) GetNetwork() string                { return s.session.Network }
-func (s *sessionAgent) SetNetwork(network string)         { s.session.Network = network }
-func (s *sessionAgent) GetSessionID() string              { return s.session.SessionId }
-func (s *sessionAgent) SetSessionID(sessionId string)     { s.session.SessionId = sessionId }
-func (s *sessionAgent) GetServerID() string               { return s.session.ServerId }
-func (s *sessionAgent) SetServerID(serverId string)       { s.session.ServerId = serverId }
-func (s *sessionAgent) GetLocalUserData() interface{}     { return s.userdata }
-func (s *sessionAgent) SetLocalUserData(data interface{}) { s.userdata = data }
+func (s *sessionAgent) GetIP() string                 { return s.session.IP }
+func (s *sessionAgent) SetIP(ip string)               { s.session.IP = ip }
+func (s *sessionAgent) GetTopic() string              { return s.session.Topic }
+func (s *sessionAgent) SetTopic(topic string)         { s.session.Topic = topic }
+func (s *sessionAgent) GetNetwork() string            { return s.session.Network }
+func (s *sessionAgent) SetNetwork(network string)     { s.session.Network = network }
+func (s *sessionAgent) GetSessionID() string          { return s.session.SessionId }
+func (s *sessionAgent) SetSessionID(sessionId string) { s.session.SessionId = sessionId }
+func (s *sessionAgent) GetServerID() string           { return s.session.ServerId }
+func (s *sessionAgent) SetServerID(serverId string)   { s.session.ServerId = serverId }
+func (s *sessionAgent) GetLocalUserData() any         { return s.userdata }
+func (s *sessionAgent) SetLocalUserData(data any)     { s.userdata = data }
 
 func (s *sessionAgent) GetUserID() string {
 	s.lock.Lock()

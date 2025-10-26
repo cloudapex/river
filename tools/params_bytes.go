@@ -81,28 +81,17 @@ func BytesToFloat64(bytes []byte) float64 {
 }
 
 // MapToBytes MapToBytes
-func MapToBytes(jmap map[string]interface{}) ([]byte, error) {
+func MapToBytes(jmap map[string]any) ([]byte, error) {
 	bytes, err := json.Marshal(jmap)
-	return bytes, err
+	if err != nil {
+		return nil, err
+	}
+	return bytes, nil
 }
 
 // BytesToMap BytesToMap
-func BytesToMap(bytes []byte) (map[string]interface{}, error) {
-	v := make(map[string]interface{})
-	err := json.Unmarshal(bytes, &v)
-
-	return v, err
-}
-
-// MapToBytesString MapToBytesString
-func MapToBytesString(jmap map[string]string) ([]byte, error) {
-	bytes, err := json.Marshal(jmap)
-	return bytes, err
-}
-
-// BytesToMapString BytesToMapString
-func BytesToMapString(bytes []byte) (map[string]string, error) {
-	v := make(map[string]string)
+func BytesToMap(bytes []byte) (map[string]any, error) {
+	v := make(map[string]any)
 	err := json.Unmarshal(bytes, &v)
 
 	return v, err

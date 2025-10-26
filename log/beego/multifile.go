@@ -57,7 +57,7 @@ func (f *multiFileLogWriter) Init(config string) error {
 	//unmarshal "separate" field to f.Separate
 	json.Unmarshal([]byte(config), f)
 
-	jsonMap := map[string]interface{}{}
+	jsonMap := map[string]any{}
 	json.Unmarshal([]byte(config), &jsonMap)
 
 	for i := LevelEmergency; i < LevelDebug+1; i++ {

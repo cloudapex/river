@@ -18,8 +18,8 @@ type Server interface {
 	OnInit(module app.IModule, settings *conf.ModuleSettings) error
 	OnDestroy() error
 
-	Register(id string, f interface{})   // 注册RPC方法
-	RegisterGO(id string, f interface{}) // 注册RPC方法
+	Register(id string, f any)   // 注册RPC方法
+	RegisterGO(id string, f any) // 注册RPC方法
 	SetListener(listener mqrpc.RPCListener)
 	ServiceRegister() error   // 向Registry注册自己
 	ServiceDeregister() error // 向Registry注销自己
@@ -33,7 +33,7 @@ type Server interface {
 // Message RPC消息头
 type Message interface {
 	Topic() string
-	Payload() interface{}
+	Payload() any
 	ContentType() string
 }
 
@@ -42,7 +42,7 @@ type Request interface {
 	Service() string
 	Method() string
 	ContentType() string
-	Request() interface{}
+	Request() any
 	// indicates whether the request will be streamed
 	Stream() bool
 }
@@ -54,8 +54,8 @@ type Request interface {
 type Stream interface {
 	Context() context.Context
 	Request() Request
-	Send(interface{}) error
-	Recv(interface{}) error
+	Send(any) error
+	Recv(any) error
 	Error() error
 	Close() error
 }

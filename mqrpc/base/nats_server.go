@@ -171,7 +171,7 @@ func (s *NatsServer) on_request_handle() (err error) {
 			callInfo := &mqrpc.CallInfo{
 				RPCInfo: rpcInfo,
 			}
-			callInfo.Props = map[string]interface{}{
+			callInfo.Props = map[string]any{
 				"reply_to": rpcInfo.ReplyTo,
 			}
 

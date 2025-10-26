@@ -10,12 +10,12 @@ var beego *beegolog.BeeLogger
 var bi *beegolog.BeeLogger
 
 // InitLog 初始化日志
-func InitLog(debug bool, ProcessID string, Logdir string, settings map[string]interface{}, logFilePath func(logdir, prefix, processID, suffix string) string) {
+func InitLog(debug bool, ProcessID string, Logdir string, settings map[string]any, logFilePath func(logdir, prefix, processID, suffix string) string) {
 	beego = NewBeegoLogger(debug, ProcessID, Logdir, settings, logFilePath)
 }
 
 // InitBI 初始化BI日志
-func InitBI(debug bool, ProcessID string, Logdir string, settings map[string]interface{}, logFilePath func(logdir, prefix, processID, suffix string) string) {
+func InitBI(debug bool, ProcessID string, Logdir string, settings map[string]any, logFilePath func(logdir, prefix, processID, suffix string) string) {
 	bi = NewBeegoLogger(debug, ProcessID, Logdir, settings, logFilePath)
 }
 
@@ -68,31 +68,31 @@ func BiReport(msg string) {
 }
 
 // Debug Debug
-func Debug(format string, a ...interface{}) {
+func Debug(format string, a ...any) {
 	//gLogger.doPrintf(debugLevel, printDebugLevel, format, a...)
 	LogBeego().Debug(nil, format, a...)
 }
 
 // Info Info
-func Info(format string, a ...interface{}) {
+func Info(format string, a ...any) {
 	//gLogger.doPrintf(releaseLevel, printReleaseLevel, format, a...)
 	LogBeego().Info(nil, format, a...)
 }
 
 // Error Error
-func Error(format string, a ...interface{}) {
+func Error(format string, a ...any) {
 	//gLogger.doPrintf(errorLevel, printErrorLevel, format, a...)
 	LogBeego().Error(nil, format, a...)
 }
 
 // Warning Warning
-func Warning(format string, a ...interface{}) {
+func Warning(format string, a ...any) {
 	//gLogger.doPrintf(fatalLevel, printFatalLevel, format, a...)
 	LogBeego().Warning(nil, format, a...)
 }
 
 // TDebug TDebug
-func TDebug(span TraceSpan, format string, a ...interface{}) {
+func TDebug(span TraceSpan, format string, a ...any) {
 	if span != nil {
 		LogBeego().Debug(
 			&beegolog.BeegoTraceSpan{
@@ -105,7 +105,7 @@ func TDebug(span TraceSpan, format string, a ...interface{}) {
 }
 
 // TInfo TInfo
-func TInfo(span TraceSpan, format string, a ...interface{}) {
+func TInfo(span TraceSpan, format string, a ...any) {
 	if span != nil {
 		LogBeego().Info(
 			&beegolog.BeegoTraceSpan{
@@ -118,7 +118,7 @@ func TInfo(span TraceSpan, format string, a ...interface{}) {
 }
 
 // TError TError
-func TError(span TraceSpan, format string, a ...interface{}) {
+func TError(span TraceSpan, format string, a ...any) {
 	if span != nil {
 		LogBeego().Error(
 			&beegolog.BeegoTraceSpan{
@@ -131,7 +131,7 @@ func TError(span TraceSpan, format string, a ...interface{}) {
 }
 
 // TWarning TWarning
-func TWarning(span TraceSpan, format string, a ...interface{}) {
+func TWarning(span TraceSpan, format string, a ...any) {
 	if span != nil {
 		LogBeego().Warning(
 			&beegolog.BeegoTraceSpan{

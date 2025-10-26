@@ -48,7 +48,7 @@ func onRPCFunc3(ctx context.Context, u *user, m map[string]string) (*out, error)
 }
 func TestBytes(t *testing.T) {
 	var c = context.Context(nil)
-	var i interface{} = c
+	var i any = c
 	if i == nil {
 		t.Log("i = nil")
 	}
@@ -63,7 +63,7 @@ func TestBytes(t *testing.T) {
 }
 
 // register
-func registerFun(id string, f interface{}) {
+func registerFun(id string, f any) {
 
 	if _, ok := functions[id]; ok {
 		panic(fmt.Sprintf("function id %v: already registered", id))
@@ -84,12 +84,12 @@ func registerFun(id string, f interface{}) {
 }
 
 // call
-func call(ctx context.Context, _func string, params ...interface{}) (interface{}, error) {
-	var argsType []string = make([]string, len(params))
+func call(ctx context.Context, _func string, params ...any) (any, error) {
+	var argTypes []string = make([]string, len(params))
 	var args [][]byte = make([][]byte, len(params))
 	for k, param := range params {
 		var err error = nil
-		argsType[k], args[k], err = Args2Bytes(param)
+		argTypes[k], args[k], err = ArgToData(param)
 		if err != nil {
 			return nil, fmt.Errorf("args[%d] error %s", k, err.Error())
 		}
@@ -110,7 +110,7 @@ func call(ctx context.Context, _func string, params ...interface{}) (interface{}
 		Expired:  *proto.Int64((start.UTC().Add(10 * time.Second).UnixNano()) / 1000000),
 		Cid:      *proto.String(correlation_id),
 		Args:     args,
-		ArgsType: argsType,
+		ArgsType: argTypes,
 		Caller:   *proto.String(caller),
 		Hostname: *proto.String(caller),
 	}
@@ -120,7 +120,7 @@ func call(ctx context.Context, _func string, params ...interface{}) (interface{}
 	}
 	_runFunc(callInfo)
 
-	result, err := Bytes2Args(callInfo.Result.ResultType, callInfo.Result.Result)
+	result, err := DataToArg(callInfo.Result.ResultType, callInfo.Result.Result)
 	if err != nil {
 		return nil, err
 	}
@@ -148,10 +148,10 @@ func _runFunc(callInfo *CallInfo) {
 	//time.Sleep(time.Second*time.Duration(t))
 	// f 为函数地址
 	var in []reflect.Value
-	var input []interface{}
+	var input []any
 	if len(ArgsType) > 0 {
 		in = make([]reflect.Value, len(params))
-		input = make([]interface{}, len(params))
+		input = make([]any, len(params))
 		for k, v := range ArgsType {
 			rv := fInType[k]
 
@@ -164,7 +164,7 @@ func _runFunc(callInfo *CallInfo) {
 				elemp = reflect.New(rv)
 			}
 
-			ret, err := Bytes2Args(v, params[k])
+			ret, err := DataToArg(v, params[k])
 			if err != nil {
 				panic(err)
 				return
@@ -214,12 +214,12 @@ func _runFunc(callInfo *CallInfo) {
 	}
 
 	out := f.Call(in)
-	var rs []interface{}
+	var rs []any
 	if len(out) != 2 {
-		panic(fmt.Sprintf("%s rpc func(%s) return error %s\n", "ModuleType", callInfo.RPCInfo.Fn, "func(....)(result interface{}, err error)"))
+		panic(fmt.Sprintf("%s rpc func(%s) return error %s\n", "ModuleType", callInfo.RPCInfo.Fn, "func(....)(result any, err error)"))
 	}
 	if len(out) > 0 { //prepare out paras
-		rs = make([]interface{}, len(out), len(out))
+		rs = make([]any, len(out), len(out))
 		for i, v := range out {
 			rs[i] = v.Interface()
 		}
@@ -235,9 +235,9 @@ func _runFunc(callInfo *CallInfo) {
 	case nil:
 		rerr = ""
 	default:
-		panic(fmt.Sprintf("%s rpc func(%s) return error %s\n", "ModuleType", callInfo.RPCInfo.Fn, "func(....)(result interface{}, err error)"))
+		panic(fmt.Sprintf("%s rpc func(%s) return error %s\n", "ModuleType", callInfo.RPCInfo.Fn, "func(....)(result any, err error)"))
 	}
-	argsType, args, err := Args2Bytes(rs[0])
+	argType, arg, err := ArgToData(rs[0])
 	if err != nil {
 		panic(err)
 	}
@@ -245,8 +245,8 @@ func _runFunc(callInfo *CallInfo) {
 	resultInfo := &rpcpb.ResultInfo{
 		Cid:        callInfo.RPCInfo.Cid,
 		Error:      rerr,
-		ResultType: argsType,
-		Result:     args,
+		ResultType: argType,
+		Result:     arg,
 	}
 	callInfo.Result = resultInfo
 }

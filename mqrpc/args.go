@@ -31,13 +31,12 @@ var (
 	NULL    = "null"    // nil   null
 	BOOL    = "bool"    // bool
 	INT     = "int"     // int
-	LONG    = "long"    // long64
+	LONG    = "long"    // int64
 	FLOAT   = "float"   // float32
 	DOUBLE  = "double"  // float64
 	BYTES   = "bytes"   // []byte
 	STRING  = "string"  // string
-	MAP     = "map"     // map[string]interface{}
-	MAPSTR  = "mapstr"  // map[string]string{}
+	JSMAP   = "map"     // map[string]any
 	TRACE   = "trace"   // log.TraceSpanImp
 	Context = "context" // context
 	MARSHAL = "marshal" // mqrpc.Marshaler
@@ -46,7 +45,7 @@ var (
 	GOB     = "gob"     // go gob(default struct)
 )
 
-func Args2Bytes(arg interface{}) (string, []byte, error) {
+func ArgToData(arg any) (string, []byte, error) {
 	if arg == nil {
 		return NULL, nil, nil
 	}
@@ -66,23 +65,15 @@ func Args2Bytes(arg interface{}) (string, []byte, error) {
 		return DOUBLE, tools.Float64ToBytes(v2), nil
 	case []byte:
 		return BYTES, v2, nil
-	case map[string]interface{}:
+	case map[string]any:
 		bytes, err := tools.MapToBytes(v2)
-		if err != nil {
-			return MAP, nil, err
-		}
-		return MAP, bytes, nil
-	case map[string]string:
-		bytes, err := tools.MapToBytesString(v2)
-		if err != nil {
-			return MAPSTR, nil, err
-		}
-		return MAPSTR, bytes, nil
+		return JSMAP, bytes, err
+
 	default:
 
 		// for context.Context with Specified types
 		if v2, ok := arg.(context.Context); ok {
-			maps := map[string]interface{}{} // 把支持trans的kv序列化到map中再编码进行传输
+			maps := map[string]any{} // 把支持trans的kv序列化到map中再编码进行传输
 			for k := range registedContextTransfer {
 				_v, _ok := v2.Value(k).(Marshaler)
 				if !_ok {
@@ -90,7 +81,7 @@ func Args2Bytes(arg interface{}) (string, []byte, error) {
 				}
 				b, err := _v.Marshal()
 				if err != nil {
-					return "", nil, fmt.Errorf("Args2Bytes args [%s] contextValues.marshal error %v", reflect.TypeOf(arg), err)
+					return "", nil, fmt.Errorf("ArgToData args [%s] contextValues.marshal error %v", reflect.TypeOf(arg), err)
 				}
 				maps[string(k)] = b
 			}
@@ -140,49 +131,43 @@ func Args2Bytes(arg interface{}) (string, []byte, error) {
 	}
 }
 
-func Bytes2Args(argsType string, args []byte) (interface{}, error) {
+func DataToArg(argType string, argData []byte) (any, error) {
 	switch {
-	case argsType == NULL:
+	case argType == NULL:
 		return nil, nil
-	case argsType == STRING:
-		return string(args), nil
-	case argsType == BOOL:
-		return tools.BytesToBool(args), nil
-	case argsType == INT:
-		return tools.BytesToInt32(args), nil
-	case argsType == LONG:
-		return tools.BytesToInt64(args), nil
-	case argsType == FLOAT:
-		return tools.BytesToFloat32(args), nil
-	case argsType == DOUBLE:
-		return tools.BytesToFloat64(args), nil
-	case argsType == BYTES:
-		return args, nil
-	case argsType == MAP:
-		mps, err := tools.BytesToMap(args)
+	case argType == STRING:
+		return string(argData), nil
+	case argType == BOOL:
+		return tools.BytesToBool(argData), nil
+	case argType == INT:
+		return tools.BytesToInt32(argData), nil
+	case argType == LONG:
+		return tools.BytesToInt64(argData), nil
+	case argType == FLOAT:
+		return tools.BytesToFloat32(argData), nil
+	case argType == DOUBLE:
+		return tools.BytesToFloat64(argData), nil
+	case argType == BYTES:
+		return argData, nil
+	case argType == JSMAP:
+		mps, err := tools.BytesToMap(argData)
 		if err != nil {
 			return nil, err
 		}
 		return mps, nil
-	case argsType == MAPSTR:
-		mps, err := tools.BytesToMapString(args)
-		if err != nil {
-			return nil, err
-		}
-		return mps, nil
-	case argsType == TRACE:
+	case argType == TRACE:
 		trace := &log.TraceSpanImp{}
-		err := json.Unmarshal(args, trace)
+		err := json.Unmarshal(argData, trace)
 		if err != nil {
 			return nil, err
 		}
 		return trace.ExtractSpan(), nil
-	case argsType == Context:
-		mps, err := tools.BytesToMap(args)
+	case argType == Context:
+		mps, err := tools.BytesToMap(argData)
 		if err != nil {
 			return nil, err
 		}
-		kvs := map[ContextTransKey]interface{}{}
+		kvs := map[ContextTransKey]any{}
 		for k, v := range mps {
 			makefun, ok := registedContextTransfer[ContextTransKey(k)]
 			if !ok {
@@ -195,14 +180,14 @@ func Bytes2Args(argsType string, args []byte) (interface{}, error) {
 			kvs[ContextTransKey(k)] = obj
 		}
 		return kvs, nil
-	case strings.HasPrefix(argsType, MARSHAL): // 不能直接解出对象
-		return args, nil
-	case strings.HasPrefix(argsType, PBPROTO): // 不能直接解出对象
-		return args, nil
-	case strings.HasPrefix(argsType, JSON): // 不能直接解出对象
-		return args, nil
-	case strings.HasPrefix(argsType, GOB): // 不能直接解出对象
-		return args, nil
+	case strings.HasPrefix(argType, MARSHAL): // 不能直接解出对象
+		return argData, nil
+	case strings.HasPrefix(argType, PBPROTO): // 不能直接解出对象
+		return argData, nil
+	case strings.HasPrefix(argType, JSON): // 不能直接解出对象
+		return argData, nil
+	case strings.HasPrefix(argType, GOB): // 不能直接解出对象
+		return argData, nil
 	}
-	return nil, fmt.Errorf("Bytes2Args [%s] unsupported argsType", argsType)
+	return nil, fmt.Errorf("DataToArg [%s] unsupported argType", argType)
 }

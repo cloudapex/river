@@ -27,7 +27,7 @@ func (f *Field) Tag(key string) string {
 
 // Value returns the underlying value of the field. It panics if the field
 // is not exported.
-func (f *Field) Value() interface{} {
+func (f *Field) Value() any {
 	return f.value.Interface()
 }
 
@@ -63,7 +63,7 @@ func (f *Field) Kind() reflect.Kind {
 // Set sets the field to given value v. It returns an error if the field is not
 // settable (not addressable or not exported) or if the given value's type
 // doesn't match the fields type.
-func (f *Field) Set(val interface{}) error {
+func (f *Field) Set(val any) error {
 	// we can't set unexported fields, so be sure this field is exported
 	if !f.IsExported() {
 		return errNotExported
@@ -95,8 +95,8 @@ func (f *Field) Zero() error {
 // of a nested struct . A struct tag with the content of "-" ignores the
 // checking of that particular field. Example:
 //
-//   // Field is ignored by this package.
-//   Field *http.Request `structs:"-"`
+//	// Field is ignored by this package.
+//	Field *http.Request `structs:"-"`
 //
 // It panics if field is not exported or if field's kind is not struct
 func (f *Field) Fields() []*Field {

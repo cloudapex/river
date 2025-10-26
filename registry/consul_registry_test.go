@@ -18,7 +18,7 @@ type mockRegistry struct {
 	url    string
 }
 
-func encodeData(obj interface{}) ([]byte, error) {
+func encodeData(obj any) ([]byte, error) {
 	buf := bytes.NewBuffer(nil)
 	enc := json.NewEncoder(buf)
 	if err := enc.Encode(obj); err != nil {

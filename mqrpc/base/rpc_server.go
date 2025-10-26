@@ -81,7 +81,7 @@ func (s *RPCServer) GetExecuting() int64 {
 }
 
 // you must call the function before calling Open and Go
-func (s *RPCServer) Register(id string, f interface{}) {
+func (s *RPCServer) Register(id string, f any) {
 
 	if _, ok := s.functions[id]; ok {
 		panic(fmt.Sprintf("function id %v: already registered", id))
@@ -102,7 +102,7 @@ func (s *RPCServer) Register(id string, f interface{}) {
 }
 
 // you must call the function before calling Open and Go
-func (s *RPCServer) RegisterGO(id string, f interface{}) {
+func (s *RPCServer) RegisterGO(id string, f any) {
 
 	if _, ok := s.functions[id]; ok {
 		panic(fmt.Sprintf("function id %v: already registered", id))
@@ -244,10 +244,10 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 	traceSpan := (log.TraceSpan)(nil)
 	// f 为函数地址
 	var in []reflect.Value
-	var input []interface{}
+	var input []any
 	if len(ArgsType) > 0 {
 		in = make([]reflect.Value, len(params))
-		input = make([]interface{}, len(params))
+		input = make([]any, len(params))
 		for k, v := range ArgsType {
 			rv := fInType[k]
 
@@ -260,7 +260,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 				elemp = reflect.New(rv)
 			}
 
-			ret, err := mqrpc.Bytes2Args(v, params[k])
+			ret, err := mqrpc.DataToArg(v, params[k])
 			if err != nil {
 				s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, err.Error())
 				return
@@ -269,7 +269,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 			switch {
 			case strings.HasPrefix(v, mqrpc.Context):
 				ctx := context.Background()
-				if kvs, ok := ret.(map[mqrpc.ContextTransKey]interface{}); ok {
+				if kvs, ok := ret.(map[mqrpc.ContextTransKey]any); ok {
 					for k, v := range kvs {
 						_v := v
 						if needSet, ok := v.(app.ICtxTransSetApp); ok {
@@ -344,13 +344,13 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 	}
 
 	out := f.Call(in)
-	var rs []interface{}
+	var rs []any
 	if len(out) != 2 {
-		s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, fmt.Sprintf("%s rpc func(%s) return error %s\n", s.module.GetType(), callInfo.RPCInfo.Fn, "func(....)(result interface{}, err error)"))
+		s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, fmt.Sprintf("%s rpc func(%s) return error %s\n", s.module.GetType(), callInfo.RPCInfo.Fn, "func(....)(result any, err error)"))
 		return
 	}
 	if len(out) > 0 { //prepare out paras
-		rs = make([]interface{}, len(out), len(out))
+		rs = make([]any, len(out), len(out))
 		for i, v := range out {
 			rs[i] = v.Interface()
 		}
@@ -368,10 +368,10 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 	case nil:
 		rerr = ""
 	default:
-		s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, fmt.Sprintf("%s rpc func(%s) return error %s\n", s.module.GetType(), callInfo.RPCInfo.Fn, "func(....)(result interface{}, err error)"))
+		s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, fmt.Sprintf("%s rpc func(%s) return error %s\n", s.module.GetType(), callInfo.RPCInfo.Fn, "func(....)(result any, err error)"))
 		return
 	}
-	argsType, args, err := mqrpc.Args2Bytes(rs[0])
+	argType, argData, err := mqrpc.ArgToData(rs[0])
 	if err != nil {
 		s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, err.Error())
 		return
@@ -380,8 +380,8 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 	resultInfo := &rpcpb.ResultInfo{
 		Cid:        callInfo.RPCInfo.Cid,
 		Error:      rerr,
-		ResultType: argsType,
-		Result:     args,
+		ResultType: argType,
+		Result:     argData,
 	}
 	callInfo.Result = resultInfo
 	callInfo.ExecTime = time.Since(start).Nanoseconds()

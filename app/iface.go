@@ -53,11 +53,11 @@ type IApp interface {
 	GetServersByType(serviceName string) []IServerSession
 
 	// Call RPC调用(需要等待结果)
-	Call(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (interface{}, error)
+	Call(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (any, error)
 	// Call RPC调用(无需等待结果)
-	CallNR(ctx context.Context, moduleType, _func string, params ...interface{}) error
+	CallNR(ctx context.Context, moduleType, _func string, params ...any) error
 	// Call RPC调用(群发,无需等待结果)
-	CallBroadcast(ctx context.Context, moduleName, _func string, params ...interface{})
+	CallBroadcast(ctx context.Context, moduleName, _func string, params ...any)
 
 	// 回调(hook)
 	OnConfigurationLoaded(func()) error                             // 设置应用启动配置初始化完成后回调
@@ -98,9 +98,9 @@ type IRPCModule interface {
 	// 通过服务类型(moduleType)获取服务实例(可设置选择器)
 	GetServerBySelector(serviceName string, opts ...selector.SelectOption) (IServerSession, error)
 
-	Call(ctx context.Context, moduleType, _func string, params mqrpc.ParamOption, opts ...selector.SelectOption) (interface{}, error)
-	CallNR(ctx context.Context, moduleType, _func string, params ...interface{}) error
-	CallBroadcast(ctx context.Context, moduleName, _func string, params ...interface{})
+	Call(ctx context.Context, moduleType, _func string, params mqrpc.ParamOption, opts ...selector.SelectOption) (any, error)
+	CallNR(ctx context.Context, moduleType, _func string, params ...any) error
+	CallBroadcast(ctx context.Context, moduleName, _func string, params ...any)
 }
 
 // IServerSession 服务代理
@@ -112,10 +112,10 @@ type IServerSession interface {
 	GetNode() *registry.Node
 	SetNode(node *registry.Node) (err error)
 
-	Call(ctx context.Context, _func string, params ...interface{}) (interface{}, error)                // 等待返回结果
-	CallArgs(ctx context.Context, _func string, argsType []string, args [][]byte) (interface{}, error) // 内部使用(ctx参数必须装进args中)
-	CallNR(ctx context.Context, _func string, params ...interface{}) (err error)                       // 无需等待结果
-	CallNRArgs(ctx context.Context, _func string, argsType []string, args [][]byte) (err error)        // 内部使用(ctx参数必须装进args中)
+	Call(ctx context.Context, _func string, params ...any) (any, error)                             // 等待返回结果
+	CallArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (any, error)  // 内部使用(ctx参数必须装进args中)
+	CallNR(ctx context.Context, _func string, params ...any) (err error)                            // 无需等待结果
+	CallNRArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (err error) // 内部使用(ctx参数必须装进args中)
 }
 
 // RPC传输时Context中的数据可能会需要赋值跨服务的app(为什么会有这个接口,会循环import)
@@ -127,10 +127,10 @@ type ICtxTransSetApp interface {
 type FileNameHandler func(logdir, prefix, processID, suffix string) string
 
 // ClientRPCHandler 调用方RPC监控
-type ClientRPCHandler func(server registry.Node, rpcinfo *rpcpb.RPCInfo, result interface{}, err error, exec_time int64)
+type ClientRPCHandler func(server registry.Node, rpcinfo *rpcpb.RPCInfo, result any, err error, exec_time int64)
 
 // ServerRPCHandler 服务方RPC监控
 type ServerRPCHandler func(module IModule, callInfo *mqrpc.CallInfo)
 
 // ServerRPCHandler 服务方RPC监控
-type RpcCompleteHandler func(module IModule, callInfo *mqrpc.CallInfo, input []interface{}, out []interface{}, execTime time.Duration)
+type RpcCompleteHandler func(module IModule, callInfo *mqrpc.CallInfo, input []any, out []any, execTime time.Duration)

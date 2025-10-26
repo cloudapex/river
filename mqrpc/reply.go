@@ -16,12 +16,12 @@ import (
 var ErrNil = errors.New("mqrpc: nil returned")
 
 type callResult struct {
-	Reply interface{}
+	Reply any
 	Error error
 }
 
 // 拼装CallResult
-func RpcResult(reply interface{}, err error) callResult {
+func RpcResult(reply any, err error) callResult {
 	return callResult{
 		Reply: reply,
 		Error: err,
@@ -29,7 +29,7 @@ func RpcResult(reply interface{}, err error) callResult {
 }
 
 // Int Int
-func Int(reply interface{}, err error) (int, error) {
+func Int(reply any, err error) (int, error) {
 	if err != nil {
 		return 0, err
 	}
@@ -56,7 +56,7 @@ func Int(reply interface{}, err error) (int, error) {
 //	bulk string   parsed reply, nil
 //	nil           0, ErrNil
 //	other         0, error
-func Int64(reply interface{}, err error) (int64, error) {
+func Int64(reply any, err error) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
@@ -78,7 +78,7 @@ func Int64(reply interface{}, err error) (int64, error) {
 //	bulk string   parsed reply, nil
 //	nil           0, ErrNil
 //	other         0, error
-func Float64(reply interface{}, err error) (float64, error) {
+func Float64(reply any, err error) (float64, error) {
 	if err != nil {
 		return 0, err
 	}
@@ -101,7 +101,7 @@ func Float64(reply interface{}, err error) (float64, error) {
 //	simple string   reply, nil
 //	nil             "",  ErrNil
 //	other           "",  error
-func String(reply interface{}, err error) (string, error) {
+func String(reply any, err error) (string, error) {
 	if err != nil {
 		return "", err
 	}
@@ -124,7 +124,7 @@ func String(reply interface{}, err error) (string, error) {
 //	simple string   []byte(reply), nil
 //	nil             nil, ErrNil
 //	other           nil, error
-func Bytes(reply interface{}, err error) ([]byte, error) {
+func Bytes(reply any, err error) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func Bytes(reply interface{}, err error) ([]byte, error) {
 	return nil, fmt.Errorf("mqrpc: unexpected type for Bytes, got type %T", reply)
 }
 
-func Bool(reply interface{}, err error) (bool, error) {
+func Bool(reply any, err error) (bool, error) {
 	if err != nil {
 		return false, err
 	}
@@ -154,7 +154,7 @@ func Bool(reply interface{}, err error) (bool, error) {
 // StringMap is a helper that converts an array of strings (alternating key, value)
 // into a map[string]string. The HGETALL and CONFIG GET commands return replies in this format.
 // Requires an even number of values in result.
-func StringMap(reply interface{}, err error) (map[string]string, error) {
+func StringMap(reply any, err error) (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
@@ -169,13 +169,13 @@ func StringMap(reply interface{}, err error) (map[string]string, error) {
 }
 
 // InterfaceMap InterfaceMap
-func InterfaceMap(reply interface{}, err error) (map[string]interface{}, error) {
+func InterfaceMap(reply any, err error) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
 
 	switch reply := reply.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		return reply, nil
 	case nil:
 		return nil, ErrNil
@@ -184,7 +184,7 @@ func InterfaceMap(reply interface{}, err error) (map[string]interface{}, error) 
 }
 
 // Marshal Marshal
-func Marshal(pObj interface{}, ret callResult) error {
+func Marshal(pObj any, ret callResult) error {
 	if ret.Error != nil {
 		return ret.Error
 	}
@@ -212,7 +212,7 @@ func Marshal(pObj interface{}, ret callResult) error {
 }
 
 // Proto Proto
-func Proto(pObj interface{}, ret callResult) error {
+func Proto(pObj any, ret callResult) error {
 	if ret.Error != nil {
 		return ret.Error
 	}
@@ -239,7 +239,7 @@ func Proto(pObj interface{}, ret callResult) error {
 }
 
 // Json Json
-func Json(pObj interface{}, ret callResult) error {
+func Json(pObj any, ret callResult) error {
 	if ret.Error != nil {
 		return ret.Error
 	}
@@ -263,7 +263,7 @@ func Json(pObj interface{}, ret callResult) error {
 }
 
 // Gob Gob
-func Gob(pObj interface{}, ret callResult) error {
+func Gob(pObj any, ret callResult) error {
 	if ret.Error != nil {
 		return ret.Error
 	}

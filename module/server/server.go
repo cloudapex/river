@@ -66,14 +66,14 @@ func (s *server) OnDestroy() error {
 }
 func (s *server) SetListener(listener mqrpc.RPCListener) { s.server.SetListener(listener) }
 
-func (s *server) Register(id string, f interface{}) {
+func (s *server) Register(id string, f any) {
 	if s.server == nil {
 		panic("invalid RPCServer")
 	}
 	s.server.Register(id, f)
 }
 
-func (s *server) RegisterGO(id string, f interface{}) {
+func (s *server) RegisterGO(id string, f any) {
 	if s.server == nil {
 		panic("invalid RPCServer")
 	}

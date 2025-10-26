@@ -30,7 +30,7 @@ type FSelector func(session gate.ISession, topic string, u *url.URL) (s app.ISer
 // FDataParsing 指定数据解析函数
 // 返回值如bean！=nil err==nil则会向后端模块传入 func(session,bean)(result, error)
 // 否则使用json或[]byte传参
-type FDataParsing func(topic string, u *url.URL, msg []byte) (bean interface{}, err error)
+type FDataParsing func(topic string, u *url.URL, msg []byte) (bean any, err error)
 
 // Option Option
 type Option func(*URIRoute)
@@ -77,14 +77,14 @@ type URIRoute struct {
 }
 
 // OnRoute OnRoute
-func (u *URIRoute) OnRoute(session gate.ISession, topic string, msg []byte) (bool, interface{}, error) {
+func (u *URIRoute) OnRoute(session gate.ISession, topic string, msg []byte) (bool, any, error) {
 	needreturn := true
 	uu, err := url.Parse(topic)
 	if err != nil {
 		return needreturn, nil, errors.Errorf("topic is not uri %v", err.Error())
 	}
-	var argsType []string = nil
-	var args [][]byte = nil
+	var argTypes []string = nil
+	var argDatas [][]byte = nil
 
 	_func := uu.Path
 	m, err := url.ParseQuery(uu.RawQuery)
@@ -94,8 +94,8 @@ func (u *URIRoute) OnRoute(session gate.ISession, topic string, msg []byte) (boo
 	if _, ok := m["msg_id"]; !ok {
 		needreturn = false
 	}
-	argsType = make([]string, 2)
-	args = make([][]byte, 2)
+	argTypes = make([]string, 2)
+	argDatas = make([][]byte, 2)
 	session.SetTopic(topic)
 	var serverSession app.IServerSession
 	if u.Selector != nil {
@@ -148,42 +148,42 @@ func (u *URIRoute) OnRoute(session gate.ISession, topic string, msg []byte) (boo
 	//默认参数
 	if len(msg) > 0 && msg[0] == '{' && msg[len(msg)-1] == '}' {
 		//尝试解析为json为map
-		var obj interface{} // var obj map[string]interface{}
+		var obj any // var obj map[string]any
 		err := json.Unmarshal(msg, &obj)
 		if err != nil {
 			return needreturn, nil, errors.Errorf("The JSON format is incorrect %v", err)
 		}
-		argsType[1] = mqrpc.MAP
-		args[1] = msg
+		argTypes[1] = mqrpc.JSMAP
+		argDatas[1] = msg
 	} else {
-		argsType[1] = mqrpc.BYTES
-		args[1] = msg
+		argTypes[1] = mqrpc.BYTES
+		argDatas[1] = msg
 	}
 	s := session.Clone()
 	s.SetTopic(topic)
 	if needreturn {
-		argsType[0] = RPCParamSessionType
+		argTypes[0] = RPCParamSessionType
 		b, err := s.Marshal()
 		if err != nil {
 			return needreturn, nil, err
 		}
-		args[0] = b
+		argDatas[0] = b
 		ctx, _ := context.WithTimeout(context.TODO(), u.CallTimeOut)
-		result, e := serverSession.CallArgs(ctx, _func, argsType, args)
+		result, e := serverSession.CallArgs(ctx, _func, argTypes, argDatas)
 		if e != nil {
 			return needreturn, result, e
 		}
 		return needreturn, result, nil
 	}
 
-	argsType[0] = RPCParamSessionType
+	argTypes[0] = RPCParamSessionType
 	b, err := s.Marshal()
 	if err != nil {
 		return needreturn, nil, err
 	}
-	args[0] = b
+	argDatas[0] = b
 
-	e := serverSession.CallNRArgs(context.TODO(), _func, argsType, args)
+	e := serverSession.CallNRArgs(context.TODO(), _func, argTypes, argDatas)
 	if e != nil {
 		log.Warning("Gate rpc", e.Error())
 		return needreturn, nil, e

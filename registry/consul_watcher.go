@@ -36,7 +36,7 @@ func newConsulWatcher(cr *consulRegistry, opts ...WatchOption) (Watcher, error) 
 		services: make(map[string][]*Service),
 	}
 
-	wp, err := watch.Parse(map[string]interface{}{"type": "services"})
+	wp, err := watch.Parse(map[string]any{"type": "services"})
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func newConsulWatcher(cr *consulRegistry, opts ...WatchOption) (Watcher, error) 
 	return cw, nil
 }
 
-func (cw *consulWatcher) serviceHandler(idx uint64, data interface{}) {
+func (cw *consulWatcher) serviceHandler(idx uint64, data any) {
 	entries, ok := data.([]*api.ServiceEntry)
 	if !ok {
 		return
@@ -184,7 +184,7 @@ func (cw *consulWatcher) serviceHandler(idx uint64, data interface{}) {
 	cw.Unlock()
 }
 
-func (cw *consulWatcher) handle(idx uint64, data interface{}) {
+func (cw *consulWatcher) handle(idx uint64, data any) {
 	services, ok := data.(map[string][]string)
 	if !ok {
 		return
@@ -201,7 +201,7 @@ func (cw *consulWatcher) handle(idx uint64, data interface{}) {
 		if _, ok := cw.watchers[service]; ok {
 			continue
 		}
-		wp, err := watch.Parse(map[string]interface{}{
+		wp, err := watch.Parse(map[string]any{
 			"type":    "service",
 			"service": service,
 		})

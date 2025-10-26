@@ -15,7 +15,7 @@ func RandInt64(min, max int64) int64 {
 }
 
 // catch panic
-func Catch(panicRet interface{}) error {
+func Catch(panicRet any) error {
 	if panicRet == nil {
 		return nil
 	}

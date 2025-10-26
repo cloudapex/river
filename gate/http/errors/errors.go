@@ -43,7 +43,7 @@ func Parse(err string) *Error {
 }
 
 // BadRequest generates a 400 error.
-func BadRequest(id, format string, a ...interface{}) error {
+func BadRequest(id, format string, a ...any) error {
 	return &Error{
 		Id:     id,
 		Code:   400,
@@ -53,7 +53,7 @@ func BadRequest(id, format string, a ...interface{}) error {
 }
 
 // Unauthorized generates a 401 error.
-func Unauthorized(id, format string, a ...interface{}) error {
+func Unauthorized(id, format string, a ...any) error {
 	return &Error{
 		Id:     id,
 		Code:   401,
@@ -63,7 +63,7 @@ func Unauthorized(id, format string, a ...interface{}) error {
 }
 
 // Forbidden generates a 403 error.
-func Forbidden(id, format string, a ...interface{}) error {
+func Forbidden(id, format string, a ...any) error {
 	return &Error{
 		Id:     id,
 		Code:   403,
@@ -73,7 +73,7 @@ func Forbidden(id, format string, a ...interface{}) error {
 }
 
 // NotFound generates a 404 error.
-func NotFound(id, format string, a ...interface{}) error {
+func NotFound(id, format string, a ...any) error {
 	return &Error{
 		Id:     id,
 		Code:   404,
@@ -83,7 +83,7 @@ func NotFound(id, format string, a ...interface{}) error {
 }
 
 // MethodNotAllowed generates a 405 error.
-func MethodNotAllowed(id, format string, a ...interface{}) error {
+func MethodNotAllowed(id, format string, a ...any) error {
 	return &Error{
 		Id:     id,
 		Code:   405,
@@ -93,7 +93,7 @@ func MethodNotAllowed(id, format string, a ...interface{}) error {
 }
 
 // Timeout generates a 408 error.
-func Timeout(id, format string, a ...interface{}) error {
+func Timeout(id, format string, a ...any) error {
 	return &Error{
 		Id:     id,
 		Code:   408,
@@ -103,7 +103,7 @@ func Timeout(id, format string, a ...interface{}) error {
 }
 
 // Conflict generates a 409 error.
-func Conflict(id, format string, a ...interface{}) error {
+func Conflict(id, format string, a ...any) error {
 	return &Error{
 		Id:     id,
 		Code:   409,
@@ -113,7 +113,7 @@ func Conflict(id, format string, a ...interface{}) error {
 }
 
 // InternalServerError generates a 500 error.
-func InternalServerError(id, format string, a ...interface{}) error {
+func InternalServerError(id, format string, a ...any) error {
 	return &Error{
 		Id:     id,
 		Code:   500,

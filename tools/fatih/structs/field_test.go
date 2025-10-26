@@ -14,7 +14,7 @@ type Foo struct {
 	E    *Baz
 	x    string `xml:"x"` // not exported, with tag
 	Y    []string
-	Z    map[string]interface{}
+	Z    map[string]any
 	*Bar // embedded
 }
 

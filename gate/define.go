@@ -112,9 +112,9 @@ type ISession interface {
 	SetServerID(serverId string)
 
 	// 网关本地的额外数据,不会再rpc中传递
-	GetLocalUserData() interface{}
+	GetLocalUserData() any
 	// 网关本地的额外数据,不会再rpc中传递
-	SetLocalUserData(data interface{})
+	SetLocalUserData(data any)
 
 	// --------------- Setting区(线程安全)
 

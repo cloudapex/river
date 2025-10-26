@@ -60,7 +60,7 @@ im模块中topic被限定为标准的URI格式
 
             type HttpResponse struct {
                 Header			http.Header
-                Body			interface{}
+                Body			any
                 Err				error
                 StatusCode    	int
             }

@@ -404,7 +404,7 @@ func file_api_proto_rawDescGZIP() []byte {
 }
 
 var file_api_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
-var file_api_proto_goTypes = []interface{}{
+var file_api_proto_goTypes = []any{
 	(*Pair)(nil),     // 0: go.api.Pair
 	(*Request)(nil),  // 1: go.api.Request
 	(*Response)(nil), // 2: go.api.Response
@@ -439,7 +439,7 @@ func file_api_proto_init() {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_api_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_api_proto_msgTypes[0].Exporter = func(v any, i int) any {
 			switch v := v.(*Pair); i {
 			case 0:
 				return &v.state
@@ -451,7 +451,7 @@ func file_api_proto_init() {
 				return nil
 			}
 		}
-		file_api_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_api_proto_msgTypes[1].Exporter = func(v any, i int) any {
 			switch v := v.(*Request); i {
 			case 0:
 				return &v.state
@@ -463,7 +463,7 @@ func file_api_proto_init() {
 				return nil
 			}
 		}
-		file_api_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_api_proto_msgTypes[2].Exporter = func(v any, i int) any {
 			switch v := v.(*Response); i {
 			case 0:
 				return &v.state
@@ -475,7 +475,7 @@ func file_api_proto_init() {
 				return nil
 			}
 		}
-		file_api_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+		file_api_proto_msgTypes[3].Exporter = func(v any, i int) any {
 			switch v := v.(*Event); i {
 			case 0:
 				return &v.state

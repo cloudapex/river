@@ -90,7 +90,7 @@ func (this *agentBase) Run() (err error) {
 	}()
 
 	addr := this.conn.RemoteAddr()
-	this.session, err = NewSessionByMap(map[string]interface{}{
+	this.session, err = NewSessionByMap(map[string]any{
 		"IP":        addr.String(),
 		"Network":   addr.Network(),
 		"SessionId": tools.GenerateID().String(),

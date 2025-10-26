@@ -31,7 +31,7 @@ func (s *DingtalkWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > s.Level {
 		return nil
 	}
-	dingtalk := map[string]interface{}{
+	dingtalk := map[string]any{
 		"msgtype": "text",
 		"text": map[string]string{
 			"content": fmt.Sprintf("%s %s", when.Format("2006-01-02 15:04:05"), msg),
