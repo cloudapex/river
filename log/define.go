@@ -8,6 +8,9 @@ import (
 	"github.com/cloudapex/river/tools"
 )
 
+// 定义需要RPC传输session的ContextKey
+const CONTEXT_TRANSKEY_TRACE = "trace"
+
 // TraceSpan A SpanID refers to a single span.
 type TraceSpan interface {
 

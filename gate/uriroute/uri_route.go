@@ -14,12 +14,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// RPCParamSessionType gate.session 类型
-var RPCParamSessionType = "SESSION"
-
-// RPCParamProtocolMarshalType ProtocolMarshal类型
-var RPCParamProtocolMarshalType = "ProtocolMarshal"
-
 // FSelector 服务节点选择函数，可以自定义服务筛选规则
 // 如不指定,默认使用 Scheme作为moduleType,Hostname作为服务节点nodeId
 // 如随机到服务节点Hostname可以用modulus,cache,random等通用规则
@@ -127,7 +121,8 @@ func (u *URIRoute) OnRoute(session gate.ISession, topic string, msg []byte) (boo
 		bean, err := u.DataParsing(topic, uu, msg)
 		if err == nil && bean != nil {
 			if needreturn {
-				ctx, _ := context.WithTimeout(context.TODO(), u.CallTimeOut)
+				ctx, cancel := context.WithTimeout(context.TODO(), u.CallTimeOut)
+				defer cancel()
 				result, e := serverSession.Call(ctx, _func, session, bean)
 				if e != nil {
 					return needreturn, result, e
@@ -145,7 +140,7 @@ func (u *URIRoute) OnRoute(session gate.ISession, topic string, msg []byte) (boo
 		}
 	}
 
-	//默认参数
+	// 默认参数
 	if len(msg) > 0 && msg[0] == '{' && msg[len(msg)-1] == '}' {
 		//尝试解析为json为map
 		var obj any // var obj map[string]any
@@ -161,14 +156,17 @@ func (u *URIRoute) OnRoute(session gate.ISession, topic string, msg []byte) (boo
 	}
 	s := session.Clone()
 	s.SetTopic(topic)
+
+	ctx := context.Background()
+	ctx = mqrpc.ContextWithValue(ctx, gate.CONTEXT_TRANSKEY_SESSION, s)
+	ctx = mqrpc.ContextWithValue(ctx, log.CONTEXT_TRANSKEY_TRACE, session.GetTraceSpan())
+	argTypes[0], argDatas[0], err = mqrpc.ArgToData(ctx)
+	if err != nil {
+		return needreturn, nil, err
+	}
 	if needreturn {
-		argTypes[0] = RPCParamSessionType
-		b, err := s.Marshal()
-		if err != nil {
-			return needreturn, nil, err
-		}
-		argDatas[0] = b
-		ctx, _ := context.WithTimeout(context.TODO(), u.CallTimeOut)
+		ctx, cancel := context.WithTimeout(ctx, u.CallTimeOut)
+		defer cancel()
 		result, e := serverSession.CallArgs(ctx, _func, argTypes, argDatas)
 		if e != nil {
 			return needreturn, result, e
@@ -176,14 +174,7 @@ func (u *URIRoute) OnRoute(session gate.ISession, topic string, msg []byte) (boo
 		return needreturn, result, nil
 	}
 
-	argTypes[0] = RPCParamSessionType
-	b, err := s.Marshal()
-	if err != nil {
-		return needreturn, nil, err
-	}
-	argDatas[0] = b
-
-	e := serverSession.CallNRArgs(context.TODO(), _func, argTypes, argDatas)
+	e := serverSession.CallNRArgs(ctx, _func, argTypes, argDatas)
 	if e != nil {
 		log.Warning("Gate rpc", e.Error())
 		return needreturn, nil, e

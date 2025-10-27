@@ -38,7 +38,7 @@ func (a *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	rsp := &go_api.Response{}
 	ctx, _ := context.WithTimeout(context.TODO(), a.Opts.TimeOut)
-	if err = mqrpc.Proto(rsp, mqrpc.RpcResult(server.SrvSession.Call(ctx, server.Hander, request))); err != nil {
+	if err = mqrpc.MsgPack(rsp, mqrpc.RpcResult(server.SrvSession.Call(ctx, server.Hander, request))); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		ce := errors.Parse(err.Error())
 		switch ce.Code {

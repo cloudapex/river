@@ -14,7 +14,6 @@
 package rpcbase
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"runtime"
@@ -267,22 +266,14 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 			}
 
 			switch {
-			case strings.HasPrefix(v, mqrpc.Context):
-				ctx := context.Background()
-				if kvs, ok := ret.(map[mqrpc.ContextTransKey]any); ok {
-					for k, v := range kvs {
-						_v := v
-						if needSet, ok := v.(app.ICtxTransSetApp); ok {
-							needSet.SetApp(app.App())
-						}
-						if traceSpan, ok := v.(log.TraceSpan); ok {
-							traceSpan = traceSpan.ExtractSpan()
-							_v = traceSpan //
-						}
-						ctx = context.WithValue(ctx, k, _v)
-					}
+			default: // 基本类型直接赋值
+				switch ret.(type) {
+				case nil:
+					in[k] = reflect.Zero(rv)
+				default:
+					in[k] = reflect.ValueOf(ret)
 				}
-				in[k] = reflect.ValueOf(ctx)
+
 			case strings.HasPrefix(v, mqrpc.MARSHAL):
 				if err := mqrpc.Marshal(elemp.Interface(), mqrpc.RpcResult(ret, nil)); err != nil {
 					s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, err.Error())
@@ -293,8 +284,9 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 				} else {
 					in[k] = elemp.Elem() // 接收 值变量
 				}
-			case strings.HasPrefix(v, mqrpc.PBPROTO):
-				if err := mqrpc.Proto(elemp.Interface(), mqrpc.RpcResult(ret, nil)); err != nil {
+
+			case strings.HasPrefix(v, mqrpc.MSGPACK):
+				if err := mqrpc.MsgPack(elemp.Interface(), mqrpc.RpcResult(ret, nil)); err != nil {
 					s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, err.Error())
 					return
 				}
@@ -302,33 +294,6 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 					in[k] = reflect.ValueOf(elemp.Interface()) //接收 指针变量
 				} else {
 					in[k] = elemp.Elem() // 接收 值变量
-				}
-			case strings.HasPrefix(v, mqrpc.JSON):
-				if err := mqrpc.Json(elemp.Interface(), mqrpc.RpcResult(ret, nil)); err != nil {
-					s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, err.Error())
-					return
-				}
-				if isPtr {
-					in[k] = reflect.ValueOf(elemp.Interface()) //接收 指针变量
-				} else {
-					in[k] = elemp.Elem() // 接收 值变量
-				}
-			case strings.HasPrefix(v, mqrpc.GOB):
-				if err := mqrpc.Gob(elemp.Interface(), mqrpc.RpcResult(ret, nil)); err != nil {
-					s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, err.Error())
-					return
-				}
-				if isPtr {
-					in[k] = reflect.ValueOf(elemp.Interface()) //接收 指针变量
-				} else {
-					in[k] = elemp.Elem() // 接收 值变量
-				}
-			default: // 其他的当做基本类型赋值
-				switch ret.(type) {
-				case nil:
-					in[k] = reflect.Zero(rv)
-				default:
-					in[k] = reflect.ValueOf(ret)
 				}
 			}
 			input[k] = in[k].Interface()

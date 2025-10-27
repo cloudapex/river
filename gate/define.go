@@ -17,15 +17,9 @@ const (
 
 	PACK_HEAD_TOTAL_LEN_SIZE  = 2 // 包头中这几个字节存放总pack的长度值
 	PACK_HEAD_MSG_ID_LEN_SIZE = 2 // 包头中这几个字节存放msgId的长度值
+
+	CONTEXT_TRANSKEY_SESSION = "session" // 定义需要RPC传输session的ContextKey
 )
-
-// 定义需要RPC传输session的ContextKey
-var ContextTransSession = mqrpc.ContextTransKey("ContextTransSession")
-
-// ContextTransSession快捷WithValue方法
-func ContextWithSession(ctx context.Context, session ISession) context.Context {
-	return context.WithValue(ctx, ContextTransSession, session)
-}
 
 // Pack 消息包
 type Pack struct {

@@ -14,21 +14,17 @@
 package mqrpc
 
 import (
-	"bytes"
 	"context"
-	"encoding/gob"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
 
-	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/tools"
-	"google.golang.org/protobuf/proto"
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 var (
-	NULL    = "null"    // nil   null
+	NULL    = "null"    // nil null
 	BOOL    = "bool"    // bool
 	INT     = "int"     // int
 	LONG    = "long"    // int64
@@ -37,12 +33,9 @@ var (
 	BYTES   = "bytes"   // []byte
 	STRING  = "string"  // string
 	JSMAP   = "map"     // map[string]any
-	TRACE   = "trace"   // log.TraceSpanImp
-	Context = "context" // context
+	CONTEXT = "context" // context
 	MARSHAL = "marshal" // mqrpc.Marshaler
-	PBPROTO = "pbproto" // proto.Message
-	JSON    = "json"    // json.Marshaler(只适用于反序列)
-	GOB     = "gob"     // go gob(default struct)
+	MSGPACK = "msgpack" // msgpack
 )
 
 func ArgToData(arg any) (string, []byte, error) {
@@ -68,40 +61,40 @@ func ArgToData(arg any) (string, []byte, error) {
 	case map[string]any:
 		bytes, err := tools.MapToBytes(v2)
 		return JSMAP, bytes, err
+	case context.Context:
+		maps := map[string]any{} // 把支持trans的kv序列化到map中再编码进行传输
+		for k := range getTransContextKeys() {
+			v := v2.Value(k)
+			if v == nil {
+				continue
+			}
 
-	default:
-
-		// for context.Context with Specified types
-		if v2, ok := arg.(context.Context); ok {
-			maps := map[string]any{} // 把支持trans的kv序列化到map中再编码进行传输
-			for k := range registedContextTransfer {
-				_v, _ok := v2.Value(k).(Marshaler)
-				if !_ok {
-					continue
-				}
+			// can Marshaler value
+			_v, _ok := v.(Marshaler)
+			if _ok {
 				b, err := _v.Marshal()
 				if err != nil {
 					return "", nil, fmt.Errorf("ArgToData args [%s] contextValues.marshal error %v", reflect.TypeOf(arg), err)
 				}
 				maps[string(k)] = b
+			} else { // basic value
+				maps[string(k)] = v
 			}
-			bytes, err := tools.MapToBytes(maps)
-			if err != nil {
-				return Context, nil, err
-			}
-			return Context, bytes, nil
 		}
+		bytes, err := tools.MapToBytes(maps)
+		return CONTEXT, bytes, err
+	default:
+
 		// 下面必须是struct
 		rv := reflect.ValueOf(arg)
 		if rv.Kind() != reflect.Ptr {
-			return "", nil, fmt.Errorf("Args2Bytes [%v] not pointer type", reflect.TypeOf(arg))
+			return "", nil, fmt.Errorf("ArgToData [%v] not pointer type", reflect.TypeOf(arg))
 		}
-		if rv.IsNil() {
-			//如果是nil则直接返回
+		if rv.IsNil() { //如果是nil则直接返回
 			return NULL, nil, nil
 		}
 		if rv.Elem().Kind() != reflect.Struct {
-			return "", nil, fmt.Errorf("Args2Bytes [%v] not struct type", reflect.TypeOf(arg))
+			return "", nil, fmt.Errorf("ArgToData [%v] not struct type", reflect.TypeOf(arg))
 		}
 
 		// 1 struct for mqrpc.Marshaler
@@ -112,22 +105,12 @@ func ArgToData(arg any) (string, []byte, error) {
 			}
 			return fmt.Sprintf("%v@%v", MARSHAL, reflect.TypeOf(arg)), b, nil
 		}
-		// 2 struct for proto.Message
-		if v2, ok := arg.(proto.Message); ok {
-			b, err := proto.Marshal(v2)
-			if err != nil {
-				log.Error("proto.Marshal error")
-				return "", nil, fmt.Errorf("args [%s] proto.Marshal error %v", reflect.TypeOf(arg), err)
-			}
-			return fmt.Sprintf("%v@%v", PBPROTO, reflect.TypeOf(arg)), b, nil
+		// 2 struct for msgpack (default)
+		b, err := msgpack.Marshal(arg)
+		if err != nil {
+			return "", nil, fmt.Errorf("args [%s] msgpack encode(default) error %v", reflect.TypeOf(arg), err)
 		}
-		// 3 struct for gob.coding (default)
-		var buf bytes.Buffer
-		encoder := gob.NewEncoder(&buf)
-		if err := encoder.Encode(arg); err != nil {
-			return "", nil, fmt.Errorf("args [%s] gob encode(default) error %v", reflect.TypeOf(arg), err)
-		}
-		return fmt.Sprintf("%v@%v", GOB, reflect.TypeOf(arg)), buf.Bytes(), nil
+		return fmt.Sprintf("%v@%v", MSGPACK, reflect.TypeOf(arg)), b, nil
 	}
 }
 
@@ -155,38 +138,30 @@ func DataToArg(argType string, argData []byte) (any, error) {
 			return nil, err
 		}
 		return mps, nil
-	case argType == TRACE:
-		trace := &log.TraceSpanImp{}
-		err := json.Unmarshal(argData, trace)
-		if err != nil {
-			return nil, err
-		}
-		return trace.ExtractSpan(), nil
-	case argType == Context:
+	case argType == CONTEXT:
 		mps, err := tools.BytesToMap(argData)
 		if err != nil {
 			return nil, err
 		}
-		kvs := map[ContextTransKey]any{}
+
+		ctx := context.Background()
 		for k, v := range mps {
-			makefun, ok := registedContextTransfer[ContextTransKey(k)]
-			if !ok {
+			makefun := getTransContextKeyItem(k)
+			if makefun == nil {
+				ctx = ContextWithValue(ctx, k, v)
 				continue
 			}
 			obj := makefun()
 			if err := Marshal(obj, RpcResult(v, nil)); err != nil {
 				return nil, err
 			}
-			kvs[ContextTransKey(k)] = obj
+			ctx = ContextWithValue(ctx, k, obj)
 		}
-		return kvs, nil
-	case strings.HasPrefix(argType, MARSHAL): // 不能直接解出对象
+		return ctx, nil
+	case strings.HasPrefix(argType, MARSHAL): // 不能直接解出对象, 让外面解析
 		return argData, nil
-	case strings.HasPrefix(argType, PBPROTO): // 不能直接解出对象
-		return argData, nil
-	case strings.HasPrefix(argType, JSON): // 不能直接解出对象
-		return argData, nil
-	case strings.HasPrefix(argType, GOB): // 不能直接解出对象
+
+	case strings.HasPrefix(argType, MSGPACK): // 不能直接解出对象, 让外面解析
 		return argData, nil
 	}
 	return nil, fmt.Errorf("DataToArg [%s] unsupported argType", argType)

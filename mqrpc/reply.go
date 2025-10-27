@@ -1,15 +1,12 @@
 package mqrpc
 
 import (
-	"bytes"
-	"encoding/gob"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
 
-	"google.golang.org/protobuf/proto"
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 // ErrNil ErrNil
@@ -151,25 +148,8 @@ func Bool(reply any, err error) (bool, error) {
 	return false, fmt.Errorf("mqrpc: unexpected type for Bool, got type %T", reply)
 }
 
-// StringMap is a helper that converts an array of strings (alternating key, value)
-// into a map[string]string. The HGETALL and CONFIG GET commands return replies in this format.
-// Requires an even number of values in result.
-func StringMap(reply any, err error) (map[string]string, error) {
-	if err != nil {
-		return nil, err
-	}
-
-	switch reply := reply.(type) {
-	case map[string]string:
-		return reply, nil
-	case nil:
-		return nil, ErrNil
-	}
-	return nil, fmt.Errorf("mqrpc: unexpected type for Bool, got type %T", reply)
-}
-
-// InterfaceMap InterfaceMap
-func InterfaceMap(reply any, err error) (map[string]any, error) {
+// JsMap JsMap
+func JsMap(reply any, err error) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
@@ -211,73 +191,21 @@ func Marshal(pObj any, ret callResult) error {
 	return fmt.Errorf("mqrpc: unexpected type for %v, got type %T", reflect.ValueOf(ret.Reply), ret.Reply)
 }
 
-// Proto Proto
-func Proto(pObj any, ret callResult) error {
+// MsgPack MsgPack
+func MsgPack(pObj any, ret callResult) error {
 	if ret.Error != nil {
 		return ret.Error
 	}
 
 	rv := reflect.ValueOf(pObj)
 	if rv.Kind() != reflect.Ptr { //不是指针
-		return fmt.Errorf("pObj [%v] not *proto.Message pointer type", rv.Type())
-	}
-	if v2, ok := pObj.(proto.Message); ok {
-		switch r := ret.Reply.(type) {
-		case []byte:
-			err := proto.Unmarshal(r, v2)
-			if err != nil {
-				return err
-			}
-			return nil
-		case nil:
-			return ErrNil
-		}
-	} else {
-		return fmt.Errorf("pObj [%v] not *proto.Message type", rv.Type())
-	}
-	return fmt.Errorf("mqrpc: unexpected type for %v, got type %T", reflect.ValueOf(ret.Reply), ret.Reply)
-}
-
-// Json Json
-func Json(pObj any, ret callResult) error {
-	if ret.Error != nil {
-		return ret.Error
-	}
-
-	rv := reflect.ValueOf(pObj)
-	if rv.Kind() != reflect.Ptr { // 不是指针
-		return fmt.Errorf("pObj [%v] not *mqrpc.Json pointer type", rv.Type())
+		return fmt.Errorf("pObj [%v] not struct pointer type", rv.Type())
 	}
 
 	switch r := ret.Reply.(type) {
 	case []byte:
-		err := json.Unmarshal(r, pObj)
-		if err != nil {
-			return err
-		}
-		return nil
-	case nil:
-		return ErrNil
-	}
-	return fmt.Errorf("mqrpc: unexpected type for %v, got type %T", reflect.ValueOf(ret.Reply), ret.Reply)
-}
-
-// Gob Gob
-func Gob(pObj any, ret callResult) error {
-	if ret.Error != nil {
-		return ret.Error
-	}
-
-	rv := reflect.ValueOf(pObj)
-	if rv.Kind() != reflect.Ptr { //不是指针
-		return fmt.Errorf("pObj [%v] not *proto.Message pointer type", rv.Type())
-	}
-
-	switch r := ret.Reply.(type) {
-	case []byte:
-		decoder := gob.NewDecoder(bytes.NewBuffer(r))
-		if err := decoder.Decode(pObj); err != nil {
-			return fmt.Errorf("pObj [%s] gob decode error: %v", rv.Type(), err)
+		if err := msgpack.Unmarshal(r, pObj); err != nil {
+			return fmt.Errorf("msgpack unmarshal error: %v", err)
 		}
 		return nil
 	case nil:

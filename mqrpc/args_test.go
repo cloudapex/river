@@ -58,7 +58,7 @@ func TestBytes(t *testing.T) {
 	str, err = String(call(context.TODO(), "rpc2", &user{X: 1, N: 2, S: "str"}))
 	t.Log("rpc2", str, err)
 	ret := &out{}
-	err = Gob(ret, RpcResult(call(context.TODO(), "rpc3", context.Background(), (*user)(nil) /*&user{X: 1, N: 2, S: "str"}*/, map[string]string{"a": "b"})))
+	err = MsgPack(ret, RpcResult(call(context.TODO(), "rpc3", context.Background(), (*user)(nil) /*&user{X: 1, N: 2, S: "str"}*/, map[string]string{"a": "b"})))
 	t.Log("rpc3", ret, err)
 }
 
@@ -174,27 +174,16 @@ func _runFunc(callInfo *CallInfo) {
 			case strings.HasPrefix(v, MARSHAL):
 				if err := Marshal(elemp.Interface(), RpcResult(ret, nil)); err != nil {
 					panic(err)
-					return
 				}
 				if isPtr {
 					in[k] = reflect.ValueOf(elemp.Interface()) //接收 指针变量
 				} else {
 					in[k] = elemp.Elem() // 接收 值变量
 				}
-			case strings.HasPrefix(v, PBPROTO):
-				if err := Proto(elemp.Interface(), RpcResult(ret, nil)); err != nil {
+
+			case strings.HasPrefix(v, MSGPACK):
+				if err := MsgPack(elemp.Interface(), RpcResult(ret, nil)); err != nil {
 					panic(err)
-					return
-				}
-				if isPtr {
-					in[k] = reflect.ValueOf(elemp.Interface()) //接收 指针变量
-				} else {
-					in[k] = elemp.Elem() // 接收 值变量
-				}
-			case strings.HasPrefix(v, GOB):
-				if err := Gob(elemp.Interface(), RpcResult(ret, nil)); err != nil {
-					panic(err)
-					return
 				}
 				if isPtr {
 					in[k] = reflect.ValueOf(elemp.Interface()) //接收 指针变量

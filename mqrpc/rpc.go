@@ -4,29 +4,58 @@ package mqrpc
 import (
 	"context"
 	"reflect"
+	"sync"
 
-	"github.com/cloudapex/river/log"
 	rpcpb "github.com/cloudapex/river/mqrpc/pb"
 )
 
-type ContextTransKey string
+// 支持rpc trans的Context Keys
+var (
+	contextKeysMutex sync.RWMutex
+	transContextKeys = map[string]func() Marshaler{}
+)
 
-var registedContextTransfer = map[ContextTransKey]func() Marshaler{
-	// 默认注册log.TraceSpanImp
-	ContextTransTrace: func() Marshaler { return &log.TraceSpanImp{} },
+// 使用此WithValue方法才能通过Context传递数据
+func ContextWithValue(ctx context.Context, key string, val any) context.Context {
+	addTransContextKey(key)
+	return context.WithValue(ctx, key, val)
 }
 
-// 把需要通过Context进行RPC传输的KV注册进来
-func RegistContextTransValue(key ContextTransKey, makeFun func() Marshaler) {
-	registedContextTransfer[key] = makeFun
+// 提前注册复合类型的Context val数据(基本类型不需要注册)
+func RegTransContextKey(key string, makeFun func() Marshaler) {
+	transContextKeys[key] = makeFun
 }
 
-// 定义需要RPC传输TraceSpan的ContextKey
-var ContextTransTrace = ContextTransKey("ContextTransTrace")
+func addTransContextKey(key string) {
+	if hasTransContextKey(key) {
+		return
+	}
+	contextKeysMutex.Lock()
+	defer contextKeysMutex.Unlock()
 
-// ContextTransTrace快捷WithValue方法
-func ContextWithTrace(ctx context.Context, trace log.TraceSpan) context.Context {
-	return context.WithValue(ctx, ContextTransTrace, trace)
+	transContextKeys[key] = nil
+}
+func hasTransContextKey(key string) bool {
+	contextKeysMutex.RLock()
+	defer contextKeysMutex.RUnlock()
+
+	_, exists := transContextKeys[key]
+	return exists
+}
+func getTransContextKeys() map[string]func() Marshaler {
+	contextKeysMutex.RLock()
+	defer contextKeysMutex.RUnlock()
+
+	mps := map[string]func() Marshaler{}
+	for k, v := range transContextKeys {
+		mps[k] = v
+	}
+	return mps
+}
+func getTransContextKeyItem(key string) func() Marshaler {
+	contextKeysMutex.RLock()
+	defer contextKeysMutex.RUnlock()
+	return transContextKeys[key]
 }
 
 // FunctionInfo handler接口信息

@@ -52,6 +52,12 @@ func (c *RPCClient) Done() (err error) {
 func (c *RPCClient) Call(ctx context.Context, _func string, params ...any) (any, error) {
 	var argTypes []string = make([]string, len(params)+1)
 	var argDatas [][]byte = make([][]byte, len(params)+1)
+	_, ok := ctx.Value(log.CONTEXT_TRANSKEY_TRACE).(log.TraceSpan)
+	if !ok {
+		ctx = mqrpc.ContextWithValue(ctx, log.CONTEXT_TRANSKEY_TRACE, log.CreateRootTrace())
+	}
+
+	// 检测是否含有log.TraceSpan
 	params = append([]any{ctx}, params...)
 	for k, arg := range params {
 		var err error = nil
@@ -63,7 +69,7 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...any) (any,
 	start := time.Now()
 	r, err := c.CallArgs(ctx, _func, argTypes, argDatas)
 	if app.App().Config().RpcLog {
-		span, _ := ctx.Value(mqrpc.ContextTransTrace).(log.TraceSpan)
+		span, _ := ctx.Value(log.CONTEXT_TRANSKEY_TRACE).(log.TraceSpan)
 		log.TInfo(span, "rpc Call ServerId = %v Func = %v Elapsed = %v Result = %v ERROR = %v", c.nats_client.session.GetID(), _func, time.Since(start), r, err)
 	}
 	return r, err
@@ -148,6 +154,10 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 func (c *RPCClient) CallNR(ctx context.Context, _func string, params ...any) (err error) {
 	var argTypes []string = make([]string, len(params)+1)
 	var argDatas [][]byte = make([][]byte, len(params)+1)
+	_, ok := ctx.Value(log.CONTEXT_TRANSKEY_TRACE).(log.TraceSpan)
+	if !ok {
+		ctx = mqrpc.ContextWithValue(ctx, log.CONTEXT_TRANSKEY_TRACE, log.CreateRootTrace())
+	}
 	params = append([]any{ctx}, params...)
 	for k, arg := range params {
 		argTypes[k], argDatas[k], err = mqrpc.ArgToData(arg)
@@ -158,7 +168,7 @@ func (c *RPCClient) CallNR(ctx context.Context, _func string, params ...any) (er
 	start := time.Now()
 	err = c.CallNRArgs(ctx, _func, argTypes, argDatas)
 	if app.App().Config().RpcLog {
-		span, _ := ctx.Value(mqrpc.ContextTransTrace).(log.TraceSpan)
+		span, _ := ctx.Value(log.CONTEXT_TRANSKEY_TRACE).(log.TraceSpan)
 		log.TInfo(span, "rpc CallNR ServerId = %v Func = %v Elapsed = %v ERROR = %v", c.nats_client.session.GetID(), _func, time.Since(start), err)
 	}
 	return err
