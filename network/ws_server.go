@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/cloudapex/river/log"
@@ -14,19 +15,12 @@ import (
 
 // WSHandler websocket 处理器
 type WSHandler struct {
-	maxConnNum int
-	maxMsgLen  uint32
-	newAgent   func(*WSConn) Agent
-	mutexConns sync.Mutex
-	wg         sync.WaitGroup
+	newConnAgent func(*WSConn) Agent
 }
 
 func (handler *WSHandler) work(conn *websocket.Conn, r *http.Request) {
-	handler.wg.Add(1)
-	defer handler.wg.Done()
-
 	wsConn := newWSConn(conn, r)
-	agent := handler.newAgent(wsConn) // Run and OnClose
+	agent := handler.newConnAgent(wsConn)
 	agent.Run()
 
 	// cleanup
@@ -36,17 +30,18 @@ func (handler *WSHandler) work(conn *websocket.Conn, r *http.Request) {
 
 // WSServer websocket服务器
 type WSServer struct {
-	Addr        string
-	TLS         bool //是否支持tls
-	CertFile    string
-	KeyFile     string
-	MaxConnNum  int
-	MaxMsgLen   uint32
-	HTTPTimeout time.Duration
-	NewAgent    func(*WSConn) Agent
-	ln          net.Listener
-	handler     *WSHandler
-	ShakeFunc   func(r *http.Request) error
+	Addr         string
+	TLS          bool //是否支持tls
+	CertFile     string
+	KeyFile      string
+	MaxConnNum   int
+	MaxMsgLen    uint32
+	HTTPTimeout  time.Duration
+	NewConnAgent func(*WSConn) Agent
+	ln           net.Listener
+	handler      *WSHandler
+	ShakeFunc    func(r *http.Request) error
+	wgConns      sync.WaitGroup
 }
 
 // Start 开启监听websocket端口
@@ -61,8 +56,9 @@ func (server *WSServer) Start() {
 		server.HTTPTimeout = 10 * time.Second
 		log.Warning("invalid HTTPTimeout, reset to %v", server.HTTPTimeout)
 	}
-	if server.NewAgent == nil {
-		log.Warning("NewAgent must not be nil")
+	if server.NewConnAgent == nil {
+		log.Error("NewConnAgent must not be nil")
+		panic(fmt.Sprintf("TCPServer.NewConnAgent must not be nil"))
 	}
 	if server.TLS {
 		tlsConf := new(tls.Config)
@@ -77,9 +73,7 @@ func (server *WSServer) Start() {
 	}
 	server.ln = ln
 	server.handler = &WSHandler{
-		maxConnNum: server.MaxConnNum,
-		maxMsgLen:  server.MaxMsgLen,
-		newAgent:   server.NewAgent,
+		newConnAgent: server.NewConnAgent,
 	}
 
 	// upgrader connect
@@ -92,6 +86,7 @@ func (server *WSServer) Start() {
 		},
 	}
 
+	var connNum int32 // 连接计数器
 	httpHandler := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
@@ -105,6 +100,13 @@ func (server *WSServer) Start() {
 			}
 		}
 
+		current := atomic.LoadInt32(&connNum)
+		if server.MaxConnNum > 0 && int(current) >= server.MaxConnNum {
+			log.Warning("WS Server reach max connection number:%d, current:%d", server.MaxConnNum, current)
+			http.Error(w, "reach max connection num", http.StatusServiceUnavailable)
+			return
+		}
+
 		// 使用 websocket.Upgrader 升级为 WebSocket 连接
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -112,13 +114,23 @@ func (server *WSServer) Start() {
 			return
 		}
 
+		// 原子增加连接数
+		atomic.AddInt32(&connNum, 1)
+		server.wgConns.Add(1)
+
 		// 设置 WebSocket 配置参数
 		conn.SetReadLimit(int64(server.MaxMsgLen))
 		conn.SetWriteDeadline(time.Now().Add(server.HTTPTimeout))
 		conn.SetReadDeadline(time.Now().Add(server.HTTPTimeout))
 
 		// 处理 WebSocket 连接
-		go server.handler.work(conn, r)
+		go func() {
+			defer func() {
+				atomic.AddInt32(&connNum, -1)
+				server.wgConns.Done()
+			}()
+			server.handler.work(conn, r)
+		}()
 	}
 
 	httpServer := &http.Server{
@@ -136,5 +148,5 @@ func (server *WSServer) Start() {
 func (server *WSServer) Close() {
 	server.ln.Close()
 
-	server.handler.wg.Wait()
+	server.wgConns.Wait()
 }

@@ -96,11 +96,12 @@ func (this *GateBase) Version() string { return "1.0.0" }
 func (this *GateBase) OnAppConfigurationLoaded() {
 	this.ModuleBase.OnAppConfigurationLoaded() // 这是必须的
 }
-func (this *GateBase) OnConfChanged(settings *conf.ModuleSettings) {}
+func (this *GateBase) OnConfChanged(settings *conf.ModuleSettings) { /*目前没用*/ }
 
 func (this *GateBase) Options() gate.Options { return this.opts }
 
 func (this *GateBase) Run(closeSig chan bool) {
+	// for wss
 	var wsServer *network.WSServer
 	if this.opts.WsAddr != "" {
 		wsServer = new(network.WSServer)
@@ -111,13 +112,13 @@ func (this *GateBase) Run(closeSig chan bool) {
 		wsServer.KeyFile = this.opts.KeyFile
 		wsServer.ShakeFunc = this.shakeHandle
 		wsServer.MaxMsgLen = uint32(this.opts.MaxPackSize)
-		wsServer.NewAgent = func(conn *network.WSConn) network.Agent {
+		wsServer.NewConnAgent = func(conn *network.WSConn) network.Agent {
 			agent := this.createAgent("ws")
 			agent.Init(agent, this, conn)
 			return agent
 		}
 	}
-
+	// for tcp
 	var tcpServer *network.TCPServer
 	if this.opts.TCPAddr != "" {
 		tcpServer = new(network.TCPServer)
@@ -125,7 +126,7 @@ func (this *GateBase) Run(closeSig chan bool) {
 		tcpServer.TLS = this.opts.TLS
 		tcpServer.CertFile = this.opts.CertFile
 		tcpServer.KeyFile = this.opts.KeyFile
-		tcpServer.NewAgent = func(conn *network.TCPConn) network.Agent {
+		tcpServer.NewConnAgent = func(conn *network.TCPConn) network.Agent {
 			agent := this.createAgent("tcp")
 			agent.Init(agent, this, conn)
 			return agent
@@ -162,7 +163,7 @@ func (this *GateBase) defaultAgentCreater(netTyp string) gate.IAgent {
 	case "ws":
 		return NewWSAgent()
 	case "tcp":
-		return NewWSAgent()
+		return NewTCPAgent()
 	}
 	return NewWSAgent()
 }

@@ -165,9 +165,8 @@ type ISession interface {
 // IAgent 客户端代理定义
 type IAgent interface {
 	Init(impl IAgent, gate IGate, conn network.Conn) error
-	Close()
-	OnClose() error
-	Destroy() // 不建议使用,优先使用Close
+	Close()         // 主动关闭(异常关闭or主动关闭)
+	OnClose() error // Run() 结束后触发回调
 
 	Run() (err error)
 
@@ -190,7 +189,7 @@ type IAgent interface {
 	// 自行实现如何处理收到的数据包
 	OnHandRecvPack(pack *Pack) error
 
-	GetError() error //连接断开的错误日志
+	GetError() error // 连接断开的错误日志
 }
 
 // StorageHandler Session信息持久化

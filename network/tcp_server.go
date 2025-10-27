@@ -3,8 +3,10 @@ package network
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/cloudapex/river/log"
@@ -17,11 +19,11 @@ type TCPServer struct {
 	CertFile   string
 	KeyFile    string
 	MaxConnNum int
-	NewAgent   func(*TCPConn) Agent
-	ln         net.Listener
-	mutexConns sync.Mutex
-	wgLn       sync.WaitGroup
-	wgConns    sync.WaitGroup
+	// mutexConns   sync.Mutex
+	NewConnAgent func(*TCPConn) Agent
+	ln           net.Listener
+	wgLn         sync.WaitGroup
+	wgConns      sync.WaitGroup
 }
 
 // Start 开始tcp监听
@@ -34,11 +36,13 @@ func (server *TCPServer) Start() {
 func (server *TCPServer) init() {
 	ln, err := net.Listen("tcp", server.Addr)
 	if err != nil {
-		log.Warning("%v", err)
+		log.Error("%v", err)
+		panic(fmt.Sprintf("TCPServer.Start.Listen err:%v", err))
 	}
 
-	if server.NewAgent == nil {
-		log.Warning("NewAgent must not be nil")
+	if server.NewConnAgent == nil {
+		log.Error("NewConnAgent must not be nil")
+		panic(fmt.Sprintf("TCPServer.NewConnAgent must not be nil"))
 	}
 	if server.TLS {
 		tlsConf := new(tls.Config)
@@ -58,6 +62,7 @@ func (server *TCPServer) run() {
 	server.wgLn.Add(1)
 	defer server.wgLn.Done()
 
+	var connNum int32
 	var tempDelay time.Duration
 	for {
 		conn, err := server.ln.Accept()
@@ -78,17 +83,27 @@ func (server *TCPServer) run() {
 			return
 		}
 		tempDelay = 0
+		current := atomic.LoadInt32(&connNum)
+		if server.MaxConnNum > 0 && int(current) >= server.MaxConnNum {
+			log.Warning("TCP Server reach max connection number:%d, current:%d", server.MaxConnNum, current)
+			conn.Close()
+			continue
+		}
+		atomic.AddInt32(&connNum, 1)
+
 		tcpConn := newTCPConn(conn)
-		agent := server.NewAgent(tcpConn)
+		agent := server.NewConnAgent(tcpConn)
 		server.wgConns.Add(1)
 		go func() {
+			defer func() {
+				atomic.AddInt32(&connNum, -1)
+				server.wgConns.Done()
+			}()
 			agent.Run()
 
 			// cleanup
 			tcpConn.Close()
 			agent.OnClose()
-
-			server.wgConns.Done()
 		}()
 	}
 }

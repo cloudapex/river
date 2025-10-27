@@ -18,7 +18,7 @@ import (
 )
 
 type agentBase struct {
-	Impl gate.IAgent
+	impl gate.IAgent
 
 	gate         gate.IGate
 	session      gate.ISession
@@ -36,7 +36,7 @@ type agentBase struct {
 }
 
 func (this *agentBase) Init(impl gate.IAgent, gt gate.IGate, conn network.Conn) error {
-	this.Impl = impl
+	this.impl = impl
 	this.ch = make(chan int, gt.Options().ConcurrentTasks)
 	this.conn = conn
 	this.gate = gt
@@ -60,14 +60,10 @@ func (this *agentBase) Close() {
 func (this *agentBase) OnClose() error {
 	atomic.StoreInt32(&this.isClosed, 1)
 	close(this.sendPackChan)
-	this.gate.GetAgentLearner().DisConnect(this) //发送连接断开的事件
+	this.gate.GetAgentLearner().DisConnect(this) // 发送连接断开的事件
 	return nil
 }
-func (this *agentBase) Destroy() { // 没用
-	if this.conn != nil {
-		this.conn.Destroy()
-	}
-}
+
 func (this *agentBase) Run() (err error) {
 	defer func() {
 		if err := tools.Catch(recover()); err != nil {
@@ -127,7 +123,7 @@ func (this *agentBase) sendLoop() {
 
 	for pack := range this.sendPackChan {
 		atomic.AddInt64(&this.sendNum, 1)
-		sendData := this.Impl.OnWriteEncodingPack(pack)
+		sendData := this.impl.OnWriteEncodingPack(pack)
 		this.conn.SetWriteDeadline(time.Now().Add(30 * time.Second))
 		if _, err := this.conn.Write(sendData); err != nil {
 			this.lastError = err
@@ -168,7 +164,7 @@ func (this *agentBase) recvLoop() error {
 			_ = this.conn.SetReadDeadline(nowTime.Add(heartOverTime))
 		}
 		// this.recvWait()
-		pack, err := this.Impl.OnReadDecodingPack()
+		pack, err := this.impl.OnReadDecodingPack()
 		if err != nil {
 			if heartOverTime > 0 && time.Since(nowTime) >= (heartOverTime) {
 				log.Error("recvLoop heartOverTime, userId:%v sessionId:%v", this.session.GetSessionID(), this.session.GetUserID())

@@ -31,23 +31,6 @@ func newTCPConn(conn net.Conn) *TCPConn {
 	return tcpConn
 }
 
-func (tcpConn *TCPConn) doDestroy() {
-	tcpConn.conn.(*net.TCPConn).SetLinger(0)
-	tcpConn.conn.Close()
-
-	if !tcpConn.closeFlag {
-		tcpConn.closeFlag = true
-	}
-}
-
-// Destroy 断连
-func (tcpConn *TCPConn) Destroy() {
-	tcpConn.Lock()
-	defer tcpConn.Unlock()
-
-	tcpConn.doDestroy()
-}
-
 // Close 关闭tcp连接
 func (tcpConn *TCPConn) Close() error {
 	tcpConn.Lock()

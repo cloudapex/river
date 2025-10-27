@@ -42,25 +42,10 @@ func (wsConn *WSConn) Conn() *websocket.Conn {
 	return wsConn.conn
 }
 
-func (wsConn *WSConn) doDestroy() {
-	wsConn.conn.Close()
-	if !wsConn.closeFlag {
-		wsConn.closeFlag = true
-	}
-}
-
-// Destroy 注销连接
-func (wsConn *WSConn) Destroy() {
-	//wsConn.Lock()
-	//defer wsConn.Unlock()
-
-	wsConn.doDestroy()
-}
-
 // Close 关闭连接
 func (wsConn *WSConn) Close() error {
-	//wsConn.Lock()
-	//defer wsConn.Unlock()
+	wsConn.Lock()
+	defer wsConn.Unlock()
 	if wsConn.closeFlag {
 		return nil
 	}
