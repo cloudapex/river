@@ -69,7 +69,7 @@ func (this *GateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSetting
 	}
 
 	handler := NewGateHandler(this)
-	this.handler = NewGateHandler(this)
+	this.handler = handler
 	this.agentLearner = handler
 	this.createAgent = this.defaultAgentCreater
 
@@ -83,7 +83,6 @@ func (this *GateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSetting
 	this.GetServer().RegisterGO("Send", handler.OnRpcSend)
 	this.GetServer().RegisterGO("Connected", handler.OnRpcConnected)
 	this.GetServer().RegisterGO("Close", handler.OnRpcClose)
-	// send by Broadcast
 	this.GetServer().RegisterGO("Broadcast", handler.OnRpcBroadcast)
 }
 func (this *GateBase) OnDestroy() {
@@ -167,13 +166,13 @@ func (this *GateBase) defaultAgentCreater(netTyp string) gate.IAgent {
 	return NewWSAgent()
 }
 
-// SetGateHandler 设置代理接口
-func (this *GateBase) setGateHandler(handler gate.GateHandler) error {
+// SetGateHandler 设置代理处理器
+func (this *GateBase) SetGateHandler(handler gate.GateHandler) error {
 	this.handler = handler
 	return nil
 }
 
-// GetGateHandler 获取代理接口
+// GetGateHandler 获取代理处理器
 func (this *GateBase) GetGateHandler() gate.GateHandler { return this.handler }
 
 // SetGuestJudger 设置是否游客的判定器
@@ -221,8 +220,8 @@ func (this *GateBase) SetSessionLearner(learner gate.SessionLearner) error {
 // GetSessionLearner 获取客户端连接和断开的监听器
 func (this *GateBase) GetSessionLearner() gate.SessionLearner { return this.sessionLearner }
 
-// SetAgentLearner 设置客户端连接和断开的监听器
-func (this *GateBase) setAgentLearner(learner gate.AgentLearner) error {
+// SetAgentLearner 设置客户端连接和断开的监听器(内部用)
+func (this *GateBase) SetAgentLearner(learner gate.AgentLearner) error {
 	this.agentLearner = learner
 	return nil
 }

@@ -301,7 +301,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 		s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, fmt.Sprintf("%s rpc func(%s) return error %s\n", s.module.GetType(), callInfo.RPCInfo.Fn, "func(....)(result any, err error)"))
 		return
 	}
-	if len(out) > 0 { //prepare out paras
+	if len(out) > 0 { // prepare out paras
 		rs = make([]any, len(out), len(out))
 		for i, v := range out {
 			rs[i] = v.Interface()

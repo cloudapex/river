@@ -219,7 +219,7 @@ type StorageHandler interface {
 // RouteHandler 路由器
 type RouteHandler interface {
 	/**
-	是否需要对本次客户端请求转发规则进行hook
+	是否需要对本次客户端请求转发规则进行hook, 返回true 表示拦截此请求
 	*/
 	OnRoute(session ISession, topic string, msg []byte) (bool, error)
 }
