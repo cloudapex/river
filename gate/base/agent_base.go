@@ -90,7 +90,7 @@ func (this *agentBase) Run() (err error) {
 	this.isShaked = 1
 	this.gate.GetAgentLearner().Connect(this) //发送连接成功的事件
 
-	log.Info("gate create agent sessionId:%s, current gate agents num:%d", this.session.GetSessionID(), this.gate.GetGateHandler().GetAgentNum())
+	log.Info("gate create agent sessionId:%s, current gate agents num:%d", this.session.GetSessionID(), this.gate.GetDelegater().GetAgentNum())
 
 	go this.sendLoop()     // 发送数据线程
 	return this.recvLoop() // 接收数据线程

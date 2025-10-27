@@ -33,17 +33,17 @@ type IGate interface {
 
 	Options() Options
 
-	GetGateHandler() GateHandler
-	GetAgentLearner() AgentLearner
-	GetSessionLearner() SessionLearner
+	GetDelegater() IDelegater
+	GetAgentLearner() IAgentLearner
+	GetSessionLearner() ISessionLearner
 	GetStorageHandler() StorageHandler
 	GetRouteHandler() RouteHandler
 	GetSendMessageHook() SendMessageHook
 	GetGuestJudger() func(session ISession) bool
 }
 
-// GateHandler 代理服务处理器
-type GateHandler interface {
+// IDelegater session管理接口
+type IDelegater interface {
 	GetAgent(sessionId string) (IAgent, error)
 	GetAgentNum() int
 	OnDestroy() // 退出事件,当主动关闭时释放所有的连接
@@ -231,14 +231,14 @@ type SendMessageHook func(session ISession, topic string, msg []byte) ([]byte, e
 type GenResponseHandler interface {
 }
 
-// AgentLearner 连接代理
-type AgentLearner interface {
+// IAgentLearner 连接代理(内部使用)
+type IAgentLearner interface {
 	Connect(a IAgent)    //当连接建立  并且MQTT协议握手成功
 	DisConnect(a IAgent) //当连接关闭	或者客户端主动发送MQTT DisConnect命令
 }
 
-// SessionLearner 客户端代理
-type SessionLearner interface {
+// ISessionLearner 客户端代理(业务使用)
+type ISessionLearner interface {
 	Connect(a ISession)    //当连接建立  并且MQTT协议握手成功
 	DisConnect(a ISession) //当连接关闭	或者客户端主动发送MQTT DisConnect命令
 }
