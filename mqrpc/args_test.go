@@ -11,7 +11,6 @@ import (
 
 	"github.com/cloudapex/river/mqrpc/core"
 	"github.com/cloudapex/river/tools/uuid"
-	"google.golang.org/protobuf/proto"
 )
 
 var functions = map[string]*FunctionInfo{}
@@ -105,14 +104,14 @@ func call(ctx context.Context, _func string, params ...any) (any, error) {
 	start := time.Now()
 	var correlation_id = uuid.Rand().Hex()
 	rpcInfo := &core.RPCInfo{
-		Fn:       *proto.String(_func),
-		Reply:    *proto.Bool(true),
-		Expired:  *proto.Int64((start.UTC().Add(10 * time.Second).UnixNano()) / 1000000),
-		Cid:      *proto.String(correlation_id),
+		Fn:       (_func),
+		Reply:    (true),
+		Expired:  ((start.UTC().Add(10 * time.Second).UnixNano()) / 1000000),
+		Cid:      (correlation_id),
 		Args:     args,
 		ArgsType: argTypes,
-		Caller:   *proto.String(caller),
-		Hostname: *proto.String(caller),
+		Caller:   (caller),
+		Hostname: (caller),
 	}
 
 	callInfo := &CallInfo{

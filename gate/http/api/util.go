@@ -8,20 +8,20 @@ import (
 	"net/http"
 	"strings"
 
-	api "github.com/cloudapex/river/gate/http/proto"
+	"github.com/cloudapex/river/gate/http/proto"
 )
 
-func RequestToProto(r *http.Request) (*api.Request, error) {
+func RequestToProto(r *http.Request) (*proto.Request, error) {
 	if err := r.ParseForm(); err != nil {
 		return nil, fmt.Errorf("Error parsing form: %v", err)
 	}
 
-	req := &api.Request{
+	req := &proto.Request{
 		Path:   r.URL.Path,
 		Method: r.Method,
-		Header: make(map[string]*api.Pair),
-		Get:    make(map[string]*api.Pair),
-		Post:   make(map[string]*api.Pair),
+		Header: make(map[string]*proto.Pair),
+		Get:    make(map[string]*proto.Pair),
+		Post:   make(map[string]*proto.Pair),
 		Url:    r.URL.String(),
 	}
 
@@ -50,14 +50,14 @@ func RequestToProto(r *http.Request) (*api.Request, error) {
 		}
 
 		// Set the header
-		req.Header["X-Forwarded-For"] = &api.Pair{
+		req.Header["X-Forwarded-For"] = &proto.Pair{
 			Key:    "X-Forwarded-For",
 			Values: []string{ip},
 		}
 	}
 
 	// Host is stripped from net/http Headers so let's add it
-	req.Header["Host"] = &api.Pair{
+	req.Header["Host"] = &proto.Pair{
 		Key:    "Host",
 		Values: []string{r.Host},
 	}
@@ -66,7 +66,7 @@ func RequestToProto(r *http.Request) (*api.Request, error) {
 	for key, vals := range r.URL.Query() {
 		header, ok := req.Get[key]
 		if !ok {
-			header = &api.Pair{
+			header = &proto.Pair{
 				Key: key,
 			}
 			req.Get[key] = header
@@ -78,7 +78,7 @@ func RequestToProto(r *http.Request) (*api.Request, error) {
 	for key, vals := range r.PostForm {
 		header, ok := req.Post[key]
 		if !ok {
-			header = &api.Pair{
+			header = &proto.Pair{
 				Key: key,
 			}
 			req.Post[key] = header
@@ -89,7 +89,7 @@ func RequestToProto(r *http.Request) (*api.Request, error) {
 	for key, vals := range r.Header {
 		header, ok := req.Header[key]
 		if !ok {
-			header = &api.Pair{
+			header = &proto.Pair{
 				Key: key,
 			}
 			req.Header[key] = header

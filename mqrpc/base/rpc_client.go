@@ -24,7 +24,6 @@ import (
 	"github.com/cloudapex/river/mqrpc"
 	"github.com/cloudapex/river/mqrpc/core"
 	"github.com/cloudapex/river/tools/uuid"
-	"google.golang.org/protobuf/proto"
 )
 
 type RPCClient struct {
@@ -89,14 +88,14 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 	start := time.Now()
 	var correlation_id = uuid.Rand().Hex()
 	rpcInfo := &core.RPCInfo{
-		Fn:       *proto.String(_func),
-		Reply:    *proto.Bool(true),
-		Expired:  *proto.Int64((start.UTC().Add(app.App().Options().RPCExpired).UnixNano()) / 1000000),
-		Cid:      *proto.String(correlation_id),
+		Fn:       _func,
+		Reply:    true,
+		Expired:  (start.UTC().Add(app.App().Options().RPCExpired).UnixNano()) / 1000000,
+		Cid:      correlation_id,
 		Args:     argDatas,
 		ArgsType: argTypes,
-		Caller:   *proto.String(caller),
-		Hostname: *proto.String(caller),
+		Caller:   caller,
+		Hostname: caller,
 	}
 	defer func() {
 		//异常日志都应该打印
@@ -184,14 +183,14 @@ func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argTypes []str
 
 	var correlation_id = uuid.Rand().Hex()
 	rpcInfo := &core.RPCInfo{
-		Fn:       *proto.String(_func),
-		Reply:    *proto.Bool(false),
-		Expired:  *proto.Int64((time.Now().UTC().Add(app.App().Options().RPCExpired).UnixNano()) / 1000000),
-		Cid:      *proto.String(correlation_id),
+		Fn:       _func,
+		Reply:    false,
+		Expired:  (time.Now().UTC().Add(app.App().Options().RPCExpired).UnixNano()) / 1000000,
+		Cid:      correlation_id,
 		Args:     argDatas,
 		ArgsType: argTypes,
-		Caller:   *proto.String(caller),
-		Hostname: *proto.String(caller),
+		Caller:   caller,
+		Hostname: caller,
 	}
 	callInfo := &mqrpc.CallInfo{
 		RPCInfo: rpcInfo,

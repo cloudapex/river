@@ -8,7 +8,7 @@ import (
 	"github.com/cloudapex/river/app"
 	httpgateapi "github.com/cloudapex/river/gate/http/api"
 	"github.com/cloudapex/river/gate/http/errors"
-	go_api "github.com/cloudapex/river/gate/http/proto"
+	"github.com/cloudapex/river/gate/http/proto"
 	"github.com/cloudapex/river/mqrpc"
 )
 
@@ -36,7 +36,7 @@ func (a *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(er.Error()))
 		return
 	}
-	rsp := &go_api.Response{}
+	rsp := &proto.Response{}
 	ctx, _ := context.WithTimeout(context.TODO(), a.Opts.TimeOut)
 	if err = mqrpc.MsgPack(rsp, mqrpc.RpcResult(server.SrvSession.Call(ctx, server.Hander, request))); err != nil {
 		w.Header().Set("Content-Type", "application/json")
@@ -53,7 +53,7 @@ func (a *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		rsp.StatusCode = http.StatusOK
 	}
 
-	for _, header := range rsp.GetHeader() {
+	for _, header := range rsp.Header {
 		for _, val := range header.Values {
 			w.Header().Add(header.Key, val)
 		}

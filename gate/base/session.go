@@ -12,7 +12,7 @@ import (
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/mqrpc"
 	"github.com/cloudapex/river/tools"
-	"google.golang.org/protobuf/proto"
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 func init() {
@@ -31,7 +31,7 @@ func NewSession(data []byte) (gate.ISession, error) {
 	if err != nil {
 		return nil, err
 	}
-	if agent.session.GetSettings() == nil {
+	if agent.session.Settings == nil {
 		agent.session.Settings = make(map[string]string)
 	}
 	return agent, nil
@@ -47,7 +47,7 @@ func NewSessionByMap(data map[string]any) (gate.ISession, error) {
 	if err != nil {
 		return nil, err
 	}
-	if agent.session.GetSettings() == nil {
+	if agent.session.Settings == nil {
 		agent.session.Settings = make(map[string]string)
 	}
 	return agent, nil
@@ -62,7 +62,7 @@ type sessionAgent struct {
 
 func (s *sessionAgent) initByDat(data []byte) error {
 	se := &SessionImp{}
-	err := proto.Unmarshal(data, se)
+	err := msgpack.Unmarshal(data, se)
 	if err != nil {
 		return err
 	}
@@ -165,14 +165,14 @@ func (s *sessionAgent) SetSettings(settings map[string]string) {
 // 合并两个map 并且以 s.Settings 已有的优先
 func (s *sessionAgent) ImportSettings(settings map[string]string) error {
 	s.lock.Lock()
-	if s.session.GetSettings() == nil {
+	if s.session.Settings == nil {
 		s.session.Settings = settings
 	} else {
 		for k, v := range settings {
-			if _, ok := s.session.GetSettings()[k]; ok {
+			if _, ok := s.session.Settings[k]; ok {
 				//不用替换
 			} else {
-				s.session.GetSettings()[k] = v
+				s.session.Settings[k] = v
 			}
 		}
 	}
@@ -184,10 +184,10 @@ func (s *sessionAgent) ImportSettings(settings map[string]string) error {
 func (s *sessionAgent) SettingsRange(f func(k, v string) bool) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	if s.session.GetSettings() == nil {
+	if s.session.Settings == nil {
 		return
 	}
-	for k, v := range s.session.GetSettings() {
+	for k, v := range s.session.Settings {
 		c := f(k, v)
 		if c == false {
 			return
@@ -467,7 +467,7 @@ func (s *sessionAgent) ToClose() error {
 
 func (s *sessionAgent) Marshal() ([]byte, error) {
 	s.lock.RLock()
-	data, err := proto.Marshal(s.session)
+	data, err := msgpack.Marshal(s.session)
 	s.lock.RUnlock()
 	if err != nil {
 		return nil, err
@@ -476,12 +476,12 @@ func (s *sessionAgent) Marshal() ([]byte, error) {
 }
 func (s *sessionAgent) Unmarshal(data []byte) error {
 	se := &SessionImp{}
-	err := proto.Unmarshal(data, se)
+	err := msgpack.Unmarshal(data, se)
 	if err != nil {
 		return err
 	} // 测试结果
 	s.session = se
-	if s.session.GetSettings() == nil {
+	if s.session.Settings == nil {
 		s.lock.Lock()
 		s.session.Settings = make(map[string]string)
 		s.lock.Unlock()
