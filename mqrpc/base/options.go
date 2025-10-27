@@ -13,10 +13,10 @@
 // limitations under the License.
 package rpcbase
 
-import rpcpb "github.com/cloudapex/river/mqrpc/pb"
+import "github.com/cloudapex/river/mqrpc/core"
 
 type ClinetCallInfo struct {
 	correlation_id string
 	timeout        int64 //超时
-	call           chan *rpcpb.ResultInfo
+	call           chan *core.ResultInfo
 }

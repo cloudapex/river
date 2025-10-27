@@ -22,9 +22,9 @@ import (
 	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/mqrpc"
-	rpcpb "github.com/cloudapex/river/mqrpc/pb"
+	"github.com/cloudapex/river/mqrpc/core"
 	"github.com/nats-io/nats.go"
-	"google.golang.org/protobuf/proto"
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 type NatsServer struct {
@@ -185,22 +185,21 @@ func (s *NatsServer) on_request_handle() (err error) {
 	return nil
 }
 
-func (s *NatsServer) Unmarshal(data []byte) (*rpcpb.RPCInfo, error) {
+func (s *NatsServer) Unmarshal(data []byte) (*core.RPCInfo, error) {
 	//fmt.Println(msg)
 	//保存解码后的数据，Value可以为任意数据类型
-	var rpcInfo rpcpb.RPCInfo
-	err := proto.Unmarshal(data, &rpcInfo)
+	var rpcInfo core.RPCInfo
+	err := msgpack.Unmarshal(data, &rpcInfo)
 	if err != nil {
 		return nil, err
 	} else {
 		return &rpcInfo, err
 	}
-
 }
 
 // goroutine safe
-func (s *NatsServer) MarshalResult(resultInfo *rpcpb.ResultInfo) ([]byte, error) {
+func (s *NatsServer) MarshalResult(resultInfo *core.ResultInfo) ([]byte, error) {
 	//log.Error("",map2)
-	b, err := proto.Marshal(resultInfo)
+	b, err := msgpack.Marshal(resultInfo)
 	return b, err
 }

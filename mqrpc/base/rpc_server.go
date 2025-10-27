@@ -24,7 +24,7 @@ import (
 	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/mqrpc"
-	rpcpb "github.com/cloudapex/river/mqrpc/pb"
+	"github.com/cloudapex/river/mqrpc/core"
 )
 
 type RPCServer struct {
@@ -146,7 +146,7 @@ func (s *RPCServer) Call(callInfo *mqrpc.CallInfo) error {
 	//} else {
 	//	s.runFunc(callInfo)
 	//	//go func() {
-	//	//	resultInfo := rpcpb.NewResultInfo(callInfo.RPCInfo.Cid, "", mqrpc.STRING, []byte("success"))
+	//	//	resultInfo := core.NewResultInfo(callInfo.RPCInfo.Cid, "", mqrpc.STRING, []byte("success"))
 	//	//	callInfo.Result = *resultInfo
 	//	//	s.doCallback(callInfo)
 	//	//}()
@@ -186,7 +186,7 @@ func (s *RPCServer) doCallback(callInfo *mqrpc.CallInfo) {
 func (s *RPCServer) _errorCallback(start time.Time, callInfo *mqrpc.CallInfo, Cid string, Error string) {
 	//异常日志都应该打印
 	//log.TError(span, "rpc Exec ModuleType = %v Func = %v Elapsed = %v ERROR:\n%v", s.module.GetType(), callInfo.RPCInfo.Fn, time.Since(start), Error)
-	resultInfo := &rpcpb.ResultInfo{
+	resultInfo := &core.ResultInfo{
 		Cid:        Cid,
 		Error:      Error,
 		ResultType: mqrpc.NULL,
@@ -342,7 +342,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 		return
 	}
 
-	resultInfo := &rpcpb.ResultInfo{
+	resultInfo := &core.ResultInfo{
 		Cid:        callInfo.RPCInfo.Cid,
 		Error:      rerr,
 		ResultType: argType,

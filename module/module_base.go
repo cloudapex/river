@@ -12,7 +12,7 @@ import (
 	"github.com/cloudapex/river/module/server"
 	"github.com/cloudapex/river/module/service"
 	"github.com/cloudapex/river/mqrpc"
-	rpcpb "github.com/cloudapex/river/mqrpc/pb"
+	"github.com/cloudapex/river/mqrpc/core"
 	"github.com/cloudapex/river/selector"
 	"github.com/cloudapex/river/tools"
 	"github.com/pkg/errors"
@@ -225,7 +225,7 @@ func (this *ModuleBase) OnError(fn string, callInfo *mqrpc.CallInfo, err error) 
 // params		参数
 // result		执行结果
 // exec_time 	方法执行时间 单位为 Nano 纳秒  1000000纳秒等于1毫秒
-func (this *ModuleBase) OnComplete(fn string, callInfo *mqrpc.CallInfo, result *rpcpb.ResultInfo, execTime int64) {
+func (this *ModuleBase) OnComplete(fn string, callInfo *mqrpc.CallInfo, result *core.ResultInfo, execTime int64) {
 	if this.listener != nil {
 		this.listener.OnComplete(fn, callInfo, result, execTime)
 	}

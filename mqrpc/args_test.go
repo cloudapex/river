@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	rpcpb "github.com/cloudapex/river/mqrpc/pb"
+	"github.com/cloudapex/river/mqrpc/core"
 	"github.com/cloudapex/river/tools/uuid"
 	"google.golang.org/protobuf/proto"
 )
@@ -104,7 +104,7 @@ func call(ctx context.Context, _func string, params ...any) (any, error) {
 	}
 	start := time.Now()
 	var correlation_id = uuid.Rand().Hex()
-	rpcInfo := &rpcpb.RPCInfo{
+	rpcInfo := &core.RPCInfo{
 		Fn:       *proto.String(_func),
 		Reply:    *proto.Bool(true),
 		Expired:  *proto.Int64((start.UTC().Add(10 * time.Second).UnixNano()) / 1000000),
@@ -231,7 +231,7 @@ func _runFunc(callInfo *CallInfo) {
 		panic(err)
 	}
 
-	resultInfo := &rpcpb.ResultInfo{
+	resultInfo := &core.ResultInfo{
 		Cid:        callInfo.RPCInfo.Cid,
 		Error:      rerr,
 		ResultType: argType,

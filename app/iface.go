@@ -6,7 +6,7 @@ import (
 
 	"github.com/cloudapex/river/conf"
 	"github.com/cloudapex/river/mqrpc"
-	rpcpb "github.com/cloudapex/river/mqrpc/pb"
+	"github.com/cloudapex/river/mqrpc/core"
 	"github.com/cloudapex/river/registry"
 	"github.com/cloudapex/river/selector"
 	"github.com/nats-io/nats.go"
@@ -127,7 +127,7 @@ type ICtxTransSetApp interface {
 type FileNameHandler func(logdir, prefix, processID, suffix string) string
 
 // ClientRPCHandler 调用方RPC监控
-type ClientRPCHandler func(server registry.Node, rpcinfo *rpcpb.RPCInfo, result any, err error, exec_time int64)
+type ClientRPCHandler func(server registry.Node, rpcinfo *core.RPCInfo, result any, err error, exec_time int64)
 
 // ServerRPCHandler 服务方RPC监控
 type ServerRPCHandler func(module IModule, callInfo *mqrpc.CallInfo)

@@ -22,10 +22,10 @@ import (
 	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/mqrpc"
-	rpcpb "github.com/cloudapex/river/mqrpc/pb"
+	"github.com/cloudapex/river/mqrpc/core"
 	"github.com/cloudapex/river/tools"
 	"github.com/nats-io/nats.go"
-	"google.golang.org/protobuf/proto"
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 type NatsClient struct {
@@ -54,7 +54,7 @@ func (c *NatsClient) Delete(key string) (err error) {
 	c.callinfos.Delete(key)
 	return
 }
-func (c *NatsClient) CloseFch(fch chan *rpcpb.ResultInfo) {
+func (c *NatsClient) CloseFch(fch chan *core.ResultInfo) {
 	defer func() {
 		if recover() != nil {
 			// close(ch) panic occur
@@ -87,7 +87,7 @@ func (c *NatsClient) Done() (err error) {
 *
 消息请求
 */
-func (c *NatsClient) Call(callInfo *mqrpc.CallInfo, callback chan *rpcpb.ResultInfo) error {
+func (c *NatsClient) Call(callInfo *mqrpc.CallInfo, callback chan *core.ResultInfo) error {
 	//var err error
 	if c.callinfos == nil {
 		return fmt.Errorf("AMQPClient is closed")
@@ -203,11 +203,11 @@ func (c *NatsClient) on_request_handle() (err error) {
 	return nil
 }
 
-func (c *NatsClient) UnmarshalResult(data []byte) (*rpcpb.ResultInfo, error) {
+func (c *NatsClient) UnmarshalResult(data []byte) (*core.ResultInfo, error) {
 	//fmt.Println(msg)
 	//保存解码后的数据，Value可以为任意数据类型
-	var resultInfo rpcpb.ResultInfo
-	err := proto.Unmarshal(data, &resultInfo)
+	var resultInfo core.ResultInfo
+	err := msgpack.Unmarshal(data, &resultInfo)
 	if err != nil {
 		return nil, err
 	} else {
@@ -215,11 +215,11 @@ func (c *NatsClient) UnmarshalResult(data []byte) (*rpcpb.ResultInfo, error) {
 	}
 }
 
-func (c *NatsClient) Unmarshal(data []byte) (*rpcpb.RPCInfo, error) {
+func (c *NatsClient) Unmarshal(data []byte) (*core.RPCInfo, error) {
 	//fmt.Println(msg)
 	//保存解码后的数据，Value可以为任意数据类型
-	var rpcInfo rpcpb.RPCInfo
-	err := proto.Unmarshal(data, &rpcInfo)
+	var rpcInfo core.RPCInfo
+	err := msgpack.Unmarshal(data, &rpcInfo)
 	if err != nil {
 		return nil, err
 	} else {
@@ -229,8 +229,8 @@ func (c *NatsClient) Unmarshal(data []byte) (*rpcpb.RPCInfo, error) {
 }
 
 // goroutine safe
-func (c *NatsClient) Marshal(rpcInfo *rpcpb.RPCInfo) ([]byte, error) {
+func (c *NatsClient) Marshal(rpcInfo *core.RPCInfo) ([]byte, error) {
 	//map2:= structs.Map(callInfo)
-	b, err := proto.Marshal(rpcInfo)
+	b, err := msgpack.Marshal(rpcInfo)
 	return b, err
 }

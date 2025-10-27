@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"sync"
 
-	rpcpb "github.com/cloudapex/river/mqrpc/pb"
+	"github.com/cloudapex/river/mqrpc/core"
 )
 
 // 支持rpc trans的Context Keys
@@ -73,8 +73,8 @@ type MQServer interface {
 
 // CallInfo RPC的请求信息
 type CallInfo struct {
-	RPCInfo  *rpcpb.RPCInfo
-	Result   *rpcpb.ResultInfo
+	RPCInfo  *core.RPCInfo
+	Result   *core.ResultInfo
 	Props    map[string]any
 	ExecTime int64
 	Agent    MQServer //代理者  AMQPServer / LocalServer 都继承 Callback(callinfo CallInfo)(error) 方法
@@ -102,7 +102,7 @@ type RPCListener interface {
 	result		执行结果
 	exec_time 	方法执行时间 单位为 Nano 纳秒  1000000纳秒等于1毫秒
 	*/
-	OnComplete(fn string, callInfo *CallInfo, result *rpcpb.ResultInfo, execTime int64)
+	OnComplete(fn string, callInfo *CallInfo, result *core.ResultInfo, execTime int64)
 }
 
 // GoroutineControl 服务协程数量控制

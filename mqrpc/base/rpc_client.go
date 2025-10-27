@@ -22,7 +22,7 @@ import (
 	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/mqrpc"
-	rpcpb "github.com/cloudapex/river/mqrpc/pb"
+	"github.com/cloudapex/river/mqrpc/core"
 	"github.com/cloudapex/river/tools/uuid"
 	"google.golang.org/protobuf/proto"
 )
@@ -88,7 +88,7 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 
 	start := time.Now()
 	var correlation_id = uuid.Rand().Hex()
-	rpcInfo := &rpcpb.RPCInfo{
+	rpcInfo := &core.RPCInfo{
 		Fn:       *proto.String(_func),
 		Reply:    *proto.Bool(true),
 		Expired:  *proto.Int64((start.UTC().Add(app.App().Options().RPCExpired).UnixNano()) / 1000000),
@@ -108,7 +108,7 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 	callInfo := &mqrpc.CallInfo{
 		RPCInfo: rpcInfo,
 	}
-	callback := make(chan *rpcpb.ResultInfo, 1)
+	callback := make(chan *core.ResultInfo, 1)
 	//优先使用本地rpc
 	//if c.local_client != nil {
 	//	err = c.local_client.Call(*callInfo, callback)
@@ -183,7 +183,7 @@ func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argTypes []str
 	}
 
 	var correlation_id = uuid.Rand().Hex()
-	rpcInfo := &rpcpb.RPCInfo{
+	rpcInfo := &core.RPCInfo{
 		Fn:       *proto.String(_func),
 		Reply:    *proto.Bool(false),
 		Expired:  *proto.Int64((time.Now().UTC().Add(app.App().Options().RPCExpired).UnixNano()) / 1000000),
@@ -203,7 +203,7 @@ func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argTypes []str
 	return c.nats_client.CallNR(callInfo)
 }
 
-func (c *RPCClient) close_callback_chan(ch chan *rpcpb.ResultInfo) {
+func (c *RPCClient) close_callback_chan(ch chan *core.ResultInfo) {
 	defer func() {
 		if recover() != nil {
 			// close(ch) panic occur
