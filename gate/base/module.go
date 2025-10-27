@@ -1,16 +1,3 @@
-// Copyright 2014 river Author. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//	http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 package gatebase
 
 import (
@@ -24,9 +11,9 @@ import (
 	"github.com/cloudapex/river/network"
 )
 
-var _ app.IRPCModule = &ModuleGate{}
+var _ app.IRPCModule = &GateBase{}
 
-type ModuleGate struct {
+type GateBase struct {
 	module.ModuleBase
 
 	opts gate.Options
@@ -43,7 +30,7 @@ type ModuleGate struct {
 	sendMessageHook gate.SendMessageHook // 发送消息时的钩子回调
 }
 
-func (this *ModuleGate) Init(subclass app.IRPCModule, settings *conf.ModuleSettings, opts ...gate.Option) {
+func (this *GateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSettings, opts ...gate.Option) {
 	this.opts = gate.NewOptions(opts...)
 	this.ModuleBase.Init(subclass, settings, this.opts.Opts...) // 这是必须的
 	if this.opts.WsAddr == "" {
@@ -99,21 +86,21 @@ func (this *ModuleGate) Init(subclass app.IRPCModule, settings *conf.ModuleSetti
 	// send by Broadcast
 	this.GetServer().RegisterGO("Broadcast", handler.OnRpcBroadcast)
 }
-func (this *ModuleGate) OnDestroy() {
+func (this *GateBase) OnDestroy() {
 	this.ModuleBase.OnDestroy() // 这是必须的
 }
-func (this *ModuleGate) GetType() string { return "Gate" }
+func (this *GateBase) GetType() string { return "Gate" }
 
-func (this *ModuleGate) Version() string { return "1.0.0" }
+func (this *GateBase) Version() string { return "1.0.0" }
 
-func (this *ModuleGate) OnAppConfigurationLoaded() {
+func (this *GateBase) OnAppConfigurationLoaded() {
 	this.ModuleBase.OnAppConfigurationLoaded() // 这是必须的
 }
-func (this *ModuleGate) OnConfChanged(settings *conf.ModuleSettings) {}
+func (this *GateBase) OnConfChanged(settings *conf.ModuleSettings) {}
 
-func (this *ModuleGate) Options() gate.Options { return this.opts }
+func (this *GateBase) Options() gate.Options { return this.opts }
 
-func (this *ModuleGate) Run(closeSig chan bool) {
+func (this *GateBase) Run(closeSig chan bool) {
 	var wsServer *network.WSServer
 	if this.opts.WsAddr != "" {
 		wsServer = new(network.WSServer)
@@ -164,13 +151,13 @@ func (this *ModuleGate) Run(closeSig chan bool) {
 }
 
 // 设置创建客户端Agent的函数
-func (this *ModuleGate) SetAgentCreater(cfunc func(netTyp string) gate.IAgent) error {
+func (this *GateBase) SetAgentCreater(cfunc func(netTyp string) gate.IAgent) error {
 	this.createAgent = cfunc
 	return nil
 }
 
 // 默认的创建客户端Agent的方法
-func (this *ModuleGate) defaultAgentCreater(netTyp string) gate.IAgent {
+func (this *GateBase) defaultAgentCreater(netTyp string) gate.IAgent {
 	switch netTyp {
 	case "ws":
 		return NewWSAgent()
@@ -181,73 +168,73 @@ func (this *ModuleGate) defaultAgentCreater(netTyp string) gate.IAgent {
 }
 
 // SetGateHandler 设置代理接口
-func (this *ModuleGate) setGateHandler(handler gate.GateHandler) error {
+func (this *GateBase) setGateHandler(handler gate.GateHandler) error {
 	this.handler = handler
 	return nil
 }
 
 // GetGateHandler 获取代理接口
-func (this *ModuleGate) GetGateHandler() gate.GateHandler { return this.handler }
+func (this *GateBase) GetGateHandler() gate.GateHandler { return this.handler }
 
 // SetGuestJudger 设置是否游客的判定器
-func (this *ModuleGate) SetGuestJudger(judger func(session gate.ISession) bool) error {
+func (this *GateBase) SetGuestJudger(judger func(session gate.ISession) bool) error {
 	this.guestJudger = judger
 	return nil
 }
 
 // GetGuestJudger 获取是否游客的判定器
-func (this *ModuleGate) GetGuestJudger() func(session gate.ISession) bool { return this.guestJudger }
+func (this *GateBase) GetGuestJudger() func(session gate.ISession) bool { return this.guestJudger }
 
 // SetShakeHandler 设置建立连接时鉴权器(ws)
-func (this *ModuleGate) SetShakeHandler(handler func(r *http.Request) error) error {
+func (this *GateBase) SetShakeHandler(handler func(r *http.Request) error) error {
 	this.shakeHandle = handler
 	return nil
 }
 
 // GetShakeHandler 获取建立连接时鉴权器(ws)
-func (this *ModuleGate) GetShakeHandler() func(r *http.Request) error { return this.shakeHandle }
+func (this *GateBase) GetShakeHandler() func(r *http.Request) error { return this.shakeHandle }
 
 // SetStorageHandler 设置Session信息持久化接口
-func (this *ModuleGate) SetStorageHandler(storager gate.StorageHandler) error {
+func (this *GateBase) SetStorageHandler(storager gate.StorageHandler) error {
 	this.storager = storager
 	return nil
 }
 
 // GetStorageHandler 获取Session信息持久化接口
-func (this *ModuleGate) GetStorageHandler() (storager gate.StorageHandler) { return this.storager }
+func (this *GateBase) GetStorageHandler() (storager gate.StorageHandler) { return this.storager }
 
 // SetRouteHandler 设置路由接口
-func (this *ModuleGate) SetRouteHandler(router gate.RouteHandler) error {
+func (this *GateBase) SetRouteHandler(router gate.RouteHandler) error {
 	this.router = router
 	return nil
 }
 
 // GetRouteHandler 获取路由接口
-func (this *ModuleGate) GetRouteHandler() gate.RouteHandler { return this.router }
+func (this *GateBase) GetRouteHandler() gate.RouteHandler { return this.router }
 
 // SetSessionLearner 设置客户端连接和断开的监听器
-func (this *ModuleGate) SetSessionLearner(learner gate.SessionLearner) error {
+func (this *GateBase) SetSessionLearner(learner gate.SessionLearner) error {
 	this.sessionLearner = learner
 	return nil
 }
 
 // GetSessionLearner 获取客户端连接和断开的监听器
-func (this *ModuleGate) GetSessionLearner() gate.SessionLearner { return this.sessionLearner }
+func (this *GateBase) GetSessionLearner() gate.SessionLearner { return this.sessionLearner }
 
 // SetAgentLearner 设置客户端连接和断开的监听器
-func (this *ModuleGate) setAgentLearner(learner gate.AgentLearner) error {
+func (this *GateBase) setAgentLearner(learner gate.AgentLearner) error {
 	this.agentLearner = learner
 	return nil
 }
 
 // SetAgentLearner 获取客户端连接和断开的监听器(建议用 SetSessionLearner)
-func (this *ModuleGate) GetAgentLearner() gate.AgentLearner { return this.agentLearner }
+func (this *GateBase) GetAgentLearner() gate.AgentLearner { return this.agentLearner }
 
 // SetsendMessageHook 设置发送消息时的钩子回调
-func (this *ModuleGate) SetSendMessageHook(hook gate.SendMessageHook) error {
+func (this *GateBase) SetSendMessageHook(hook gate.SendMessageHook) error {
 	this.sendMessageHook = hook
 	return nil
 }
 
 // GetSendMessageHook 获取发送消息时的钩子回调
-func (this *ModuleGate) GetSendMessageHook() gate.SendMessageHook { return this.sendMessageHook }
+func (this *GateBase) GetSendMessageHook() gate.SendMessageHook { return this.sendMessageHook }
