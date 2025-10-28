@@ -15,7 +15,7 @@ import (
 
 // WSHandler websocket 处理器
 type WSHandler struct {
-	newConnAgent func(*WSConn) Agent
+	newConnAgent func(*WSConn) ConnAgent
 }
 
 func (handler *WSHandler) work(conn *websocket.Conn, r *http.Request) {
@@ -30,18 +30,18 @@ func (handler *WSHandler) work(conn *websocket.Conn, r *http.Request) {
 
 // WSServer websocket服务器
 type WSServer struct {
-	Addr         string
-	TLS          bool //是否支持tls
-	CertFile     string
-	KeyFile      string
-	MaxConnNum   int
-	MaxMsgLen    uint32
-	HTTPTimeout  time.Duration
-	NewConnAgent func(*WSConn) Agent
-	ln           net.Listener
-	handler      *WSHandler
-	ShakeFunc    func(r *http.Request) error
-	wgConns      sync.WaitGroup
+	Addr        string
+	TLS         bool //是否支持tls
+	CertFile    string
+	KeyFile     string
+	MaxConnNum  int
+	MaxMsgLen   uint32
+	HTTPTimeout time.Duration
+	NewAgent    func(*WSConn) ConnAgent
+	ln          net.Listener
+	handler     *WSHandler
+	ShakeFunc   func(r *http.Request) error
+	wgConns     sync.WaitGroup
 }
 
 // Start 开启监听websocket端口
@@ -56,7 +56,7 @@ func (server *WSServer) Start() {
 		server.HTTPTimeout = 10 * time.Second
 		log.Warning("invalid HTTPTimeout, reset to %v", server.HTTPTimeout)
 	}
-	if server.NewConnAgent == nil {
+	if server.NewAgent == nil {
 		log.Error("NewConnAgent must not be nil")
 		panic(fmt.Sprintf("TCPServer.NewConnAgent must not be nil"))
 	}
@@ -73,7 +73,7 @@ func (server *WSServer) Start() {
 	}
 	server.ln = ln
 	server.handler = &WSHandler{
-		newConnAgent: server.NewConnAgent,
+		newConnAgent: server.NewAgent,
 	}
 
 	// upgrader connect

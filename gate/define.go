@@ -23,7 +23,7 @@ const (
 
 // Pack 消息包
 type Pack struct {
-	Topic string
+	Topic string // "moduleTyp/msgId"
 	Body  []byte
 }
 
@@ -44,7 +44,7 @@ type IGate interface {
 
 // IDelegater session管理接口
 type IDelegater interface {
-	GetAgent(sessionId string) (IAgent, error)
+	GetAgent(sessionId string) (IConnAgent, error)
 	GetAgentNum() int
 	OnDestroy() // 退出事件,当主动关闭时释放所有的连接
 
@@ -88,15 +88,8 @@ type ISession interface {
 	GetIP() string
 	SetIP(ip string)
 
-	GetTopic() string
-	SetTopic(topic string)
-
 	GetNetwork() string
 	SetNetwork(network string)
-
-	GetUserID() string
-	GetUserIDInt64() int64
-	SetUserID(userId string)
 
 	GetSessionID() string
 	SetSessionID(sessionId string)
@@ -110,6 +103,11 @@ type ISession interface {
 	// 网关本地的额外数据,不会再rpc中传递
 	SetLocalUserData(data any)
 
+	// UserID(线程安全)
+	GetUserID() string
+	GetUserIDUint() uint64
+	SetUserID(userId string)
+
 	// --------------- Setting区(线程安全)
 
 	Get(key string) (string, bool)
@@ -118,7 +116,7 @@ type ISession interface {
 	SetSettings(settings map[string]string)
 	// 合并两个map 并且以 agent.(Agent).GetSession().Settings 已有的优先
 	ImportSettings(map[string]string) error
-	//SettingsRange 配合一个回调函数进行遍历操作，通过回调函数返回内部遍历出来的值。回调函数的返回值：需要继续迭代遍历时，返回 true；终止迭代遍历时，返回 false。
+	//SettingsRange 配合一个回调函数进行遍历操作，通过回调函数返回内部遍历出来的值。回调函数的返回值：返回 true；终止迭代遍历时，返回 false。
 	SettingsRange(func(k, v string) bool)
 
 	// 每次rpc调用都拷贝一份新的Session进行传输
@@ -126,17 +124,17 @@ type ISession interface {
 	// 只Clone Settings
 	CloneSettings() map[string]string
 
-	//是否是访客(未登录)
+	// 是否是访客(未登录)
 	IsGuest() bool
 
-	// 生成RPC方法需要的context
+	// 调用RPC方法时通过context传递
 	GenRPCContext() context.Context
 
 	// 日志追踪
-	UpdTraceSpan()
+	GenTraceSpan()
 	GetTraceSpan() log.TraceSpan
 
-	// --------------- Session RPC方法封装
+	// --------------- 业务区 Session RPC方法封装
 
 	// update local Session(从Gate拉取最新数据)
 	ToUpdate() error
@@ -154,17 +152,19 @@ type ISession interface {
 	ToDel(key string) error
 	// Send message to the session.
 	ToSend(topic string, body []byte) error
+
 	// Send batch message to the sessions(sessionId之间用,分割).
 	//ToSendBatch(sessionids string, topic string, body []byte) (int64, error)
+
 	// the session is connect status
 	ToConnected() (bool, error)
 	// close the session connect
 	ToClose() error
 }
 
-// IAgent 客户端代理定义
-type IAgent interface {
-	Init(impl IAgent, gate IGate, conn network.Conn) error
+// IConnAgent 客户端代理定义
+type IConnAgent interface {
+	Init(impl IConnAgent, gate IGate, conn network.Conn) error
 	Close()         // 主动关闭(异常关闭or主动关闭)
 	OnClose() error // Run() 结束后触发回调
 
@@ -186,7 +186,7 @@ type IAgent interface {
 	// 读取数据并解码出Pack
 	OnReadDecodingPack() (*Pack, error)
 
-	// 自行实现如何处理收到的数据包
+	// 实现如何处理收到的数据包
 	OnHandRecvPack(pack *Pack) error
 
 	GetError() error // 连接断开的错误日志
@@ -232,8 +232,8 @@ type GenResponseHandler interface {
 
 // IAgentLearner 连接代理(内部使用)
 type IAgentLearner interface {
-	Connect(a IAgent)    //当连接建立  并且MQTT协议握手成功
-	DisConnect(a IAgent) //当连接关闭	或者客户端主动发送MQTT DisConnect命令
+	Connect(a IConnAgent)    //当连接建立  并且MQTT协议握手成功
+	DisConnect(a IConnAgent) //当连接关闭	或者客户端主动发送MQTT DisConnect命令
 }
 
 // ISessionLearner 客户端代理(业务使用)

@@ -18,7 +18,7 @@ import (
 )
 
 type agentBase struct {
-	impl gate.IAgent
+	impl gate.IConnAgent
 
 	gate         gate.IGate
 	session      gate.ISession
@@ -35,7 +35,7 @@ type agentBase struct {
 	lastError    error
 }
 
-func (this *agentBase) Init(impl gate.IAgent, gt gate.IGate, conn network.Conn) error {
+func (this *agentBase) Init(impl gate.IConnAgent, gt gate.IGate, conn network.Conn) error {
 	this.impl = impl
 	this.ch = make(chan int, gt.Options().ConcurrentTasks)
 	this.conn = conn
@@ -60,7 +60,7 @@ func (this *agentBase) Close() {
 func (this *agentBase) OnClose() error {
 	atomic.StoreInt32(&this.isClosed, 1)
 	close(this.sendPackChan)
-	this.gate.GetAgentLearner().DisConnect(this) // 发送连接断开的事件
+	this.gate.GetAgentLearner().DisConnect(this.impl) // 触发连接断开的事件
 	return nil
 }
 
@@ -81,7 +81,7 @@ func (this *agentBase) Run() (err error) {
 		"Settings":  make(map[string]string),
 	})
 
-	this.session.UpdTraceSpan() // 代码跟踪
+	this.session.GenTraceSpan() // 代码跟踪
 	this.connTime = time.Now()
 	this.isShaked = 1
 	this.gate.GetAgentLearner().Connect(this) //发送连接成功的事件
@@ -112,6 +112,14 @@ func (this *agentBase) SendNum() int64 { return atomic.LoadInt64(&this.sendNum) 
 // GetSession 管理的ClientSession
 func (this *agentBase) GetSession() gate.ISession { return this.session }
 
+// 获取最后发生的错误
+func (this *agentBase) GetError() error {
+	if !this.IsClosed() {
+		return nil
+	}
+	return this.lastError
+}
+
 // ========== 处理发送
 func (this *agentBase) sendLoop() {
 	defer func() {
@@ -128,6 +136,7 @@ func (this *agentBase) sendLoop() {
 		if _, err := this.conn.Write(sendData); err != nil {
 			this.lastError = err
 			log.Error("sendLoop, userId:%v sessionId:%v topic:%v dataLen:%v, err:%v", this.session.GetUserID(), this.session.GetSessionID(), pack.Topic, len(sendData), err)
+			break
 		} else {
 			log.Debug("sendLoop, userId:%v sessionId:%v topic:%v dataLen:%v ok.", this.session.GetUserID(), this.session.GetSessionID(), pack.Topic, len(sendData))
 		}
@@ -155,7 +164,7 @@ func (this *agentBase) SendPack(pack *gate.Pack) error {
 	}
 }
 
-// ========== 处理接收
+// ========== 处理接收(wait)
 func (this *agentBase) recvLoop() error {
 	heartOverTime := this.gate.Options().HeartOverTimer
 	for {
@@ -169,7 +178,7 @@ func (this *agentBase) recvLoop() error {
 			if heartOverTime > 0 && time.Since(nowTime) >= (heartOverTime) {
 				log.Error("recvLoop heartOverTime, userId:%v sessionId:%v", this.session.GetSessionID(), this.session.GetUserID())
 			} else {
-				log.Error("recvLoop heartOverTime, userId:%v sessionId:%v err:%s", this.session.GetSessionID(), this.session.GetUserID(), err.Error())
+				log.Error("recvLoop OnReadDecodingPack, userId:%v sessionId:%v err:%s", this.session.GetSessionID(), this.session.GetUserID(), err.Error())
 			}
 			this.lastError = err
 			return err
@@ -189,7 +198,7 @@ func (this *agentBase) recvLoop() error {
 				continue
 			}
 		}
-		if err := this.OnHandRecvPack(pack); err != nil {
+		if err := this.impl.OnHandRecvPack(pack); err != nil {
 			this.lastError = err
 			return err
 		}
@@ -203,7 +212,6 @@ func (this *agentBase) recvWait() error {
 	}
 	return nil
 }
-
 func (this *agentBase) recvFinish() {
 	// 完成则从ch推出数据
 	select {
@@ -212,7 +220,7 @@ func (this *agentBase) recvFinish() {
 	}
 }
 
-// 自行实现如何处理收到的数据包
+// 实现如何处理收到的数据包
 func (this *agentBase) OnHandRecvPack(pack *gate.Pack) error {
 	// 处理保活(默认不处理保活,留给上层处理)
 
@@ -242,17 +250,9 @@ func (this *agentBase) OnHandRecvPack(pack *gate.Pack) error {
 	return err
 }
 
-// 获取最后发生的错误
-func (this *agentBase) GetError() error {
-	if !this.IsClosed() {
-		return nil
-	}
-	return this.lastError
-}
-
 // ========== Pack编码默认实现
 
-// OnWriteEncodingPack 处理编码Pack后的数据用于发送
+// OnWriteEncodingPack 处理Pack数据的编码用于发送
 func (this *agentBase) OnWriteEncodingPack(pack *gate.Pack) []byte {
 	// [普通不加密]
 	// headLen := gate.PACK_HEAD_TOTAL_LEN_SIZE + gate.PACK_HEAD_MSG_ID_LEN_SIZE

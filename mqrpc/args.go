@@ -63,7 +63,7 @@ func ArgToData(arg any) (string, []byte, error) {
 		return JSMAP, bytes, err
 	case context.Context:
 		maps := map[string]any{} // 把支持trans的kv序列化到map中再编码进行传输
-		for k := range getTransContextKeys() {
+		for _, k := range getTransContextKeys() {
 			v := v2.Value(k)
 			if v == nil {
 				continue

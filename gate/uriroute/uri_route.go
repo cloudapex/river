@@ -90,7 +90,7 @@ func (u *URIRoute) OnRoute(session gate.ISession, topic string, msg []byte) (boo
 	}
 	argTypes = make([]string, 2)
 	argDatas = make([][]byte, 2)
-	session.SetTopic(topic)
+	//session.SetTopic(topic)
 	var serverSession app.IServerSession
 	if u.Selector != nil {
 		ss, err := u.Selector(session, topic, uu)
@@ -155,7 +155,7 @@ func (u *URIRoute) OnRoute(session gate.ISession, topic string, msg []byte) (boo
 		argDatas[1] = msg
 	}
 	s := session.Clone()
-	s.SetTopic(topic)
+	//s.SetTopic(topic)
 
 	ctx := context.Background()
 	ctx = mqrpc.ContextWithValue(ctx, gate.CONTEXT_TRANSKEY_SESSION, s)

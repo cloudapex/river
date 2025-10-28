@@ -20,10 +20,10 @@ type TCPServer struct {
 	KeyFile    string
 	MaxConnNum int
 	// mutexConns   sync.Mutex
-	NewConnAgent func(*TCPConn) Agent
-	ln           net.Listener
-	wgLn         sync.WaitGroup
-	wgConns      sync.WaitGroup
+	NewAgent func(*TCPConn) ConnAgent
+	ln       net.Listener
+	wgLn     sync.WaitGroup
+	wgConns  sync.WaitGroup
 }
 
 // Start 开始tcp监听
@@ -40,7 +40,7 @@ func (server *TCPServer) init() {
 		panic(fmt.Sprintf("TCPServer.Start.Listen err:%v", err))
 	}
 
-	if server.NewConnAgent == nil {
+	if server.NewAgent == nil {
 		log.Error("NewConnAgent must not be nil")
 		panic(fmt.Sprintf("TCPServer.NewConnAgent must not be nil"))
 	}
@@ -92,7 +92,7 @@ func (server *TCPServer) run() {
 		atomic.AddInt32(&connNum, 1)
 
 		tcpConn := newTCPConn(conn)
-		agent := server.NewConnAgent(tcpConn)
+		agent := server.NewAgent(tcpConn)
 		server.wgConns.Add(1)
 		go func() {
 			defer func() {

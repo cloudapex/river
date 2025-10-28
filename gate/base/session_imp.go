@@ -9,6 +9,4 @@ type SessionImp struct {
 	TraceId   string            `msgpack:"trace_id,omitempty" json:"trace_id,omitempty"`
 	SpanId    string            `msgpack:"span_id,omitempty" json:"span_id,omitempty"`
 	Settings  map[string]string `msgpack:"settings,omitempty" json:"settings,omitempty"`
-	Carrier   map[string]string `msgpack:"carrier,omitempty" json:"carrier,omitempty"`
-	Topic     string            `msgpack:"topic,omitempty" json:"topic,omitempty"`
 }

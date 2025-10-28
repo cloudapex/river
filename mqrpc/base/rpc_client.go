@@ -36,15 +36,18 @@ func (c *RPCClient) Done() (err error) {
 }
 
 func (c *RPCClient) Call(ctx context.Context, _func string, params ...any) (any, error) {
+	_ctx := ctx
 	var argTypes []string = make([]string, len(params)+1)
 	var argDatas [][]byte = make([][]byte, len(params)+1)
-	_, ok := ctx.Value(log.CONTEXT_TRANSKEY_TRACE).(log.TraceSpan)
+	// 检测是否含有log.TraceSpan
+	span, ok := ctx.Value(log.CONTEXT_TRANSKEY_TRACE).(log.TraceSpan)
 	if !ok {
-		ctx = mqrpc.ContextWithValue(ctx, log.CONTEXT_TRANSKEY_TRACE, log.CreateRootTrace())
+		_ctx = mqrpc.ContextWithValue(_ctx, log.CONTEXT_TRANSKEY_TRACE, log.CreateRootTrace())
+	} else {
+		_ctx = mqrpc.ContextWithValue(_ctx, log.CONTEXT_TRANSKEY_TRACE, span.ExtractSpan())
 	}
 
-	// 检测是否含有log.TraceSpan
-	params = append([]any{ctx}, params...)
+	params = append([]any{_ctx}, params...)
 	for k, arg := range params {
 		var err error = nil
 		argTypes[k], argDatas[k], err = mqrpc.ArgToData(arg)
@@ -138,13 +141,17 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 }
 
 func (c *RPCClient) CallNR(ctx context.Context, _func string, params ...any) (err error) {
+	_ctx := ctx
 	var argTypes []string = make([]string, len(params)+1)
 	var argDatas [][]byte = make([][]byte, len(params)+1)
-	_, ok := ctx.Value(log.CONTEXT_TRANSKEY_TRACE).(log.TraceSpan)
+	// 检测是否含有log.TraceSpan
+	span, ok := ctx.Value(log.CONTEXT_TRANSKEY_TRACE).(log.TraceSpan)
 	if !ok {
-		ctx = mqrpc.ContextWithValue(ctx, log.CONTEXT_TRANSKEY_TRACE, log.CreateRootTrace())
+		_ctx = mqrpc.ContextWithValue(_ctx, log.CONTEXT_TRANSKEY_TRACE, log.CreateRootTrace())
+	} else {
+		_ctx = mqrpc.ContextWithValue(_ctx, log.CONTEXT_TRANSKEY_TRACE, span.ExtractSpan())
 	}
-	params = append([]any{ctx}, params...)
+	params = append([]any{_ctx}, params...)
 	for k, arg := range params {
 		argTypes[k], argDatas[k], err = mqrpc.ArgToData(arg)
 		if err != nil {

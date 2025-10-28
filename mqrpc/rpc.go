@@ -42,15 +42,15 @@ func hasTransContextKey(key string) bool {
 	_, exists := transContextKeys[key]
 	return exists
 }
-func getTransContextKeys() map[string]func() Marshaler {
+func getTransContextKeys() []string {
 	contextKeysMutex.RLock()
 	defer contextKeysMutex.RUnlock()
 
-	mps := map[string]func() Marshaler{}
-	for k, v := range transContextKeys {
-		mps[k] = v
+	ks := make([]string, len(transContextKeys))
+	for k := range transContextKeys {
+		ks = append(ks, k)
 	}
-	return mps
+	return ks
 }
 func getTransContextKeyItem(key string) func() Marshaler {
 	contextKeysMutex.RLock()

@@ -12,7 +12,7 @@ type Option func(*Options)
 
 // Options 网关配置项
 type Options struct {
-	ConcurrentTasks int // 单个连接允许的同时并发协程数,控制流量(20)
+	ConcurrentTasks int // 单个连接允许的同时并发协程数,控制流量(20)(目前没用)
 	BufSize         int // 连接数据缓存大小(2048)
 	MaxPackSize     int // 单个协议包数据最大值(65535)
 	SendPackBuffNum int // 发送消息的缓冲队列(100)
@@ -48,7 +48,7 @@ func NewOptions(opts ...Option) Options {
 	return opt
 }
 
-// ConcurrentTasks 设置单个连接允许的同时并发协程数
+// ConcurrentTasks 设置单个连接允许的同时并发协程数(目前没用)
 func ConcurrentTasks(s int) Option {
 	return func(o *Options) {
 		o.ConcurrentTasks = s

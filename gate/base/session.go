@@ -22,7 +22,7 @@ func init() {
 	})
 }
 
-// NewSession NewSession
+// NewSession data必须要有效
 func NewSession(data []byte) (gate.ISession, error) {
 	agent := &sessionAgent{
 		lock: new(sync.RWMutex),
@@ -37,7 +37,7 @@ func NewSession(data []byte) (gate.ISession, error) {
 	return agent, nil
 }
 
-// NewSessionByMap NewSessionByMap
+// NewSessionByMap data可以为空则构造一个空的Session
 func NewSessionByMap(data map[string]any) (gate.ISession, error) {
 	agent := &sessionAgent{
 		session: new(SessionImp),
@@ -70,33 +70,24 @@ func (s *sessionAgent) initByDat(data []byte) error {
 	return nil
 }
 func (s *sessionAgent) initByMap(datas map[string]any) error {
-	userId := datas["UserId"]
-	if userId != nil {
-		s.session.UserId = userId.(string)
+	if uid := datas["UserId"]; uid != nil {
+		s.session.UserId = uid.(string)
 	}
-	IP := datas["IP"]
-	if IP != nil {
-		s.session.IP = IP.(string)
+	if ip := datas["IP"]; ip != nil {
+		s.session.IP = ip.(string)
 	}
-	if topic, ok := datas["Topic"]; ok {
-		s.session.Topic = topic.(string)
+	if network := datas["Network"]; network != nil {
+		s.session.Network = network.(string)
 	}
-	Network := datas["Network"]
-	if Network != nil {
-		s.session.Network = Network.(string)
+	if sessionId := datas["SessionId"]; sessionId != nil {
+		s.session.SessionId = sessionId.(string)
 	}
-	Sessionid := datas["SessionId"]
-	if Sessionid != nil {
-		s.session.SessionId = Sessionid.(string)
+	if serverId := datas["ServerId"]; serverId != nil {
+		s.session.ServerId = serverId.(string)
 	}
-	Serverid := datas["ServerId"]
-	if Serverid != nil {
-		s.session.ServerId = Serverid.(string)
-	}
-	Settings := datas["Settings"]
-	if Settings != nil {
+	if settings := datas["Settings"]; settings != nil {
 		s.lock.Lock()
-		s.session.Settings = Settings.(map[string]string)
+		s.session.Settings = settings.(map[string]string)
 		s.lock.Unlock()
 	}
 	return nil
@@ -104,8 +95,6 @@ func (s *sessionAgent) initByMap(datas map[string]any) error {
 
 func (s *sessionAgent) GetIP() string                 { return s.session.IP }
 func (s *sessionAgent) SetIP(ip string)               { s.session.IP = ip }
-func (s *sessionAgent) GetTopic() string              { return s.session.Topic }
-func (s *sessionAgent) SetTopic(topic string)         { s.session.Topic = topic }
 func (s *sessionAgent) GetNetwork() string            { return s.session.Network }
 func (s *sessionAgent) SetNetwork(network string)     { s.session.Network = network }
 func (s *sessionAgent) GetSessionID() string          { return s.session.SessionId }
@@ -120,12 +109,12 @@ func (s *sessionAgent) GetUserID() string {
 	defer s.lock.Unlock()
 	return s.session.UserId
 }
-func (s *sessionAgent) GetUserIDInt64() int64 {
-	uid64, err := strconv.ParseInt(s.GetUserID(), 10, 64)
+func (s *sessionAgent) GetUserIDUint() uint64 {
+	uid, err := strconv.ParseUint(s.GetUserID(), 10, 64)
 	if err != nil {
-		return -1
+		return 0
 	}
-	return uid64
+	return uid
 }
 func (s *sessionAgent) SetUserID(userId string) {
 	s.lock.Lock()
@@ -197,29 +186,28 @@ func (s *sessionAgent) SettingsRange(f func(k, v string) bool) {
 
 // update 更新为新的session数据(只更新Settings数据)
 func (s *sessionAgent) update(session gate.ISession) error {
-	// userId := session.GetUserID()
-	// s.session.UserId = userId
+	userId := session.GetUserID()
 
-	// ip := session.GetIP()
-	// s.session.IP = ip
+	iP := session.GetIP()
 
-	// s.session.Topic = session.GetTopic()
+	network := session.GetNetwork()
 
-	// network := session.GetNetwork()
-	// s.session.Network = network
+	sessionId := session.GetSessionID()
 
-	// sessionId := session.GetSessionID()
-	// s.session.SessionId = sessionId
-
-	// serverid := session.GetServerID()
-	// s.session.ServerId = serverid
+	serverId := session.GetServerID()
 
 	settings := map[string]string{}
 	session.SettingsRange(func(k, v string) bool {
 		settings[k] = v
 		return true
 	})
+
 	s.lock.Lock()
+	s.session.UserId = userId
+	s.session.IP = iP
+	s.session.Network = network
+	s.session.SessionId = sessionId
+	s.session.ServerId = serverId
 	s.session.Settings = settings
 	s.lock.Unlock()
 	return nil
@@ -279,7 +267,7 @@ func (s *sessionAgent) GenRPCContext() context.Context {
 }
 
 // ========== TraceLog 部分
-func (s *sessionAgent) UpdTraceSpan() {
+func (s *sessionAgent) GenTraceSpan() {
 	s.session.TraceId = tools.GenerateID().String()
 	s.session.SpanId = tools.GenerateID().String()
 }
@@ -308,7 +296,7 @@ func (s *sessionAgent) ToUpdate() error {
 // Bind the session with the the userId.
 func (s *sessionAgent) ToBind(userId string) error {
 	if app.App() == nil {
-		return fmt.Errorf("SessionAgent.App is nil")
+		return fmt.Errorf("app.App is nil")
 	}
 	server, err := app.App().GetServerByID(s.session.ServerId)
 	if err != nil {
@@ -327,7 +315,7 @@ func (s *sessionAgent) ToBind(userId string) error {
 // UnBind the session with the the userId.
 func (s *sessionAgent) ToUnBind() error {
 	if app.App() == nil {
-		return fmt.Errorf("SessionAgent.App is nil")
+		return fmt.Errorf("app.App is nil")
 	}
 	server, err := app.App().GetServerByID(s.session.ServerId)
 	if err != nil {
@@ -346,7 +334,7 @@ func (s *sessionAgent) ToUnBind() error {
 // Set values (one) for the session.
 func (s *sessionAgent) ToSet(key string, value string) error {
 	if app.App() == nil {
-		return fmt.Errorf("SessionAgent.App is nil")
+		return fmt.Errorf("app.App is nil")
 	}
 	server, err := app.App().GetServerByID(s.session.ServerId)
 	if err != nil {
@@ -366,7 +354,7 @@ func (s *sessionAgent) ToSet(key string, value string) error {
 // Set values (many) for the session(直接用参数Push).
 func (s *sessionAgent) ToSetBatch(settings map[string]string) error {
 	if app.App() == nil {
-		return fmt.Errorf("SessionAgent.App is nil")
+		return fmt.Errorf("app.App is nil")
 	}
 	server, err := app.App().GetServerByID(s.session.ServerId)
 	if err != nil {
@@ -385,7 +373,7 @@ func (s *sessionAgent) ToSetBatch(settings map[string]string) error {
 // Push all Settings values for the session(拿自己的Settings去Push).
 func (s *sessionAgent) ToPush() error {
 	if app.App() == nil {
-		return fmt.Errorf("SessionAgent.App is nil")
+		return fmt.Errorf("app.App is nil")
 	}
 	server, err := app.App().GetServerByID(s.session.ServerId)
 	if err != nil {
@@ -410,7 +398,7 @@ func (s *sessionAgent) ToPush() error {
 // Remove value from the session.
 func (s *sessionAgent) ToDel(key string) error {
 	if app.App() == nil {
-		return fmt.Errorf("SessionAgent.App is nil")
+		return fmt.Errorf("app.App is nil")
 	}
 	server, err := app.App().GetServerByID(s.session.ServerId)
 	if err != nil {
@@ -429,7 +417,7 @@ func (s *sessionAgent) ToDel(key string) error {
 // Send message to the session.
 func (s *sessionAgent) ToSend(topic string, body []byte) error {
 	if app.App() == nil {
-		return fmt.Errorf("SessionAgent.App is nil")
+		return fmt.Errorf("app.App is nil")
 	}
 	server, err := app.App().GetServerByID(s.session.ServerId)
 	if err != nil {
@@ -441,7 +429,7 @@ func (s *sessionAgent) ToSend(topic string, body []byte) error {
 // the session is connect status
 func (s *sessionAgent) ToConnected() (bool, error) {
 	if app.App() == nil {
-		return false, fmt.Errorf("SessionAgent.App is nil")
+		return false, fmt.Errorf("app.App is nil")
 	}
 	server, err := app.App().GetServerByID(s.session.ServerId)
 	if err != nil {
@@ -454,7 +442,7 @@ func (s *sessionAgent) ToConnected() (bool, error) {
 // Close the session connect
 func (s *sessionAgent) ToClose() error {
 	if app.App() == nil {
-		return fmt.Errorf("SessionAgent.App is nil")
+		return fmt.Errorf("app.App is nil")
 	}
 	server, err := app.App().GetServerByID(s.session.ServerId)
 	if err != nil {
@@ -471,7 +459,7 @@ func (s *sessionAgent) Marshal() ([]byte, error) {
 	s.lock.RUnlock()
 	if err != nil {
 		return nil, err
-	} // 进行解码
+	}
 	return data, nil
 }
 func (s *sessionAgent) Unmarshal(data []byte) error {
@@ -479,7 +467,8 @@ func (s *sessionAgent) Unmarshal(data []byte) error {
 	err := msgpack.Unmarshal(data, se)
 	if err != nil {
 		return err
-	} // 测试结果
+	}
+
 	s.session = se
 	if s.session.Settings == nil {
 		s.lock.Lock()

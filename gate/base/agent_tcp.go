@@ -10,16 +10,16 @@ import (
 	"github.com/cloudapex/river/tools/aes"
 )
 
-func NewTCPAgent() gate.IAgent {
-	return &TCPAgent{}
+func NewTCPConnAgent() gate.IConnAgent {
+	return &TCPConnAgent{}
 }
 
-type TCPAgent struct {
+type TCPConnAgent struct {
 	agentBase
 }
 
 // 读取数据并解码出Pack
-func (this *TCPAgent) OnReadDecodingPack() (*gate.Pack, error) {
+func (this *TCPConnAgent) OnReadDecodingPack() (*gate.Pack, error) {
 	pkgLenData := make([]byte, gate.PACK_HEAD_TOTAL_LEN_SIZE)
 	_, err := io.ReadFull(this.r, pkgLenData)
 	if err != nil {
@@ -43,8 +43,16 @@ func (this *TCPAgent) OnReadDecodingPack() (*gate.Pack, error) {
 		}
 		bodyData = b64Data
 	}
+	// 检查解密后的数据长度是否足够
+	if len(bodyData) < gate.PACK_HEAD_MSG_ID_LEN_SIZE {
+		return nil, fmt.Errorf("package len too small after decrypt")
+	}
 	topicLen := binary.LittleEndian.Uint16(bodyData[0:gate.PACK_HEAD_MSG_ID_LEN_SIZE])
 
+	// 检查数据长度是否足够包含topic和body
+	if len(bodyData) < int(gate.PACK_HEAD_MSG_ID_LEN_SIZE+topicLen) {
+		return nil, fmt.Errorf("package len not enough for topic and body")
+	}
 	return &gate.Pack{
 		Topic: string(bodyData[gate.PACK_HEAD_MSG_ID_LEN_SIZE : gate.PACK_HEAD_MSG_ID_LEN_SIZE+topicLen]),
 		Body:  bodyData[gate.PACK_HEAD_MSG_ID_LEN_SIZE+topicLen:],
