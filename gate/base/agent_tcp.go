@@ -5,29 +5,71 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"sync"
 
 	"github.com/cloudapex/river/gate"
 	"github.com/cloudapex/river/tools/aes"
 )
 
 func NewTCPConnAgent() gate.IConnAgent {
-	return &TCPConnAgent{}
+	return &TCPConnAgent{
+		pkgLenDataPool: &sync.Pool{
+			New: func() interface{} {
+				return make([]byte, gate.PACK_HEAD_TOTAL_LEN_SIZE)
+			},
+		},
+		bodyDataPool: &sync.Pool{
+			New: func() interface{} {
+				// 初始化为512KB，这是一个合理的中间值
+				return make([]byte, gate.PACK_BODY_DEFAULT_SIZE_IN_POOL)
+			},
+		},
+	}
 }
 
 type TCPConnAgent struct {
 	agentBase
+	// 每个连接实例的缓冲池
+	pkgLenDataPool *sync.Pool
+	bodyDataPool   *sync.Pool
 }
 
 // 读取数据并解码出Pack
 func (this *TCPConnAgent) OnReadDecodingPack() (*gate.Pack, error) {
-	pkgLenData := make([]byte, gate.PACK_HEAD_TOTAL_LEN_SIZE)
+	// 从缓冲池获取包长度数据缓冲区
+	pkgLenData := this.pkgLenDataPool.Get().([]byte)
+	defer this.pkgLenDataPool.Put(pkgLenData)
+
 	_, err := io.ReadFull(this.r, pkgLenData)
 	if err != nil {
 		return nil, err
 	}
 	pkgLen := binary.LittleEndian.Uint16(pkgLenData)
 
-	bodyData := make([]byte, pkgLen-gate.PACK_HEAD_TOTAL_LEN_SIZE)
+	// 计算需要的包体大小
+	bodySize := int(pkgLen - gate.PACK_HEAD_TOTAL_LEN_SIZE)
+
+	var bodyData []byte
+	var needPutBack bool
+
+	// 判断是否需要使用缓冲池
+	if bodySize <= gate.PACK_BODY_DEFAULT_SIZE_IN_POOL {
+		// 从缓冲池获取包体数据缓冲区
+		buf := this.bodyDataPool.Get().([]byte)
+		// 调整切片长度以匹配实际需要的大小
+		bodyData = buf[:bodySize]
+		needPutBack = true
+	} else {
+		// 如果包体太大，直接创建新的缓冲区（不使用缓冲池）
+		bodyData = make([]byte, bodySize)
+		needPutBack = false
+	}
+
+	// 确保缓冲区在函数结束时正确处理
+	if needPutBack {
+		defer this.bodyDataPool.Put(bodyData[:gate.PACK_BODY_DEFAULT_SIZE_IN_POOL]) // 归还完整大小的缓冲区
+	}
+
 	_, err = io.ReadFull(this.r, bodyData)
 	if err != nil {
 		return nil, err

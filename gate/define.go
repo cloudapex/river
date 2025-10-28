@@ -15,8 +15,9 @@ const (
 	// RPC_CLIENT_MSG RPC处理来自客户端的消息
 	RPC_CLIENT_MSG string = "RPC_CLIENT_MSG"
 
-	PACK_HEAD_TOTAL_LEN_SIZE  = 2 // 包头中这几个字节存放总pack的长度值
-	PACK_HEAD_MSG_ID_LEN_SIZE = 2 // 包头中这几个字节存放msgId的长度值
+	PACK_HEAD_TOTAL_LEN_SIZE       = 2          // 包头中这几个字节存放总pack的长度值
+	PACK_HEAD_MSG_ID_LEN_SIZE      = 2          // 包头中这几个字节存放msgId的长度值
+	PACK_BODY_DEFAULT_SIZE_IN_POOL = 512 * 1024 // 缓存池中定义的缓存区大小
 
 	CONTEXT_TRANSKEY_SESSION = "session" // 定义需要RPC传输session的ContextKey
 )
@@ -232,12 +233,12 @@ type GenResponseHandler interface {
 
 // IAgentLearner 连接代理(内部使用)
 type IAgentLearner interface {
-	Connect(a IConnAgent)    //当连接建立  并且MQTT协议握手成功
-	DisConnect(a IConnAgent) //当连接关闭	或者客户端主动发送MQTT DisConnect命令
+	Connect(a IConnAgent)    //当连接建立  并且协议握手成功
+	DisConnect(a IConnAgent) //当连接关闭  或者客户端主动发送DisConnect命令
 }
 
 // ISessionLearner 客户端代理(业务使用)
 type ISessionLearner interface {
-	Connect(a ISession)    //当连接建立  并且MQTT协议握手成功
-	DisConnect(a ISession) //当连接关闭	或者客户端主动发送MQTT DisConnect命令
+	Connect(a ISession)    //当连接建立  并且协议握手成功
+	DisConnect(a ISession) //当连接关闭	 或者客户端主动发送DisConnect命令
 }
