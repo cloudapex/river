@@ -1,6 +1,6 @@
 // Package errors provides a way to return detailed information
 // for an rpc request error. The error is normally JSON encoded.
-package errors
+package httpgate
 
 import (
 	"encoding/json"
@@ -21,8 +21,8 @@ func (e *Error) Error() string {
 	return string(b)
 }
 
-// New generates a custom error.
-func New(id, detail string, code int32) error {
+// NewError generates a custom error.
+func NewError(id, detail string, code int32) error {
 	return &Error{
 		Id:     id,
 		Code:   code,
@@ -31,9 +31,9 @@ func New(id, detail string, code int32) error {
 	}
 }
 
-// Parse tries to parse a JSON string into an error. If that
+// ParseError tries to parse a JSON string into an error. If that
 // fails, it will set the given string as the error detail.
-func Parse(err string) *Error {
+func ParseError(err string) *Error {
 	e := new(Error)
 	errr := json.Unmarshal([]byte(err), e)
 	if errr != nil {

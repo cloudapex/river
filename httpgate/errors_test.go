@@ -1,4 +1,4 @@
-package errors
+package httpgate
 
 import (
 	"net/http"
@@ -16,13 +16,13 @@ func TestErrors(t *testing.T) {
 	}
 
 	for _, e := range testData {
-		ne := New(e.Id, e.Detail, e.Code)
+		ne := NewError(e.Id, e.Detail, e.Code)
 
 		if e.Error() != ne.Error() {
 			t.Fatalf("Expected %s got %s", e.Error(), ne.Error())
 		}
 
-		pe := Parse(ne.Error())
+		pe := ParseError(ne.Error())
 
 		if pe == nil {
 			t.Fatalf("Expected error got nil %v", pe)

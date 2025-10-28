@@ -1,28 +1,28 @@
-// Package httpgateway provides an http-rpc handler which provides the entire http request over rpc
-package httpgate
+package httpgatebase
 
 import (
 	"context"
 	"net/http"
 
-	"github.com/cloudapex/river/app"
-	httpgateapi "github.com/cloudapex/river/gate/http/api"
-	"github.com/cloudapex/river/gate/http/errors"
-	"github.com/cloudapex/river/gate/http/proto"
+	"github.com/cloudapex/river/httpgate"
 	"github.com/cloudapex/river/mqrpc"
 )
 
-// APIHandler 网关handler
-type APIHandler struct {
-	Opts Options
-	App  app.IApp
+// NewHandler 创建网关
+func NewHandler(opts httpgate.Options) http.Handler {
+	return &HttpHandler{Opts: opts}
+}
+
+// HttpHandler 网关handler
+type HttpHandler struct {
+	Opts httpgate.Options
 }
 
 // API handler is the default handler which takes api.Request and returns api.Response
-func (a *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	request, err := httpgateapi.RequestToProto(r)
+func (a *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	request, err := RequestToProto(r)
 	if err != nil {
-		er := errors.InternalServerError("httpgateway", err.Error())
+		er := httpgate.InternalServerError("httpgateway", err.Error())
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(500)
 		w.Write([]byte(er.Error()))
@@ -30,17 +30,18 @@ func (a *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	server, err := a.Opts.Route(r)
 	if err != nil {
-		er := errors.InternalServerError("httpgateway", err.Error())
+		er := httpgate.InternalServerError("httpgateway", err.Error())
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(500)
 		w.Write([]byte(er.Error()))
 		return
 	}
-	rsp := &proto.Response{}
-	ctx, _ := context.WithTimeout(context.TODO(), a.Opts.TimeOut)
+	rsp := &httpgate.Response{}
+	ctx, cancel := context.WithTimeout(context.TODO(), a.Opts.TimeOut)
+	defer cancel()
 	if err = mqrpc.MsgPack(rsp, mqrpc.RpcResult(server.SrvSession.Call(ctx, server.Hander, request))); err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		ce := errors.Parse(err.Error())
+		ce := httpgate.ParseError(err.Error())
 		switch ce.Code {
 		case 0:
 			w.WriteHeader(500)
@@ -65,12 +66,4 @@ func (a *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(int(rsp.StatusCode))
 	w.Write([]byte(rsp.Body))
-}
-
-// NewHandler 创建网关
-func NewHandler(opts ...Option) http.Handler {
-	options := NewOptions(opts...)
-	return &APIHandler{
-		Opts: options,
-	}
 }

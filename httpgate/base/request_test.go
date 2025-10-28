@@ -1,4 +1,4 @@
-package httpgateapi
+package httpgatebase
 
 import (
 	"net/http"
