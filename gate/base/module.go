@@ -33,39 +33,23 @@ type GateBase struct {
 func (this *GateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSettings, opts ...gate.Option) {
 	this.opts = gate.NewOptions(opts...)
 	this.ModuleBase.Init(subclass, settings, this.opts.Opts...) // 这是必须的
-	if this.opts.WsAddr == "" {
-		if WSAddr, ok := settings.Settings["WSAddr"]; ok { // 可以从Settings中配置
-			this.opts.WsAddr = WSAddr.(string)
-		}
+	if WSAddr, ok := settings.Settings["WSAddr"]; ok {          // 可以从Settings中配置
+		this.opts.WsAddr = WSAddr.(string)
 	}
-	if this.opts.TCPAddr == "" {
-		if TCPAddr, ok := settings.Settings["TCPAddr"]; ok { // 可以从Settings中配置
-			this.opts.TCPAddr = TCPAddr.(string)
-		}
+	if TCPAddr, ok := settings.Settings["TCPAddr"]; ok { // 可以从Settings中配置
+		this.opts.TCPAddr = TCPAddr.(string)
 	}
 
-	if this.opts.TLS == false {
-		if tls, ok := settings.Settings["TLS"]; ok { // 可以从Settings中配置
-			this.opts.TLS = tls.(bool)
-		} else {
-			this.opts.TLS = false
-		}
+	if tls, ok := settings.Settings["TLS"]; ok { // 可以从Settings中配置
+		this.opts.TLS = tls.(bool)
 	}
 
-	if this.opts.CertFile == "" {
-		if CertFile, ok := settings.Settings["CertFile"]; ok { // 可以从Settings中配置
-			this.opts.CertFile = CertFile.(string)
-		} else {
-			this.opts.CertFile = ""
-		}
+	if CertFile, ok := settings.Settings["CertFile"]; ok { // 可以从Settings中配置
+		this.opts.CertFile = CertFile.(string)
 	}
 
-	if this.opts.KeyFile == "" {
-		if KeyFile, ok := settings.Settings["KeyFile"]; ok { // 可以从Settings中配置
-			this.opts.KeyFile = KeyFile.(string)
-		} else {
-			this.opts.KeyFile = ""
-		}
+	if KeyFile, ok := settings.Settings["KeyFile"]; ok { // 可以从Settings中配置
+		this.opts.KeyFile = KeyFile.(string)
 	}
 
 	delegate := NewDelegate(this)
