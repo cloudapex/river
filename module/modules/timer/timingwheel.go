@@ -2,14 +2,21 @@ package timewheel
 
 import (
 	"container/list"
-	"github.com/cloudapex/river/log"
 	"math"
 	"time"
+
+	"github.com/cloudapex/river/log"
 )
 
 var timeWheel *TimeWheel
 
-// @author qiang.ou<qingqianludao@gmail.com>
+func SetTimeWheel(t *TimeWheel) {
+	timeWheel = t
+}
+
+func GetTimeWheel() *TimeWheel {
+	return timeWheel
+}
 
 // Job 延时任务回调函数
 type Job func(arge any)
@@ -39,14 +46,6 @@ type Task struct {
 	key    any           // 定时器唯一标识, 用于删除定时器
 	job    Job           // 定时器回调函数
 	data   TaskData      // 回调函数参数
-}
-
-func SetTimeWheel(t *TimeWheel) {
-	timeWheel = t
-}
-
-func GetTimeWheel() *TimeWheel {
-	return timeWheel
 }
 
 // New 创建时间轮
