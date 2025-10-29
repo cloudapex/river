@@ -25,8 +25,8 @@ type ModuleBase struct {
 	Impl     app.IRPCModule
 	settings *conf.ModuleSettings
 
-	serviceStopeds chan bool
-	exit           context.CancelFunc
+	serviceStoped chan bool
+	exit          context.CancelFunc
 
 	service  service.Service // 内含server
 	listener mqrpc.RPCListener
@@ -83,7 +83,7 @@ func (this *ModuleBase) Init(impl app.IRPCModule, settings *conf.ModuleSettings,
 	server.Options().Metadata["pid"] = fmt.Sprintf("%v", os.Getpid())
 	ctx, cancel := context.WithCancel(context.Background())
 	this.exit = cancel
-	this.serviceStopeds = make(chan bool)
+	this.serviceStoped = make(chan bool)
 	this.service = service.NewService(
 		service.Server(server),
 		service.RegisterInterval(app.App().Options().RegisterInterval),
@@ -95,7 +95,7 @@ func (this *ModuleBase) Init(impl app.IRPCModule, settings *conf.ModuleSettings,
 		if err != nil {
 			log.Warning("service run fail id(%s) error(%s)", this.GetServerID(), err)
 		}
-		close(this.serviceStopeds)
+		close(this.serviceStoped)
 	}()
 	this.GetServer().SetListener(this)
 }
@@ -110,8 +110,7 @@ func (this *ModuleBase) OnDestroy() {
 	this.exit()
 
 	select {
-	case <-this.serviceStopeds:
-		// 等待注册中心注销完成
+	case <-this.serviceStoped: // 等待注册中心注销完成
 	}
 	_ = this.GetServer().OnDestroy() //一定别忘了关闭RPC
 }
