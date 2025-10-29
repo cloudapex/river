@@ -272,7 +272,7 @@ func (this *DefaultApp) SetServiceRoute(fn func(route string) string) error {
 	return nil
 }
 
-// GetRouteServer 获取服务实例(通过服务ID|服务类型,可设置选择器过滤)
+// GetRouteServer 获取服务实例(通过服务ID|服务类型,可设置可设置selector.WithFilter和selector.WithStrategy)
 func (this *DefaultApp) GetRouteServer(service string, opts ...selector.SelectOption) (app.IServerSession, error) {
 	if this.serviceRoute != nil { // 进行一次路由转换
 		service = this.serviceRoute(service)
@@ -311,7 +311,7 @@ func (this *DefaultApp) GetServerByID(serverID string) (app.IServerSession, erro
 	return nil, errors.Errorf("nofound %v", serverID)
 }
 
-// GetServerBySelector 获取服务实例(通过服务类型(moduleType))
+// GetServerBySelector 获取服务实例(通过服务类型(moduleType),可设置可设置selector.WithFilter和selector.WithStrategy)
 func (this *DefaultApp) GetServerBySelector(moduleType string, opts ...selector.SelectOption) (app.IServerSession, error) {
 	next, err := this.opts.Selector.Select(moduleType, opts...)
 	if err != nil {

@@ -43,11 +43,11 @@ type IApp interface {
 	// 设置服务路由器(动态转换service名称)
 	SetServiceRoute(fn func(route string) string) error
 
-	// 获取服务实例(通过服务ID|服务类型,可设置选择器过滤)
+	// 获取服务实例(通过服务ID|服务类型,可设置selector.WithFilter和selector.WithStrategy)
 	GetRouteServer(service string, opts ...selector.SelectOption) (IServerSession, error)
 	// 获取服务实例(通过服务ID(moduleType@id))
 	GetServerByID(serverID string) (IServerSession, error)
-	// 获取服务实例(通过服务类型(moduleType))(可设置选择器过滤)
+	// 获取服务实例(通过服务类型(moduleType),可设置可设置selector.WithFilter和selector.WithStrategy)
 	GetServerBySelector(serviceName string, opts ...selector.SelectOption) (IServerSession, error)
 	// 获取多个服务实例(通过服务类型(moduleType))
 	GetServersByType(serviceName string) []IServerSession
