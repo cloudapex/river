@@ -20,7 +20,7 @@ import (
 
 // ModuleBase 默认的RPCModule实现
 type ModuleBase struct {
-	context.Context
+	//context.Context
 
 	Impl     app.IRPCModule
 	settings *conf.ModuleSettings

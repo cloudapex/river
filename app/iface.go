@@ -83,7 +83,7 @@ type IModule interface {
 // IRPCModule RPC模块定义
 type IRPCModule interface {
 	IModule
-	context.Context
+	//context.Context
 
 	// 节点ID
 	GetServerID() string
