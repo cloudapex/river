@@ -225,7 +225,9 @@ func (this *agentBase) OnHandRecvPack(pack *gate.Pack) error {
 	// 处理保活(默认不处理保活,留给上层处理)
 
 	// 默认是通过topic解析出路由规则
-	topic := strings.Split(pack.Topic, "/")
+	topic := strings.FieldsFunc(pack.Topic, func(r rune) bool {
+		return r == '/' || r == '_'
+	})
 	if len(topic) < 2 {
 		return fmt.Errorf("pack.Topic resolving faild with:%v", pack.Topic)
 	}
