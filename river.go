@@ -110,8 +110,8 @@ func (this *DefaultApp) initConfig() error {
 
 // 初始化 logs
 func (this *DefaultApp) initLogs() error {
-	// init log
-	log.Init(log.WithDebug(this.opts.Debug),
+	log.Init(
+		log.WithDebug(this.opts.Debug),
 		log.WithProcessID(this.opts.ProcessEnv),
 		log.WithBiDir(this.opts.BIDir),
 		log.WithLogDir(this.opts.LogDir),

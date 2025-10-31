@@ -158,7 +158,7 @@ type Option func(*Options)
 
 // Options 应用级别配置
 type Options struct {
-	Version     string
+	Version     string // app的版本
 	Debug       bool
 	Parse       bool     // 是否由框架解析启动环境变量,默认为true
 	WorkDir     string   // 工作目录(from startUpArgs.WordDir)

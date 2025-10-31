@@ -15,7 +15,7 @@ type Options struct {
 	Address   string // use host:port nats_server.addr 不重要
 	Advertise string // use host:port (优先) 不重要
 	ID        string
-	Version   string
+	Version   string // module的版本
 
 	RegisterInterval time.Duration
 	RegisterTTL      time.Duration
