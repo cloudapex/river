@@ -32,7 +32,7 @@ type ModuleBase struct {
 	listener mqrpc.RPCListener
 }
 
-// Init 模块初始化(在OnInit中调用)
+// Init 模块初始化(由派生类调用)
 func (this *ModuleBase) Init(impl app.IRPCModule, settings *conf.ModuleSettings, opt ...server.Option) {
 	// 初始化模块
 	this.Impl = impl
@@ -102,6 +102,7 @@ func (this *ModuleBase) Init(impl app.IRPCModule, settings *conf.ModuleSettings,
 
 // OnInit 当模块初始化时调用
 func (this *ModuleBase) OnInit(settings *conf.ModuleSettings) {
+	// 所有初始化逻辑都放到Init中, 重载OnInit不可调用基类!
 	panic("ModuleBase: OnInit() must be implemented")
 }
 
