@@ -45,7 +45,7 @@ type IGate interface {
 
 // IDelegater session管理接口
 type IDelegater interface {
-	GetAgent(sessionId string) (IConnAgent, error)
+	GetAgent(sessionId string) (IClientAgent, error)
 	GetAgentNum() int
 	OnDestroy() // 退出事件,当主动关闭时释放所有的连接
 
@@ -163,9 +163,9 @@ type ISession interface {
 	ToClose() error
 }
 
-// IConnAgent 客户端代理定义
-type IConnAgent interface {
-	Init(impl IConnAgent, gate IGate, conn network.Conn) error
+// IClientAgent 客户端代理定义
+type IClientAgent interface {
+	Init(impl IClientAgent, gate IGate, conn network.Conn) error
 	Close()         // 主动关闭(异常关闭or主动关闭)
 	OnClose() error // Run() 结束后触发回调
 
@@ -233,8 +233,8 @@ type GenResponseHandler interface {
 
 // IAgentLearner 连接代理(内部使用)
 type IAgentLearner interface {
-	Connect(a IConnAgent)    //当连接建立  并且协议握手成功
-	DisConnect(a IConnAgent) //当连接关闭  或者客户端主动发送DisConnect命令
+	Connect(a IClientAgent)    //当连接建立  并且协议握手成功
+	DisConnect(a IClientAgent) //当连接关闭  或者客户端主动发送DisConnect命令
 }
 
 // ISessionLearner 客户端代理(业务使用)

@@ -31,19 +31,19 @@ type Delegate struct {
 // OnDestroy
 func (this *Delegate) OnDestroy() {
 	this.sessions.Range(func(key, value any) bool {
-		value.(gate.IConnAgent).Close()
+		value.(gate.IClientAgent).Close()
 		this.sessions.Delete(key)
 		return true
 	})
 }
 
 // GetAgent
-func (this *Delegate) GetAgent(sessionId string) (gate.IConnAgent, error) {
+func (this *Delegate) GetAgent(sessionId string) (gate.IClientAgent, error) {
 	agent, ok := this.sessions.Load(sessionId)
 	if !ok || agent == nil {
 		return nil, errors.New("No Sesssion found")
 	}
-	return agent.(gate.IConnAgent), nil
+	return agent.(gate.IClientAgent), nil
 }
 
 // GetAgentNum
@@ -58,7 +58,7 @@ func (this *Delegate) GetAgentNum() int {
 // ========== IAgentLearner
 
 // 当连接建立(握手成功)
-func (this *Delegate) Connect(a gate.IConnAgent) {
+func (this *Delegate) Connect(a gate.IClientAgent) {
 	defer func() {
 		if err := tools.Catch(recover()); err != nil {
 			log.Error("gateHandler Connect(agent) panic:%v", err)
@@ -82,7 +82,7 @@ func (this *Delegate) Connect(a gate.IConnAgent) {
 }
 
 // 当连接关闭(客户端主动关闭或者异常断开)
-func (this *Delegate) DisConnect(a gate.IConnAgent) {
+func (this *Delegate) DisConnect(a gate.IClientAgent) {
 	defer func() {
 		if err := tools.Catch(recover()); err != nil {
 			log.Error("handler DisConnect panic:%v", err)
@@ -114,7 +114,7 @@ func (this *Delegate) OnRpcLoad(ctx context.Context, sessionId string) (gate.ISe
 	if !ok || agent == nil {
 		return nil, fmt.Errorf("No Sesssion found")
 	}
-	return agent.(gate.IConnAgent).GetSession(), nil
+	return agent.(gate.IClientAgent).GetSession(), nil
 }
 
 // Bind the session with the the userId.
@@ -124,10 +124,10 @@ func (this *Delegate) OnRpcBind(ctx context.Context, sessionId string, userId st
 		return nil, fmt.Errorf("No Sesssion found")
 	}
 
-	agent.(gate.IConnAgent).GetSession().SetUserID(userId)
+	agent.(gate.IClientAgent).GetSession().SetUserID(userId)
 
 	storager := this.gate.GetStorageHandler()
-	if storager != nil && agent.(gate.IConnAgent).GetSession().GetUserID() != "" {
+	if storager != nil && agent.(gate.IClientAgent).GetSession().GetUserID() != "" {
 		// 可以持久化
 		data, err := storager.Query(userId)
 		if err == nil && data != nil {
@@ -135,17 +135,17 @@ func (this *Delegate) OnRpcBind(ctx context.Context, sessionId string, userId st
 			impSession, err := NewSession(data)
 			if err == nil {
 				// 合并两个map 并且以 agent.(Agent).GetSession().Settings 已有的优先
-				agent.(gate.IConnAgent).GetSession().SetSettings(impSession.CloneSettings())
+				agent.(gate.IClientAgent).GetSession().SetSettings(impSession.CloneSettings())
 			} else {
 				// 解析持久化数据失败
 				log.Warning("Sesssion Resolve fail %s", err.Error())
 			}
 		}
 		//数据持久化
-		_ = storager.Storage(agent.(gate.IConnAgent).GetSession())
+		_ = storager.Storage(agent.(gate.IClientAgent).GetSession())
 	}
 
-	return agent.(gate.IConnAgent).GetSession(), nil
+	return agent.(gate.IClientAgent).GetSession(), nil
 }
 
 // UnBind the session with the the userId.
@@ -154,8 +154,8 @@ func (this *Delegate) OnRpcUnBind(ctx context.Context, sessionId string) (gate.I
 	if !ok || agent == nil {
 		return nil, fmt.Errorf("No Sesssion found")
 	}
-	agent.(gate.IConnAgent).GetSession().SetUserID("")
-	return agent.(gate.IConnAgent).GetSession(), nil
+	agent.(gate.IClientAgent).GetSession().SetUserID("")
+	return agent.(gate.IClientAgent).GetSession(), nil
 }
 
 // Push the session with the the userId.
@@ -166,18 +166,18 @@ func (this *Delegate) OnRpcPush(ctx context.Context, sessionId string, settings 
 	}
 	// 覆盖当前map对应的key-value
 	for key, value := range settings {
-		_ = agent.(gate.IConnAgent).GetSession().Set(key, value)
+		_ = agent.(gate.IClientAgent).GetSession().Set(key, value)
 	}
 
 	storager := this.gate.GetStorageHandler()
-	if storager != nil && agent.(gate.IConnAgent).GetSession().GetUserID() != "" {
-		err := storager.Storage(agent.(gate.IConnAgent).GetSession())
+	if storager != nil && agent.(gate.IClientAgent).GetSession().GetUserID() != "" {
+		err := storager.Storage(agent.(gate.IClientAgent).GetSession())
 		if err != nil {
 			log.Warning("gate session storage failure : %v", err)
 		}
 	}
 
-	return agent.(gate.IConnAgent).GetSession(), nil
+	return agent.(gate.IClientAgent).GetSession(), nil
 }
 
 // Set values (one or many) for the session.
@@ -187,17 +187,17 @@ func (this *Delegate) OnRpcSet(ctx context.Context, sessionId string, key string
 		return nil, fmt.Errorf("No Sesssion found")
 	}
 
-	_ = agent.(gate.IConnAgent).GetSession().Set(key, value)
+	_ = agent.(gate.IClientAgent).GetSession().Set(key, value)
 
 	storager := this.gate.GetStorageHandler()
-	if storager != nil && agent.(gate.IConnAgent).GetSession().GetUserID() != "" {
-		err := storager.Storage(agent.(gate.IConnAgent).GetSession())
+	if storager != nil && agent.(gate.IClientAgent).GetSession().GetUserID() != "" {
+		err := storager.Storage(agent.(gate.IClientAgent).GetSession())
 		if err != nil {
 			log.Error("gate session storage failure : %v", err)
 		}
 	}
 
-	return agent.(gate.IConnAgent).GetSession(), nil
+	return agent.(gate.IClientAgent).GetSession(), nil
 }
 
 // Del value from the session.
@@ -207,17 +207,17 @@ func (this *Delegate) OnRpcDel(ctx context.Context, sessionId string, key string
 		return nil, fmt.Errorf("No Sesssion found")
 	}
 
-	_ = agent.(gate.IConnAgent).GetSession().Del(key)
+	_ = agent.(gate.IClientAgent).GetSession().Del(key)
 
 	storager := this.gate.GetStorageHandler()
-	if storager != nil && agent.(gate.IConnAgent).GetSession().GetUserID() != "" {
-		err := storager.Storage(agent.(gate.IConnAgent).GetSession())
+	if storager != nil && agent.(gate.IClientAgent).GetSession().GetUserID() != "" {
+		err := storager.Storage(agent.(gate.IClientAgent).GetSession())
 		if err != nil {
 			log.Error("gate session storage failure :%v", err)
 		}
 	}
 
-	return agent.(gate.IConnAgent).GetSession(), nil
+	return agent.(gate.IClientAgent).GetSession(), nil
 }
 
 // Send message to the session.
@@ -227,7 +227,7 @@ func (this *Delegate) OnRpcSend(ctx context.Context, sessionId string, topic str
 		return false, fmt.Errorf("No Sesssion found")
 	}
 	// 组装一个pack{topic,data}
-	err := agent.(gate.IConnAgent).SendPack(&gate.Pack{Topic: topic, Body: body})
+	err := agent.(gate.IClientAgent).SendPack(&gate.Pack{Topic: topic, Body: body})
 	if err != nil {
 		return false, err
 	}
@@ -240,7 +240,7 @@ func (this *Delegate) OnRpcConnected(ctx context.Context, sessionId string) (boo
 	if !ok || agent == nil {
 		return false, fmt.Errorf("No Sesssion found")
 	}
-	return agent.(gate.IConnAgent).IsClosed(), nil
+	return agent.(gate.IClientAgent).IsClosed(), nil
 }
 
 // Proactively close the connection of session
@@ -249,7 +249,7 @@ func (this *Delegate) OnRpcClose(ctx context.Context, sessionId string) (bool, e
 	if !ok || agent == nil {
 		return false, fmt.Errorf("No Sesssion found")
 	}
-	agent.(gate.IConnAgent).Close()
+	agent.(gate.IClientAgent).Close()
 	return true, nil
 }
 
@@ -259,7 +259,7 @@ func (this *Delegate) OnRpcClose(ctx context.Context, sessionId string) (bool, e
 func (this *Delegate) OnRpcBroadcast(ctx context.Context, topic string, body []byte) (int64, error) {
 	var count int64 = 0
 	this.sessions.Range(func(key, agent any) bool {
-		e := agent.(gate.IConnAgent).SendPack(&gate.Pack{Topic: topic, Body: body})
+		e := agent.(gate.IClientAgent).SendPack(&gate.Pack{Topic: topic, Body: body})
 		if e != nil {
 			log.Warning("IAgent.SendPack error:", e.Error())
 		} else {

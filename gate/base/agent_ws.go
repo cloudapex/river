@@ -9,16 +9,16 @@ import (
 	"github.com/cloudapex/river/tools/aes"
 )
 
-func NewWSConnAgent() gate.IConnAgent {
-	return &WSConnAgent{}
+func NewWSClientAgent() gate.IClientAgent {
+	return &WSClientAgent{}
 }
 
-type WSConnAgent struct {
+type WSClientAgent struct {
 	agentBase
 }
 
 // 读取数据并解码出Pack
-func (this *WSConnAgent) OnReadDecodingPack() (*gate.Pack, error) {
+func (this *WSClientAgent) OnReadDecodingPack() (*gate.Pack, error) {
 	_, datas, err := this.conn.ReadMessage()
 	if err != nil {
 		return nil, err

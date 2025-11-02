@@ -20,7 +20,7 @@ type TCPServer struct {
 	KeyFile    string
 	MaxConnNum int
 	// mutexConns   sync.Mutex
-	NewAgent func(*TCPConn) ConnAgent
+	NewAgent func(*TCPConn) Client
 	ln       net.Listener
 	wgLn     sync.WaitGroup
 	wgConns  sync.WaitGroup

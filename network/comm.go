@@ -12,8 +12,8 @@ type Conn interface {
 	ReadMessage() (messageType int, p []byte, err error)
 }
 
-// ConnAgent 代理
-type ConnAgent interface {
+// Client 代理
+type Client interface {
 	Run() error
 	OnClose() error
 }

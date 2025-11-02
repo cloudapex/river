@@ -11,8 +11,8 @@ import (
 	"github.com/cloudapex/river/tools/aes"
 )
 
-func NewTCPConnAgent() gate.IConnAgent {
-	return &TCPConnAgent{
+func NewTCPClientAgent() gate.IClientAgent {
+	return &TCPClientAgent{
 		pkgLenDataPool: &sync.Pool{
 			New: func() interface{} {
 				return make([]byte, gate.PACK_HEAD_TOTAL_LEN_SIZE)
@@ -27,7 +27,7 @@ func NewTCPConnAgent() gate.IConnAgent {
 	}
 }
 
-type TCPConnAgent struct {
+type TCPClientAgent struct {
 	agentBase
 	// 每个连接实例的缓冲池
 	pkgLenDataPool *sync.Pool
@@ -35,7 +35,7 @@ type TCPConnAgent struct {
 }
 
 // 读取数据并解码出Pack
-func (this *TCPConnAgent) OnReadDecodingPack() (*gate.Pack, error) {
+func (this *TCPClientAgent) OnReadDecodingPack() (*gate.Pack, error) {
 	// 从缓冲池获取包长度数据缓冲区
 	pkgLenData := this.pkgLenDataPool.Get().([]byte)
 	defer this.pkgLenDataPool.Put(pkgLenData)

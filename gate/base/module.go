@@ -18,10 +18,10 @@ type GateBase struct {
 
 	opts gate.Options
 
-	delegater    gate.IDelegater                     // ession管理接口
-	agentCreater func(netTyp string) gate.IConnAgent // 创建客户端连接代理接口
-	guestJudger  func(session gate.ISession) bool    // 是否游客
-	shakeHandle  func(r *http.Request) error         // 建立连接时鉴权(ws)
+	delegater    gate.IDelegater                       // ession管理接口
+	agentCreater func(netTyp string) gate.IClientAgent // 创建客户端连接代理接口
+	guestJudger  func(session gate.ISession) bool      // 是否游客
+	shakeHandle  func(r *http.Request) error           // 建立连接时鉴权(ws)
 
 	storager        gate.StorageHandler  // Session持久化接口
 	router          gate.RouteHandler    // 路由控制接口
@@ -55,7 +55,7 @@ func (this *GateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSetting
 	delegate := NewDelegate(this)
 	this.delegater = delegate
 	this.agentLearner = delegate
-	this.agentCreater = this.defaultConnAgentCreater
+	this.agentCreater = this.defaultClientAgentCreater
 
 	// for session
 	this.GetServer().RegisterGO("Load", delegate.OnRpcLoad)
@@ -96,7 +96,7 @@ func (this *GateBase) Run(closeSig chan bool) {
 		wsServer.KeyFile = this.opts.KeyFile
 		wsServer.ShakeFunc = this.shakeHandle
 		wsServer.MaxMsgLen = uint32(this.opts.MaxPackSize)
-		wsServer.NewAgent = func(conn *network.WSConn) network.ConnAgent {
+		wsServer.NewAgent = func(conn *network.WSConn) network.Client {
 			agent := this.agentCreater("ws")
 			agent.Init(agent, this, conn)
 			return agent
@@ -110,7 +110,7 @@ func (this *GateBase) Run(closeSig chan bool) {
 		tcpServer.TLS = this.opts.TLS
 		tcpServer.CertFile = this.opts.CertFile
 		tcpServer.KeyFile = this.opts.KeyFile
-		tcpServer.NewAgent = func(conn *network.TCPConn) network.ConnAgent {
+		tcpServer.NewAgent = func(conn *network.TCPConn) network.Client {
 			agent := this.agentCreater("tcp")
 			agent.Init(agent, this, conn)
 			return agent
@@ -136,20 +136,20 @@ func (this *GateBase) Run(closeSig chan bool) {
 }
 
 // 设置创建客户端Agent的函数
-func (this *GateBase) SetAgentCreater(cfunc func(netTyp string) gate.IConnAgent) error {
+func (this *GateBase) SetAgentCreater(cfunc func(netTyp string) gate.IClientAgent) error {
 	this.agentCreater = cfunc
 	return nil
 }
 
 // 默认的创建客户端连接Agent的方法
-func (this *GateBase) defaultConnAgentCreater(netTyp string) gate.IConnAgent {
+func (this *GateBase) defaultClientAgentCreater(netTyp string) gate.IClientAgent {
 	switch netTyp {
 	case "ws":
-		return NewWSConnAgent()
+		return NewWSClientAgent()
 	case "tcp":
-		return NewTCPConnAgent()
+		return NewTCPClientAgent()
 	}
-	return NewWSConnAgent() // default use ws
+	return NewWSClientAgent() // default use ws
 }
 
 // SetGateHandler 设置代理处理器

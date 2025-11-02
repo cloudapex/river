@@ -15,7 +15,7 @@ import (
 
 // WSHandler websocket 处理器
 type WSHandler struct {
-	newConnAgent func(*WSConn) ConnAgent
+	newConnAgent func(*WSConn) Client
 }
 
 func (handler *WSHandler) work(conn *websocket.Conn, r *http.Request) {
@@ -37,7 +37,7 @@ type WSServer struct {
 	MaxConnNum  int
 	MaxMsgLen   uint32
 	HTTPTimeout time.Duration
-	NewAgent    func(*WSConn) ConnAgent
+	NewAgent    func(*WSConn) Client
 	ln          net.Listener
 	handler     *WSHandler
 	ShakeFunc   func(r *http.Request) error

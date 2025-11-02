@@ -18,7 +18,7 @@ import (
 )
 
 type agentBase struct {
-	impl gate.IConnAgent
+	impl gate.IClientAgent
 
 	gate         gate.IGate
 	session      gate.ISession
@@ -35,7 +35,7 @@ type agentBase struct {
 	lastError    error
 }
 
-func (this *agentBase) Init(impl gate.IConnAgent, gt gate.IGate, conn network.Conn) error {
+func (this *agentBase) Init(impl gate.IClientAgent, gt gate.IGate, conn network.Conn) error {
 	this.impl = impl
 	this.ch = make(chan int, gt.Options().ConcurrentTasks)
 	this.conn = conn
