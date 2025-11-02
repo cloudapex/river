@@ -1,7 +1,9 @@
 package gatebase
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/cloudapex/river/app"
@@ -27,7 +29,7 @@ type GateBase struct {
 	router          gate.RouteHandler       // 路由控制接口
 	sessionLearner  gate.ISessionLearner    // 客户端连接和断开的监听器(业务使用)
 	agentLearner    gate.IAgentLearner      // 客户端连接和断开的监听器(内部使用)
-	recvPacker      gate.FunRecvPackHandle  // 接收数据包处理接口
+	recvPacker      gate.FunRecvPackHandler // 接收数据包处理接口
 	sendMessageHook gate.FunSendMessageHook // 发送消息时的钩子回调
 }
 
@@ -57,6 +59,7 @@ func (this *GateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSetting
 	this.delegater = delegate
 	this.agentLearner = delegate
 	this.agentCreater = this.defaultClientAgentCreater
+	this.recvPacker = this.defaultRecvPackHandler
 
 	// for session
 	this.GetServer().RegisterGO("Load", delegate.OnRpcLoad)
@@ -217,13 +220,43 @@ func (this *GateBase) SetAgentLearner(learner gate.IAgentLearner) error {
 func (this *GateBase) GetAgentLearner() gate.IAgentLearner { return this.agentLearner }
 
 // SetRecvPackHandler 设置接收数据包处理接口
-func (this *GateBase) SetRecvPackHandler(handler gate.FunRecvPackHandle) error {
+func (this *GateBase) SetRecvPackHandler(handler gate.FunRecvPackHandler) error {
 	this.recvPacker = handler
 	return nil
 }
 
 // GetRecvPackHandler 获取接收数据包处理接口
-func (this *GateBase) GetRecvPackHandler() gate.FunRecvPackHandle { return this.recvPacker }
+func (this *GateBase) GetRecvPackHandler() gate.FunRecvPackHandler { return this.recvPacker }
+
+// defaultRecvPackHandler 默认接收数据包处理接口
+func (this *GateBase) defaultRecvPackHandler(session gate.ISession, pack *gate.Pack) error {
+	// 默认是通过topic解析出路由规则
+	topic := strings.FieldsFunc(pack.Topic, func(r rune) bool {
+		return r == '/' || r == '_'
+	})
+	if len(topic) < 2 {
+		return fmt.Errorf("pack.Topic resolving faild with:%v", pack.Topic)
+	}
+	moduleTyp, msgId := topic[0], topic[1]
+
+	// 优先在已绑定的Module中提供服务
+	serverId, _ := session.Get(moduleTyp)
+	if serverId != "" {
+		if server, _ := app.App().GetServerByID(serverId); server != nil {
+			_, err := server.Call(session.GenRPCContext(), gate.RPC_CLIENT_MSG, msgId, pack.Body)
+			return err
+		}
+	}
+
+	// 然后按照默认路由规则随机取得Module服务
+	server, err := app.App().GetRouteServer(moduleTyp)
+	if err != nil {
+		return fmt.Errorf("Service(moduleType:%s) not found", moduleTyp)
+	}
+
+	_, err = server.Call(session.GenRPCContext(), gate.RPC_CLIENT_MSG, msgId, pack.Body)
+	return err
+}
 
 // SetsendMessageHook 设置发送消息时的钩子回调
 func (this *GateBase) SetSendMessageHook(hook gate.FunSendMessageHook) error {

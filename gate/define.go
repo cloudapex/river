@@ -41,7 +41,7 @@ type IGate interface {
 	GetRouteHandler() RouteHandler
 	GetSendMessageHook() FunSendMessageHook
 	GetGuestJudger() func(session ISession) bool
-	GetRecvPackHandler() FunRecvPackHandle
+	GetRecvPackHandler() FunRecvPackHandler
 }
 
 // IDelegater session管理接口
@@ -225,8 +225,8 @@ type RouteHandler interface {
 // FunSendMessageHook 给客户端下发消息拦截器
 type FunSendMessageHook func(session ISession, topic string, msg []byte) ([]byte, error)
 
-// FunRecvPackHandle 处理接收的消息包
-type FunRecvPackHandle func(pack *Pack) error
+// FunRecvPackHandler 处理接收的消息包
+type FunRecvPackHandler func(session ISession, pack *Pack) error
 
 // IAgentLearner 连接代理(内部使用)
 type IAgentLearner interface {
