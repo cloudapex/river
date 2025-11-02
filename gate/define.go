@@ -39,9 +39,9 @@ type IGate interface {
 	GetSessionLearner() ISessionLearner
 	GetStorageHandler() StorageHandler
 	GetRouteHandler() RouteHandler
-	GetSendMessageHook() SendMessageHook
+	GetSendMessageHook() FunSendMessageHook
 	GetGuestJudger() func(session ISession) bool
-	GetRecvPackHandler() IRecvPackHandler
+	GetRecvPackHandler() FunRecvPackHandle
 }
 
 // IDelegater session管理接口
@@ -222,12 +222,11 @@ type RouteHandler interface {
 	OnRoute(session ISession, topic string, msg []byte) (bool, error)
 }
 
-// SendMessageHook 给客户端下发消息拦截器
-type SendMessageHook func(session ISession, topic string, msg []byte) ([]byte, error)
+// FunSendMessageHook 给客户端下发消息拦截器
+type FunSendMessageHook func(session ISession, topic string, msg []byte) ([]byte, error)
 
-// GenResponseHandler 回应处理器
-type GenResponseHandler interface {
-}
+// FunRecvPackHandle 处理接收的消息包
+type FunRecvPackHandle func(pack *Pack) error
 
 // IAgentLearner 连接代理(内部使用)
 type IAgentLearner interface {
@@ -239,9 +238,4 @@ type IAgentLearner interface {
 type ISessionLearner interface {
 	Connect(a ISession)    //当连接建立  并且协议握手成功
 	DisConnect(a ISession) //当连接关闭	 或者客户端主动发送DisConnect命令
-}
-
-// IRecvPackHandler 处理接收的消息包
-type IRecvPackHandler interface {
-	OnHandleRecvPack(pack *Pack) error
 }

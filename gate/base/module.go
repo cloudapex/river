@@ -23,12 +23,12 @@ type GateBase struct {
 	guestJudger  func(session gate.ISession) bool      // 是否游客
 	shakeHandle  func(r *http.Request) error           // 建立连接时鉴权(ws)
 
-	storager        gate.StorageHandler   // Session持久化接口
-	router          gate.RouteHandler     // 路由控制接口
-	sessionLearner  gate.ISessionLearner  // 客户端连接和断开的监听器(业务使用)
-	agentLearner    gate.IAgentLearner    // 客户端连接和断开的监听器(内部使用)
-	recvPacker      gate.IRecvPackHandler // 接收数据包处理接口
-	sendMessageHook gate.SendMessageHook  // 发送消息时的钩子回调
+	storager        gate.StorageHandler     // Session持久化接口
+	router          gate.RouteHandler       // 路由控制接口
+	sessionLearner  gate.ISessionLearner    // 客户端连接和断开的监听器(业务使用)
+	agentLearner    gate.IAgentLearner      // 客户端连接和断开的监听器(内部使用)
+	recvPacker      gate.FunRecvPackHandle  // 接收数据包处理接口
+	sendMessageHook gate.FunSendMessageHook // 发送消息时的钩子回调
 }
 
 func (this *GateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSettings, opts ...gate.Option) {
@@ -154,7 +154,7 @@ func (this *GateBase) defaultClientAgentCreater(netTyp string) gate.IClientAgent
 }
 
 // SetGateHandler 设置代理处理器
-func (this *GateBase) SetGateHandler(handler gate.IDelegater) error {
+func (this *GateBase) SetDelegater(handler gate.IDelegater) error {
 	this.delegater = handler
 	return nil
 }
@@ -217,19 +217,19 @@ func (this *GateBase) SetAgentLearner(learner gate.IAgentLearner) error {
 func (this *GateBase) GetAgentLearner() gate.IAgentLearner { return this.agentLearner }
 
 // SetRecvPackHandler 设置接收数据包处理接口
-func (this *GateBase) SetRecvPackHandler(handler gate.IRecvPackHandler) error {
+func (this *GateBase) SetRecvPackHandler(handler gate.FunRecvPackHandle) error {
 	this.recvPacker = handler
 	return nil
 }
 
 // GetRecvPackHandler 获取接收数据包处理接口
-func (this *GateBase) GetRecvPackHandler() gate.IRecvPackHandler { return this.recvPacker }
+func (this *GateBase) GetRecvPackHandler() gate.FunRecvPackHandle { return this.recvPacker }
 
 // SetsendMessageHook 设置发送消息时的钩子回调
-func (this *GateBase) SetSendMessageHook(hook gate.SendMessageHook) error {
+func (this *GateBase) SetSendMessageHook(hook gate.FunSendMessageHook) error {
 	this.sendMessageHook = hook
 	return nil
 }
 
 // GetSendMessageHook 获取发送消息时的钩子回调
-func (this *GateBase) GetSendMessageHook() gate.SendMessageHook { return this.sendMessageHook }
+func (this *GateBase) GetSendMessageHook() gate.FunSendMessageHook { return this.sendMessageHook }

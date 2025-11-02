@@ -224,7 +224,7 @@ func (this *agentBase) recvFinish() {
 func (this *agentBase) OnRecvPack(pack *gate.Pack) error {
 	// 处理保活(默认不处理保活,留给上层处理)
 	if handle := this.gate.GetRecvPackHandler(); handle != nil {
-		return handle.OnHandleRecvPack(pack)
+		return handle(pack)
 	}
 
 	// 默认是通过topic解析出路由规则
