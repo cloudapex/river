@@ -420,8 +420,8 @@ func (this *DefaultApp) OnStartup(_func func()) error {
 	return nil
 }
 
-// OnServiceDeleted 设置当模块服务断开删除时回调
-func (this *DefaultApp) OnServiceDeleted(_func func(moduleName, serverId string)) error {
+// OnServiceBreak 设置当模块服务断开删除时回调
+func (this *DefaultApp) OnServiceBreak(_func func(moduleName, serverId string)) error {
 	this.onServiceDeleted = _func
 	return nil
 }
