@@ -23,11 +23,12 @@ type GateBase struct {
 	guestJudger  func(session gate.ISession) bool      // 是否游客
 	shakeHandle  func(r *http.Request) error           // 建立连接时鉴权(ws)
 
-	storager        gate.StorageHandler  // Session持久化接口
-	router          gate.RouteHandler    // 路由控制接口
-	sessionLearner  gate.ISessionLearner // 客户端连接和断开的监听器(业务使用)
-	agentLearner    gate.IAgentLearner   // 客户端连接和断开的监听器(内部使用)
-	sendMessageHook gate.SendMessageHook // 发送消息时的钩子回调
+	storager        gate.StorageHandler   // Session持久化接口
+	router          gate.RouteHandler     // 路由控制接口
+	sessionLearner  gate.ISessionLearner  // 客户端连接和断开的监听器(业务使用)
+	agentLearner    gate.IAgentLearner    // 客户端连接和断开的监听器(内部使用)
+	recvPacker      gate.IRecvPackHandler // 接收数据包处理接口
+	sendMessageHook gate.SendMessageHook  // 发送消息时的钩子回调
 }
 
 func (this *GateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSettings, opts ...gate.Option) {
@@ -212,8 +213,17 @@ func (this *GateBase) SetAgentLearner(learner gate.IAgentLearner) error {
 	return nil
 }
 
-// SetAgentLearner 获取客户端连接和断开的监听器(建议用 SetSessionLearner)
+// SetAgentLearner 获取客户端连接和断开的监听器(内部用)
 func (this *GateBase) GetAgentLearner() gate.IAgentLearner { return this.agentLearner }
+
+// SetRecvPackHandler 设置接收数据包处理接口
+func (this *GateBase) SetRecvPackHandler(handler gate.IRecvPackHandler) error {
+	this.recvPacker = handler
+	return nil
+}
+
+// GetRecvPackHandler 获取接收数据包处理接口
+func (this *GateBase) GetRecvPackHandler() gate.IRecvPackHandler { return this.recvPacker }
 
 // SetsendMessageHook 设置发送消息时的钩子回调
 func (this *GateBase) SetSendMessageHook(hook gate.SendMessageHook) error {

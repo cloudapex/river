@@ -198,7 +198,7 @@ func (this *agentBase) recvLoop() error {
 				continue
 			}
 		}
-		if err := this.impl.OnHandRecvPack(pack); err != nil {
+		if err := this.OnRecvPack(pack); err != nil {
 			this.lastError = err
 			return err
 		}
@@ -221,8 +221,11 @@ func (this *agentBase) recvFinish() {
 }
 
 // 实现如何处理收到的数据包
-func (this *agentBase) OnHandRecvPack(pack *gate.Pack) error {
+func (this *agentBase) OnRecvPack(pack *gate.Pack) error {
 	// 处理保活(默认不处理保活,留给上层处理)
+	if handle := this.gate.GetRecvPackHandler(); handle != nil {
+		return handle.OnHandleRecvPack(pack)
+	}
 
 	// 默认是通过topic解析出路由规则
 	topic := strings.FieldsFunc(pack.Topic, func(r rune) bool {

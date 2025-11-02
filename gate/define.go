@@ -41,6 +41,7 @@ type IGate interface {
 	GetRouteHandler() RouteHandler
 	GetSendMessageHook() SendMessageHook
 	GetGuestJudger() func(session ISession) bool
+	GetRecvPackHandler() IRecvPackHandler
 }
 
 // IDelegater session管理接口
@@ -187,9 +188,6 @@ type IClientAgent interface {
 	// 读取数据并解码出Pack
 	OnReadDecodingPack() (*Pack, error)
 
-	// 实现如何处理收到的数据包
-	OnHandRecvPack(pack *Pack) error
-
 	GetError() error // 连接断开的错误日志
 }
 
@@ -241,4 +239,9 @@ type IAgentLearner interface {
 type ISessionLearner interface {
 	Connect(a ISession)    //当连接建立  并且协议握手成功
 	DisConnect(a ISession) //当连接关闭	 或者客户端主动发送DisConnect命令
+}
+
+// IRecvPackHandler 处理接收的消息包
+type IRecvPackHandler interface {
+	OnHandleRecvPack(pack *Pack) error
 }
