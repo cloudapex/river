@@ -76,7 +76,7 @@ func (this *Delegate) Connect(a gate.IClientAgent) {
 	// 客户端连接和断开的监听器
 	if this.gate.GetSessionLearner() != nil {
 		go func() {
-			this.gate.GetSessionLearner().Connect(a.GetSession())
+			this.gate.GetSessionLearner().OnConnect(a.GetSession())
 		}()
 	}
 }
@@ -101,7 +101,7 @@ func (this *Delegate) DisConnect(a gate.IClientAgent) {
 	if this.gate.GetSessionLearner() != nil {
 		if a.GetSession() != nil {
 			// 没有session的就不回调了
-			this.gate.GetSessionLearner().DisConnect(a.GetSession())
+			this.gate.GetSessionLearner().OnDisConnect(a.GetSession())
 		}
 	}
 }

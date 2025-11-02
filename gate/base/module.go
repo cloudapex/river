@@ -22,7 +22,6 @@ type GateBase struct {
 
 	delegater    gate.IDelegater                       // ession管理接口
 	agentCreater func(netTyp string) gate.IClientAgent // 创建客户端连接代理接口
-	guestJudger  func(session gate.ISession) bool      // 是否游客
 	shakeHandle  func(r *http.Request) error           // 建立连接时鉴权(ws)
 
 	storager        gate.StorageHandler     // Session持久化接口
@@ -164,15 +163,6 @@ func (this *GateBase) SetDelegater(handler gate.IDelegater) error {
 
 // GetDelegater 获取代理处理器
 func (this *GateBase) GetDelegater() gate.IDelegater { return this.delegater }
-
-// SetGuestJudger 设置是否游客的判定器
-func (this *GateBase) SetGuestJudger(judger func(session gate.ISession) bool) error {
-	this.guestJudger = judger
-	return nil
-}
-
-// GetGuestJudger 获取是否游客的判定器
-func (this *GateBase) GetGuestJudger() func(session gate.ISession) bool { return this.guestJudger }
 
 // SetShakeHandler 设置建立连接时鉴权器(ws)
 func (this *GateBase) SetShakeHandler(handler func(r *http.Request) error) error {

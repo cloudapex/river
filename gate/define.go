@@ -40,7 +40,6 @@ type IGate interface {
 	GetStorageHandler() StorageHandler
 	GetRouteHandler() RouteHandler
 	GetSendMessageHook() FunSendMessageHook
-	GetGuestJudger() func(session ISession) bool
 	GetRecvPackHandler() FunRecvPackHandler
 }
 
@@ -236,6 +235,6 @@ type IAgentLearner interface {
 
 // ISessionLearner 客户端代理(业务使用)
 type ISessionLearner interface {
-	Connect(a ISession)    //当连接建立  并且协议握手成功
-	DisConnect(a ISession) //当连接关闭	 或者客户端主动发送DisConnect命令
+	OnConnect(a ISession)    //当连接建立  并且协议握手成功
+	OnDisConnect(a ISession) //当连接关闭	 或者客户端主动发送DisConnect命令
 }
