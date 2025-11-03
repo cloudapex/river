@@ -229,7 +229,7 @@ func (this *agentBase) OnRecvPack(pack *gate.Pack) error {
 
 	// 默认是通过topic解析出路由规则
 	topic := strings.FieldsFunc(pack.Topic, func(r rune) bool {
-		return r == '/' || r == '_'
+		return r == '/'
 	})
 	if len(topic) < 2 {
 		return fmt.Errorf("pack.Topic resolving faild with:%v", pack.Topic)

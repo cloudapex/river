@@ -80,12 +80,14 @@ func (this *GateBase) GetType() string { return "Gate" }
 
 func (this *GateBase) Version() string { return "1.0.0" }
 
+func (this *GateBase) Options() gate.Options { return this.opts }
+
 func (this *GateBase) OnAppConfigurationLoaded() {
 	this.ModuleBase.OnAppConfigurationLoaded() // 这是必须的
 }
-func (this *GateBase) OnConfChanged(settings *conf.ModuleSettings) { /*目前没用*/ }
-
-func (this *GateBase) Options() gate.Options { return this.opts }
+func (this *GateBase) OnConfChanged(settings *conf.ModuleSettings) {
+	this.ModuleBase.OnConfChanged(settings)
+}
 
 func (this *GateBase) Run(closeSig chan bool) {
 	// for wss

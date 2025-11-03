@@ -68,10 +68,10 @@ type DefaultApp struct {
 	//将一个RPC调用路由到新的路由上
 	serviceRoute func(route string) string
 
-	onConfigurationLoaded func()                            // 应用启动配置初始化完成后回调
-	onModuleInited        func(module app.IModule)          // 每个模块初始化完成后回调
-	onStartup             func()                            // 应用启动完成后回调
-	onServiceDeleted      func(moduleName, serverId string) // 当模块服务断开删除时回调
+	onConfigurationLoaded func()                              // 应用启动配置初始化完成后回调
+	onModuleInited        func(module app.IModule)            // 每个模块初始化完成后回调
+	onStartup             func()                              // 应用启动完成后回调
+	onServiceDeleteds     []func(moduleName, serverId string) // 当模块服务断开删除时回调
 }
 
 // 初始化 consul
@@ -255,8 +255,10 @@ func (this *DefaultApp) Watcher(node *registry.Node) {
 	if len(s) < 2 {
 		return
 	}
-	if this.onServiceDeleted != nil {
-		go this.onServiceDeleted(s[0], node.Id)
+	if len(this.onServiceDeleteds) != 0 {
+		for _, f := range this.onServiceDeleteds {
+			go f(s[0], node.Id)
+		}
 	}
 }
 
@@ -422,6 +424,6 @@ func (this *DefaultApp) OnStartup(_func func()) error {
 
 // OnServiceBreak 设置当模块服务断开删除时回调
 func (this *DefaultApp) OnServiceBreak(_func func(moduleName, serverId string)) error {
-	this.onServiceDeleted = _func
+	this.onServiceDeleteds = append(this.onServiceDeleteds, _func)
 	return nil
 }
