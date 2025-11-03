@@ -131,7 +131,7 @@ func (this *ModuleBase) GetServer() server.Server {
 	return this.service.Server()
 }
 
-// GetServerID 节点ID
+// GetServerID 模块服务ID
 func (this *ModuleBase) GetServerID() string {
 	//很关键,需要与配置文件中的Module配置对应
 	if this.service != nil && this.service.Server() != nil {

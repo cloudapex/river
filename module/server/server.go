@@ -30,7 +30,7 @@ type server struct {
 	// used for first registration
 	registered bool
 	server     mqrpc.RPCServer
-	id         string // 节点ID
+	id         string
 	// graceful exit
 	wg sync.WaitGroup
 }

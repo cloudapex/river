@@ -85,7 +85,7 @@ type IRPCModule interface {
 	IModule
 	//context.Context
 
-	// 节点ID
+	// 模块服务ID
 	GetServerID() string
 	GetModuleSettings() (settings *conf.ModuleSettings)
 
