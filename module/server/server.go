@@ -11,7 +11,7 @@ import (
 	"github.com/cloudapex/river/mqrpc"
 	rpcbase "github.com/cloudapex/river/mqrpc/base"
 	"github.com/cloudapex/river/registry"
-	"github.com/cloudapex/river/tools/lib/addr"
+	"github.com/cloudapex/river/tools/iptool"
 )
 
 func newServer(opts ...Option) Server {
@@ -104,7 +104,7 @@ func (s *server) ServiceRegister() error {
 		host = parts[0]
 	}
 
-	addr, err := addr.Extract(host)
+	addr, err := iptool.Extract(host)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func (s *server) ServiceDeregister() error {
 		host = parts[0]
 	}
 
-	addr, err := addr.Extract(host)
+	addr, err := iptool.Extract(host)
 	if err != nil {
 		return err
 	}

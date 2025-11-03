@@ -19,7 +19,7 @@ import (
 )
 
 func Test_beemap(t *testing.T) {
-	bm := NewBeeMap()
+	bm := NewSafeMap()
 	if !bm.Set("astaxie", 1) {
 		t.Error("set Error")
 	}

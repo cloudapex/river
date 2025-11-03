@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	iptool "github.com/cloudapex/river/tools/ip"
+	"github.com/cloudapex/river/tools/iptool"
 	"github.com/gorilla/websocket"
 )
 
