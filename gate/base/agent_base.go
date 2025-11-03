@@ -60,7 +60,11 @@ func (this *agentBase) Close() {
 func (this *agentBase) OnClose() error {
 	atomic.StoreInt32(&this.isClosed, 1)
 	close(this.sendPackChan)
+
 	this.gate.GetAgentLearner().DisConnect(this.impl) // 触发连接断开的事件
+
+	log.Info("gate close agent sessionId:%s, current gate agents num:%d", this.session.GetSessionID(), this.gate.GetDelegater().GetAgentNum())
+
 	return nil
 }
 
