@@ -14,6 +14,8 @@ import (
 const (
 	// RPC_CLIENT_MSG RPC处理来自客户端的消息
 	RPC_CLIENT_MSG string = "RPC_CLIENT_MSG"
+	// RPC_CLIENT_DISCONNECT_MSG RPC处理客户端断开连接的消息
+	RPC_CLIENT_DISCONNECT_MSG string = "RPC_CLIENT_MSG"
 
 	PACK_HEAD_TOTAL_LEN_SIZE       = 2          // 包头中这几个字节存放总pack的长度值
 	PACK_HEAD_MSG_ID_LEN_SIZE      = 2          // 包头中这几个字节存放msgId的长度值
@@ -47,6 +49,7 @@ type IGate interface {
 type IDelegater interface {
 	GetAgent(sessionId string) (IClientAgent, error)
 	GetAgentNum() int
+	SessionsRange(f func(key, value any) bool)
 	OnDestroy() // 退出事件,当主动关闭时释放所有的连接
 
 	// 获取最新Session数据
@@ -87,22 +90,10 @@ type ISession interface {
 	// --------------- 固定属性区(Gate管理,理论上不可更改)
 
 	GetIP() string
-	SetIP(ip string)
-
 	GetNetwork() string
-	SetNetwork(network string)
-
 	GetSessionID() string
-	SetSessionID(sessionId string)
-
-	// GateServerId
-	GetServerID() string
-	SetServerID(serverId string)
-
-	// 网关本地的额外数据,不会再rpc中传递
-	GetLocalUserData() any
-	// 网关本地的额外数据,不会再rpc中传递
-	SetLocalUserData(data any)
+	GetServerID() string // gate server id
+	GetUserData() any    // 网关本地的额外数据,不会再rpc中传递
 
 	// UserID(线程安全)
 	GetUserID() string
@@ -117,7 +108,7 @@ type ISession interface {
 	SetSettings(settings map[string]string)
 	// 合并两个map 并且以 agent.(Agent).GetSession().Settings 已有的优先
 	ImportSettings(map[string]string) error
-	//SettingsRange 配合一个回调函数进行遍历操作，通过回调函数返回内部遍历出来的值。回调函数的返回值：返回 true；终止迭代遍历时，返回 false。
+	// 遍历Settings通过回调函数遍历kv值。回调函数的返回值(true-继续遍历; false-终止迭代)
 	SettingsRange(func(k, v string) bool)
 
 	// 每次rpc调用都拷贝一份新的Session进行传输

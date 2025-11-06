@@ -3,6 +3,7 @@ package tools
 import (
 	"encoding/base64"
 	"encoding/json"
+	"strings"
 
 	"github.com/vmihailenco/msgpack/v5"
 )
@@ -61,10 +62,13 @@ func processBase64Data(data map[string]interface{}) {
 	for k, v := range data {
 		switch val := v.(type) {
 		case string:
-			// 尝试解码 base64
-			if decoded, err := base64.StdEncoding.DecodeString(val); err == nil {
-				data[k] = decoded
+			// 尝试解码 base64(不一定严谨,够用就行)
+			if strings.HasSuffix(k, "_bin") && len(val)%4 == 0 {
+				if decoded, err := base64.StdEncoding.DecodeString(val); err == nil {
+					data[k] = decoded
+				}
 			}
+
 		case map[string]interface{}:
 			processBase64Data(val)
 		}

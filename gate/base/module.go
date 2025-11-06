@@ -28,7 +28,7 @@ type GateBase struct {
 	router          gate.RouteHandler       // 路由控制接口
 	sessionLearner  gate.ISessionLearner    // 客户端连接和断开的监听器(业务使用)
 	agentLearner    gate.IAgentLearner      // 客户端连接和断开的监听器(内部使用)
-	recvPacker      gate.FunRecvPackHandler // 接收数据包处理接口
+	recvPackHandler gate.FunRecvPackHandler // 接收数据包处理接口
 	sendMessageHook gate.FunSendMessageHook // 发送消息时的钩子回调
 }
 
@@ -58,7 +58,7 @@ func (this *GateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSetting
 	this.delegater = delegate
 	this.agentLearner = delegate
 	this.agentCreater = this.defaultClientAgentCreater
-	this.recvPacker = this.defaultRecvPackHandler
+	this.recvPackHandler = this.defaultRecvPackHandler
 
 	// for session
 	this.GetServer().RegisterGO("Load", delegate.OnRpcLoad)
@@ -213,12 +213,12 @@ func (this *GateBase) GetAgentLearner() gate.IAgentLearner { return this.agentLe
 
 // SetRecvPackHandler 设置接收数据包处理接口
 func (this *GateBase) SetRecvPackHandler(handler gate.FunRecvPackHandler) error {
-	this.recvPacker = handler
+	this.recvPackHandler = handler
 	return nil
 }
 
 // GetRecvPackHandler 获取接收数据包处理接口
-func (this *GateBase) GetRecvPackHandler() gate.FunRecvPackHandler { return this.recvPacker }
+func (this *GateBase) GetRecvPackHandler() gate.FunRecvPackHandler { return this.recvPackHandler }
 
 // defaultRecvPackHandler 默认接收数据包处理接口
 func (this *GateBase) defaultRecvPackHandler(session gate.ISession, pack *gate.Pack) error {

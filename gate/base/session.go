@@ -93,16 +93,11 @@ func (s *sessionAgent) initByMap(datas map[string]any) error {
 	return nil
 }
 
-func (s *sessionAgent) GetIP() string                 { return s.session.IP }
-func (s *sessionAgent) SetIP(ip string)               { s.session.IP = ip }
-func (s *sessionAgent) GetNetwork() string            { return s.session.Network }
-func (s *sessionAgent) SetNetwork(network string)     { s.session.Network = network }
-func (s *sessionAgent) GetSessionID() string          { return s.session.SessionId }
-func (s *sessionAgent) SetSessionID(sessionId string) { s.session.SessionId = sessionId }
-func (s *sessionAgent) GetServerID() string           { return s.session.ServerId }
-func (s *sessionAgent) SetServerID(serverId string)   { s.session.ServerId = serverId }
-func (s *sessionAgent) GetLocalUserData() any         { return s.userdata }
-func (s *sessionAgent) SetLocalUserData(data any)     { s.userdata = data }
+func (s *sessionAgent) GetIP() string        { return s.session.IP }
+func (s *sessionAgent) GetNetwork() string   { return s.session.Network }
+func (s *sessionAgent) GetSessionID() string { return s.session.SessionId }
+func (s *sessionAgent) GetServerID() string  { return s.session.ServerId }
+func (s *sessionAgent) GetUserData() any     { return s.userdata }
 
 func (s *sessionAgent) GetUserID() string {
 	s.lock.Lock()

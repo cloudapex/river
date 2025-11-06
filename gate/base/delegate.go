@@ -55,6 +55,11 @@ func (this *Delegate) GetAgentNum() int {
 	return num
 }
 
+// SessionsRange
+func (this *Delegate) SessionsRange(f func(key, value any) bool) {
+	this.sessions.Range(f)
+}
+
 // ========== IAgentLearner
 
 // 当连接建立(握手成功)

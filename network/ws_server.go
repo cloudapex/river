@@ -95,7 +95,8 @@ func (server *WSServer) Start() {
 
 		if server.ShakeFunc != nil {
 			if err := server.ShakeFunc(r); err != nil {
-				http.Error(w, "Handshake error", http.StatusBadRequest)
+				log.Error("WS client ShakeFunc err:%v", err)
+				http.Error(w, "HandShake error", http.StatusBadRequest)
 				return
 			}
 		}

@@ -5,11 +5,9 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
-	"strings"
 	"sync/atomic"
 	"time"
 
-	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/gate"
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/network"
@@ -202,7 +200,7 @@ func (this *agentBase) recvLoop() error {
 				continue
 			}
 		}
-		if err := this.OnRecvPack(pack); err != nil {
+		if err := this.onRecvPack(pack); err != nil {
 			this.lastError = err
 			return err
 		}
@@ -224,39 +222,10 @@ func (this *agentBase) recvFinish() {
 	}
 }
 
-// 实现如何处理收到的数据包
-func (this *agentBase) OnRecvPack(pack *gate.Pack) error {
-	// 处理保活(默认不处理保活,留给上层处理)
-	if handle := this.gate.GetRecvPackHandler(); handle != nil {
-		return handle(this.GetSession(), pack)
-	}
-
-	// 默认是通过topic解析出路由规则
-	topic := strings.FieldsFunc(pack.Topic, func(r rune) bool {
-		return r == '/'
-	})
-	if len(topic) < 2 {
-		return fmt.Errorf("pack.Topic resolving faild with:%v", pack.Topic)
-	}
-	moduleTyp, msgId := topic[0], topic[1]
-
-	// 优先在已绑定的Module中提供服务
-	serverId, _ := this.session.Get(moduleTyp)
-	if serverId != "" {
-		if server, _ := app.App().GetServerByID(serverId); server != nil {
-			_, err := server.Call(this.session.GenRPCContext(), gate.RPC_CLIENT_MSG, msgId, pack.Body)
-			return err
-		}
-	}
-
-	// 然后按照默认路由规则随机取得Module服务
-	server, err := app.App().GetRouteServer(moduleTyp)
-	if err != nil {
-		return fmt.Errorf("Service(moduleType:%s) not found", moduleTyp)
-	}
-
-	_, err = server.Call(this.session.GenRPCContext(), gate.RPC_CLIENT_MSG, msgId, pack.Body)
-	return err
+// 处理收到的数据包
+func (this *agentBase) onRecvPack(pack *gate.Pack) error {
+	handle := this.gate.GetRecvPackHandler()
+	return handle(this.GetSession(), pack)
 }
 
 // ========== Pack编码默认实现
