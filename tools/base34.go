@@ -1,23 +1,31 @@
 package tools
 
 import (
+	"errors"
+	"fmt"
 	"math"
 )
 
 const (
 	// 34进制字母表, 由0-9a-z(去掉o和l)组成
-	digits34      = "ub4zpfwj8ra72ynvgh3ism09ex5d6cq1kt"
-	bitMask       = uint64(0xFFFFFFFF) // 32位掩码
+	digits34 = "ub4zpfwj8ra72ynvgh3ism09ex5d6cq1kt"
+	//bitMask       = uint64(0xFFFFFFFF) // 32位掩码
 	feistelRounds = 4
 	//magicNumber   = 0x123456789ABCDEF1 // Feistel轮函数使用的魔术数
 )
 
 // in init func
-var position34 [256]uint8
+var position34 [256]int8
 
 func init() {
+	// 初始化为-1表示未使用
+	for i := range position34 {
+		position34[i] = -1
+	}
+
+	// 设置有效字符的位置
 	for i, c := range []byte(digits34) {
-		position34[c] = uint8(i)
+		position34[c] = int8(i)
 	}
 }
 
@@ -40,43 +48,22 @@ func ToBase34(d uint64) string {
 }
 
 // FromBase34 ...
-func FromBase34(s string) uint64 {
+func FromBase34(s string) (uint64, error) {
 	var out uint64
 	for _, c := range s {
-		if c >= 256 || position34[byte(c)] == 0 && c != rune(digits34[0]) {
-			return 0 //, fmt.Errorf("invalid base34 char: %c", c)
+		// 检查字符是否有效
+		if c >= 256 || position34[byte(c)] < 0 {
+			return 0, fmt.Errorf("invalid base34 char: %c", c)
 		}
-		d := position34[c]
+
+		d := position34[byte(c)]
+		// 溢出检查
 		if out > (math.MaxUint64-uint64(d))/34 {
-			return 0 //, errors.New("value exceeds uint64 range")
+			return 0, errors.New("value exceeds uint64 range")
 		}
 		out = out*34 + uint64(d)
 	}
-	return out //, nil
-}
-
-// userId to accountId
-func ToAcctId(userId uint64) string {
-	if userId == 0 {
-		return ""
-		// return string(digits34[0])
-	}
-	//return ToBase34(userId)
-
-	mixed := feistelEncrypt(uint32(userId & bitMask))
-	return ToBase34(uint64(userId>>32<<32 | uint64(mixed)))
-}
-
-// accountId to userId
-func ToUserId(acctId string) uint64 {
-	if acctId == "" {
-		return 0
-	}
-	// return FromBase34(acctId)
-	mixed := FromBase34(acctId)
-
-	right := feistelDecrypt(uint32(mixed & bitMask))
-	return mixed>>32<<32 | uint64(right)
+	return out, nil
 }
 
 // ---------------
@@ -98,7 +85,7 @@ func generateKey(round int) uint16 {
 }
 
 // Feistel网络加密 - 将int32混淆
-func feistelEncrypt(num uint32) uint32 {
+func FeistelEncrypt(num uint32) uint32 {
 	// 转换为无符号数进行处理
 	value := uint32(num)
 
@@ -121,7 +108,7 @@ func feistelEncrypt(num uint32) uint32 {
 }
 
 // Feistel网络解密 - 还原原始int32
-func feistelDecrypt(num uint32) uint32 {
+func FeistelDecrypt(num uint32) uint32 {
 	// 转换为无符号数进行处理
 	value := uint32(num)
 
