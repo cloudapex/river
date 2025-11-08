@@ -10,27 +10,27 @@ package tools
 const minQueueLen = 16
 
 // Queue represents a single instance of the queue data structure.
-type Queue struct {
-	buf               []any
+type Queue[T any] struct {
+	buf               []T
 	head, tail, count int
 }
 
-// NewQueue New constructs and returns a new Queue.
-func NewQueue() *Queue {
-	return &Queue{
-		buf: make([]any, minQueueLen),
+// NewQueue constructs and returns a new Queue.
+func NewQueue[T any]() *Queue[T] {
+	return &Queue[T]{
+		buf: make([]T, minQueueLen),
 	}
 }
 
 // Length returns the number of elements currently stored in the queue.
-func (q *Queue) Length() int {
+func (q *Queue[T]) Length() int {
 	return q.count
 }
 
 // resizes the queue to fit exactly twice its current contents
 // this can result in shrinking if the queue is less than half-full
-func (q *Queue) resize() {
-	newBuf := make([]any, q.count<<1)
+func (q *Queue[T]) resize() {
+	newBuf := make([]T, q.count<<1)
 
 	if q.tail > q.head {
 		copy(newBuf, q.buf[q.head:q.tail])
@@ -45,7 +45,7 @@ func (q *Queue) resize() {
 }
 
 // Add puts an element on the end of the queue.
-func (q *Queue) Add(elem any) {
+func (q *Queue[T]) Add(elem T) {
 	if q.count == len(q.buf) {
 		q.resize()
 	}
@@ -58,7 +58,7 @@ func (q *Queue) Add(elem any) {
 
 // Peek returns the element at the head of the queue. This call panics
 // if the queue is empty.
-func (q *Queue) Peek() any {
+func (q *Queue[T]) Peek() T {
 	if q.count <= 0 {
 		panic("queue: Peek() called on empty queue")
 	}
@@ -69,7 +69,7 @@ func (q *Queue) Peek() any {
 // invalid, the call will panic. This method accepts both positive and
 // negative index values. Index 0 refers to the first element, and
 // index -1 refers to the last.
-func (q *Queue) Get(i int) any {
+func (q *Queue[T]) Get(i int) T {
 	// If indexing backwards, convert to positive index.
 	if i < 0 {
 		i += q.count
@@ -83,12 +83,13 @@ func (q *Queue) Get(i int) any {
 
 // Remove removes and returns the element from the front of the queue. If the
 // queue is empty, the call will panic.
-func (q *Queue) Remove() any {
+func (q *Queue[T]) Remove() T {
 	if q.count <= 0 {
 		panic("queue: Remove() called on empty queue")
 	}
 	ret := q.buf[q.head]
-	q.buf[q.head] = nil
+	var zero T
+	q.buf[q.head] = zero
 	// bitwise modulus
 	q.head = (q.head + 1) & (len(q.buf) - 1)
 	q.count--

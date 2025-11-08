@@ -2,17 +2,8 @@ package tools
 
 import (
 	"fmt"
-	"math/rand"
 	"runtime"
 )
-
-// RandInt64 生成一个[min,max)的随机数
-func RandInt64(min, max int64) int64 {
-	if min >= max {
-		return max
-	}
-	return rand.Int63n(max-min) + min
-}
 
 // catch panic
 func Catch(panicRet any) error {

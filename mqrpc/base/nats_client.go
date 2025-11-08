@@ -17,7 +17,7 @@ import (
 
 type NatsClient struct {
 	//callinfos map[string]*ClinetCallInfo
-	callinfos         *tools.SafeMap
+	callinfos         *tools.SafeMap[string]
 	cmutex            sync.Mutex //操作callinfos的锁
 	callbackqueueName string
 	done              chan error
@@ -29,7 +29,7 @@ type NatsClient struct {
 func NewNatsClient(session app.IServerSession) (client *NatsClient, err error) {
 	client = new(NatsClient)
 	client.session = session
-	client.callinfos = tools.NewSafeMap()
+	client.callinfos = tools.NewSafeMap[string]()
 	client.callbackqueueName = nats.NewInbox()
 	client.done = make(chan error)
 	client.isClose = false
