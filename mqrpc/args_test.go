@@ -166,7 +166,6 @@ func _runFunc(callInfo *CallInfo) {
 			ret, err := DataToArg(v, params[k])
 			if err != nil {
 				panic(err)
-				return
 			}
 
 			switch {
