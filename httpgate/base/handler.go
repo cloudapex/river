@@ -10,7 +10,11 @@ import (
 
 // NewHandler 创建网关
 func NewHandler(opts httpgate.Options) http.Handler {
-	return &HttpHandler{Opts: opts}
+	h := &HttpHandler{Opts: opts}
+	if opts.RpcHandle == nil {
+		opts.RpcHandle = h.handleRpc
+	}
+	return h
 }
 
 // HttpHandler 网关handler
@@ -20,7 +24,7 @@ type HttpHandler struct {
 
 // API handler is the default handler which takes api.Request and returns api.Response
 func (a *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	request, err := RequestToProto(r)
+	req, err := RequestToProto(r)
 	if err != nil {
 		er := httpgate.InternalServerError("httpgateway", err.Error())
 		w.Header().Set("Content-Type", "application/json")
@@ -28,7 +32,7 @@ func (a *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(er.Error()))
 		return
 	}
-	server, err := a.Opts.Route(r)
+	service, err := a.Opts.Route(r)
 	if err != nil {
 		er := httpgate.InternalServerError("httpgateway", err.Error())
 		w.Header().Set("Content-Type", "application/json")
@@ -37,9 +41,7 @@ func (a *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rsp := &httpgate.Response{}
-	ctx, cancel := context.WithTimeout(context.TODO(), a.Opts.TimeOut)
-	defer cancel()
-	if err = mqrpc.MsgPack(rsp, mqrpc.RpcResult(server.SrvSession.Call(ctx, server.Hander, request))); err != nil {
+	if err = a.Opts.RpcHandle(service, req, rsp); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		ce := httpgate.ParseError(err.Error())
 		switch ce.Code {
@@ -66,4 +68,9 @@ func (a *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(int(rsp.StatusCode))
 	w.Write([]byte(rsp.Body))
+}
+func (a *HttpHandler) handleRpc(service *httpgate.Service, req *httpgate.Request, rsp *httpgate.Response) error {
+	ctx, cancel := context.WithTimeout(context.TODO(), a.Opts.TimeOut)
+	defer cancel()
+	return mqrpc.MsgPack(rsp, mqrpc.RpcResult(service.SrvSession.Call(ctx, service.Hander, req)))
 }

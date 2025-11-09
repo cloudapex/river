@@ -68,6 +68,8 @@ func (this *HttpGateBase) Version() string {
 	// 可以在监控时了解代码版本
 	return "1.0.0"
 }
+func (this *HttpGateBase) Options() httpgate.Options { return this.opts }
+
 func (this *HttpGateBase) Run(closeSig chan bool) {
 	srv := this.startHttpServer()
 

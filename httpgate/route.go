@@ -21,8 +21,8 @@ type Service struct {
 	SrvSession app.IServerSession
 }
 
-// Route 路由器定义
-type Route func(r *http.Request) (*Service, error)
+// Router 路由器定义
+type Router func(r *http.Request) (*Service, error)
 
 // DefaultRoute 默认路由规则
 var DefaultRoute = func(r *http.Request) (*Service, error) {
@@ -65,3 +65,6 @@ var DefaultRoute = func(r *http.Request) (*Service, error) {
 	}
 	return &Service{SrvSession: session, Hander: r.URL.Path}, err
 }
+
+// RPCHandler 函数定义
+type RPCHandler func(service *Service, req *Request, rsp *Response) error

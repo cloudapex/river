@@ -13,7 +13,8 @@ type Option func(*Options)
 // Options 网关配置项
 type Options struct {
 	Addr           string
-	Route          Route
+	Route          Router
+	RpcHandle      RPCHandler
 	TLS            bool
 	CertFile       string
 	KeyFile        string
@@ -46,10 +47,17 @@ func NewOptions(opts ...Option) Options {
 	return opt
 }
 
-// SetRoute 设置路由器
-func SetRoute(s Route) Option {
+// Route 设置路由器
+func Route(s Router) Option {
 	return func(o *Options) {
 		o.Route = s
+	}
+}
+
+// RpcHandler 设置rpc处理器
+func RpcHandler(h RPCHandler) Option {
+	return func(o *Options) {
+		o.RpcHandle = h
 	}
 }
 
