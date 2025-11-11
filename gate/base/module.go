@@ -10,7 +10,6 @@ import (
 	"github.com/cloudapex/river/conf"
 	"github.com/cloudapex/river/gate"
 	"github.com/cloudapex/river/module"
-	"github.com/cloudapex/river/mqrpc"
 	"github.com/cloudapex/river/network"
 )
 
@@ -236,7 +235,7 @@ func (this *GateBase) defaultRecvPackHandler(session gate.ISession, pack *gate.P
 	// 优先在已绑定的Module中提供服务
 	serverId, _ := session.Get(moduleTyp)
 	if serverId != "" {
-		return app.App().CallNR(session.GenRPCContext(), serverId, gate.RPC_CLIENT_MSG, mqrpc.Param(msgId, pack.Body))
+		return app.App().CallNR(session.GenRPCContext(), serverId, gate.RPC_CLIENT_MSG, msgId, pack.Body)
 	}
 
 	// 然后按照默认路由规则随机取得Module服务
