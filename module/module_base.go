@@ -174,13 +174,13 @@ func (this *ModuleBase) GetServerBySelector(serviceName string, opts ...selector
 }
 
 // Call  RPC调用(需要等待结果)
-func (this *ModuleBase) Call(ctx context.Context, moduleType, _func string, params mqrpc.ParamOption, opts ...selector.SelectOption) (any, error) {
-	return app.App().Call(ctx, moduleType, _func, params, opts...)
+func (this *ModuleBase) Call(ctx context.Context, moduleServer, _func string, params mqrpc.ParamOption, opts ...selector.SelectOption) (any, error) {
+	return app.App().Call(ctx, moduleServer, _func, params, opts...)
 }
 
 // CallNR  RPC调用(需要等待结果)
-func (this *ModuleBase) CallNR(ctx context.Context, moduleType, _func string, params ...any) (err error) {
-	return app.App().CallNR(ctx, moduleType, _func, params...)
+func (this *ModuleBase) CallNR(ctx context.Context, moduleServer, _func string, params ...any) (err error) {
+	return app.App().CallNR(ctx, moduleServer, _func, params...)
 }
 
 // CallBroadcast RPC调用(群发,无需等待结果)

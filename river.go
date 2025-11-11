@@ -372,8 +372,8 @@ func (this *DefaultApp) getServerSessionSafe(node *registry.Node, moduleType str
 }
 
 // Call RPC调用(需要等待结果)
-func (this *DefaultApp) Call(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (result any, err error) {
-	server, err := this.GetRouteServer(moduleType, opts...)
+func (this *DefaultApp) Call(ctx context.Context, moduleServer, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (result any, err error) {
+	server, err := this.GetRouteServer(moduleServer, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -381,8 +381,8 @@ func (this *DefaultApp) Call(ctx context.Context, moduleType, _func string, para
 }
 
 // Call RPC调用(无需等待结果)
-func (this *DefaultApp) CallNR(ctx context.Context, moduleType, _func string, params ...any) (err error) {
-	server, err := this.GetRouteServer(moduleType)
+func (this *DefaultApp) CallNR(ctx context.Context, moduleServer, _func string, params ...any) (err error) {
+	server, err := this.GetRouteServer(moduleServer)
 	if err != nil {
 		return
 	}
@@ -390,8 +390,8 @@ func (this *DefaultApp) CallNR(ctx context.Context, moduleType, _func string, pa
 }
 
 // CallBroadcast RPC调用(群发,无需等待结果)
-func (this *DefaultApp) CallBroadcast(ctx context.Context, moduleName, _func string, params ...any) {
-	listSvr := this.GetServersByType(moduleName)
+func (this *DefaultApp) CallBroadcast(ctx context.Context, moduleType, _func string, params ...any) {
+	listSvr := this.GetServersByType(moduleType)
 	for _, svr := range listSvr {
 		svr.CallNR(ctx, _func, params...)
 	}

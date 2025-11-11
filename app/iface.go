@@ -53,18 +53,18 @@ type IApp interface {
 	GetServersByType(serviceName string) []IServerSession
 
 	// Call RPC调用(需要等待结果)
-	Call(ctx context.Context, moduleType, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (any, error)
+	Call(ctx context.Context, moduleServer, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (any, error)
 	// Call RPC调用(无需等待结果)
-	CallNR(ctx context.Context, moduleType, _func string, params ...any) error
+	CallNR(ctx context.Context, moduleServer, _func string, params ...any) error
 	// Call RPC调用(群发,无需等待结果)
-	CallBroadcast(ctx context.Context, moduleName, _func string, params ...any)
+	CallBroadcast(ctx context.Context, moduleType, _func string, params ...any)
 
 	// 回调(hook)
 	OnConfigurationLoaded(func()) error                           // 设置应用启动配置初始化完成后回调
 	OnModuleInited(func(module IModule)) error                    // 设置每个模块初始化完成后回调
 	GetModuleInited() func(module IModule)                        // 获取每个模块初始化完成后回调函数
 	OnStartup(func()) error                                       // 设置应用启动完成后回调
-	OnServiceBreak(_func func(moduleName, serverId string)) error // 设置当模块服务断开删除时回调
+	OnServiceBreak(_func func(moduleType, serverId string)) error // 设置当模块服务断开删除时回调
 }
 
 // IModule 基本模块定义
@@ -98,9 +98,9 @@ type IRPCModule interface {
 	// 通过服务类型(moduleType)获取服务实例(可设置选择器)
 	GetServerBySelector(serviceName string, opts ...selector.SelectOption) (IServerSession, error)
 
-	Call(ctx context.Context, moduleType, _func string, params mqrpc.ParamOption, opts ...selector.SelectOption) (any, error)
-	CallNR(ctx context.Context, moduleType, _func string, params ...any) error
-	CallBroadcast(ctx context.Context, moduleName, _func string, params ...any)
+	Call(ctx context.Context, moduleServer, _func string, params mqrpc.ParamOption, opts ...selector.SelectOption) (any, error)
+	CallNR(ctx context.Context, moduleServer, _func string, params ...any) error
+	CallBroadcast(ctx context.Context, moduleType, _func string, params ...any)
 }
 
 // IServerSession 服务代理
