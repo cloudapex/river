@@ -10,6 +10,7 @@ import (
 	"github.com/cloudapex/river/conf"
 	"github.com/cloudapex/river/gate"
 	"github.com/cloudapex/river/module"
+	"github.com/cloudapex/river/mqrpc"
 	"github.com/cloudapex/river/network"
 )
 
@@ -229,15 +230,13 @@ func (this *GateBase) defaultRecvPackHandler(session gate.ISession, pack *gate.P
 	if len(topic) < 2 {
 		return fmt.Errorf("pack.Topic resolving faild with:%v", pack.Topic)
 	}
+
 	moduleTyp, msgId := topic[0], topic[1]
 
 	// 优先在已绑定的Module中提供服务
 	serverId, _ := session.Get(moduleTyp)
 	if serverId != "" {
-		if server, _ := app.App().GetServerByID(serverId); server != nil {
-			_, err := server.Call(session.GenRPCContext(), gate.RPC_CLIENT_MSG, msgId, pack.Body)
-			return err
-		}
+		return app.App().CallNR(session.GenRPCContext(), serverId, gate.RPC_CLIENT_MSG, mqrpc.Param(msgId, pack.Body))
 	}
 
 	// 然后按照默认路由规则随机取得Module服务
@@ -246,8 +245,7 @@ func (this *GateBase) defaultRecvPackHandler(session gate.ISession, pack *gate.P
 		return fmt.Errorf("Service(moduleType:%s) not found", moduleTyp)
 	}
 
-	_, err = server.Call(session.GenRPCContext(), gate.RPC_CLIENT_MSG, msgId, pack.Body)
-	return err
+	return server.CallNR(session.GenRPCContext(), gate.RPC_CLIENT_MSG, msgId, pack.Body)
 }
 
 // SetsendMessageHook 设置发送消息时的钩子回调
