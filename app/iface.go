@@ -64,7 +64,7 @@ type IApp interface {
 	OnModuleInited(func(module IModule)) error                    // 设置每个模块初始化完成后回调
 	GetModuleInited() func(module IModule)                        // 获取每个模块初始化完成后回调函数
 	OnStartup(func()) error                                       // 设置应用启动完成后回调
-	OnServiceBreak(_func func(moduleType, serverId string)) error // 设置当模块服务断开删除时回调
+	OnServiceBreak(_func func(moduleName, serverId string)) error // 设置当模块服务断开删除时回调
 }
 
 // IModule 基本模块定义
