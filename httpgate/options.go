@@ -13,8 +13,8 @@ type Option func(*Options)
 // Options 网关配置项
 type Options struct {
 	Addr           string
-	Route          Router
-	RpcHandle      RPCHandler
+	Route          Router     // 控制如何选择rpc服务
+	RpcHandle      RPCHandler // 控制如何处理api请求
 	TLS            bool
 	CertFile       string
 	KeyFile        string

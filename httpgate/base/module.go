@@ -10,6 +10,7 @@ import (
 	"github.com/cloudapex/river/httpgate"
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/module"
+	"github.com/gin-gonic/gin"
 )
 
 var _ app.IRPCModule = &HttpGateBase{}
@@ -18,6 +19,8 @@ type HttpGateBase struct {
 	module.ModuleBase
 
 	opts httpgate.Options
+
+	router *gin.Engine
 }
 
 func (this *HttpGateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSettings, opts ...httpgate.Option) {
@@ -59,6 +62,17 @@ func (this *HttpGateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSet
 	if MaxHeaderBytes, ok := settings.Settings["MaxHeaderBytes"]; ok {
 		this.opts.MaxHeaderBytes = MaxHeaderBytes.(int)
 	}
+
+	// 创建路由
+	this.router = gin.New()
+	this.router.Use(gin.Logger())
+	this.router.Use(gin.Recovery())
+
+	_handler := NewHandler(this.opts)
+	this.router.NoRoute(func(ctx *gin.Context) {
+		// 将 gin.Context 转换为标准 http.ResponseWriter 和 *http.Request
+		_handler.ServeHTTP(ctx.Writer, ctx.Request)
+	})
 }
 func (this *HttpGateBase) GetType() string {
 	// 很关键,需要与配置文件中的Module配置对应
@@ -69,6 +83,8 @@ func (this *HttpGateBase) Version() string {
 	return "1.0.0"
 }
 func (this *HttpGateBase) Options() httpgate.Options { return this.opts }
+
+func (this *HttpGateBase) RouterGroup() *gin.RouterGroup { return &this.router.RouterGroup }
 
 func (this *HttpGateBase) Run(closeSig chan bool) {
 	srv := this.startHttpServer()
@@ -89,7 +105,7 @@ func (this *HttpGateBase) OnDestroy() {
 func (this *HttpGateBase) startHttpServer() *http.Server {
 	srv := &http.Server{
 		Addr:           this.opts.Addr,
-		Handler:        NewHandler(this.opts),
+		Handler:        this.router,
 		ReadTimeout:    this.opts.ReadTimeout,
 		WriteTimeout:   this.opts.WriteTimeout,
 		IdleTimeout:    this.opts.IdleTimeout,

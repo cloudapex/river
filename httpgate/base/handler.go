@@ -8,11 +8,11 @@ import (
 	"github.com/cloudapex/river/mqrpc"
 )
 
-// NewHandler 创建网关
+// NewHandler 创建常规http handler
 func NewHandler(opts httpgate.Options) http.Handler {
 	h := &HttpHandler{Opts: opts}
 	if opts.RpcHandle == nil {
-		opts.RpcHandle = h.handleRpc
+		opts.RpcHandle = h.callRpcService
 	}
 	return h
 }
@@ -69,7 +69,7 @@ func (a *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(int(rsp.StatusCode))
 	w.Write([]byte(rsp.Body))
 }
-func (a *HttpHandler) handleRpc(service *httpgate.Service, req *httpgate.Request, rsp *httpgate.Response) error {
+func (a *HttpHandler) callRpcService(service *httpgate.Service, req *httpgate.Request, rsp *httpgate.Response) error {
 	ctx, cancel := context.WithTimeout(context.TODO(), a.Opts.TimeOut)
 	defer cancel()
 	return mqrpc.MsgPack(rsp, mqrpc.RpcResult(service.SrvSession.Call(ctx, service.Hander, req)))
