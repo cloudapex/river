@@ -64,6 +64,7 @@ func (this *HttpGateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSet
 	}
 
 	// 创建路由
+	gin.SetMode(gin.ReleaseMode)
 	this.router = gin.New()
 	this.router.Use(gin.Logger())
 	this.router.Use(gin.Recovery())
