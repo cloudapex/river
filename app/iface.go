@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"time"
 
 	"github.com/cloudapex/river/conf"
 	"github.com/cloudapex/river/mqrpc"
@@ -12,22 +11,7 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-// default app instance
-var defaultApp IApp = nil
-
-func Default(set ...IApp) IApp {
-	if defaultApp != nil {
-		return defaultApp
-	}
-
-	if len(set) != 0 {
-		defaultApp = set[0]
-	}
-
-	return defaultApp
-}
-
-// IApp mqant应用定义
+// IApp 应用定义
 type IApp interface {
 	OnInit() error
 	OnDestroy() error
@@ -142,5 +126,5 @@ type ClientRPCHandler func(server registry.Node, rpcinfo *core.RPCInfo, result a
 // ServerRPCHandler 服务方RPC监控
 type ServerRPCHandler func(module IModule, callInfo *mqrpc.CallInfo)
 
-// ServerRPCHandler 服务方RPC监控
-type RpcCompleteHandler func(module IModule, callInfo *mqrpc.CallInfo, input []any, out []any, execTime time.Duration)
+// ServerRPCHandler 服务方RPC完成监控
+// type RpcCompleteHandler func(module IModule, callInfo *mqrpc.CallInfo, input []any, out []any, execTime time.Duration)

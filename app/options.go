@@ -18,16 +18,6 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-// 启动参数(命令行优先级比环境变量高)
-type startUpArgs struct {
-	WordDir    string `env:"wd" env-default:""`
-	ProcessEnv string `env:"env" env-default:"dev"`
-	ConsulAddr string `env:"consul" env-default:"127.0.0.1:8500"` // use configKey: config/{env}/server
-	LogPath    string `env:"log" env-default:""`
-	BiPath     string `env:"bi" env-default:""`
-	PProfAddr  string `env:"pprof" env-default:""`
-}
-
 // APP选项
 func NewOptions(opts ...Option) Options {
 
@@ -153,13 +143,10 @@ func NewOptions(opts ...Option) Options {
 	return opt
 }
 
-// Option 应用级别配置项
-type Option func(*Options)
-
 // Options 应用级别配置
 type Options struct {
-	Version     string // app的版本
-	Debug       bool
+	Version     string   // app的版本
+	Debug       bool     // 是否打印日志到控制台(true)
 	Parse       bool     // 是否由框架解析启动环境变量,默认为true
 	WorkDir     string   // 工作目录(from startUpArgs.WordDir)
 	ProcessEnv  string   // 进程分组名称(from startUpArgs.ProcessEnv)
@@ -176,17 +163,21 @@ type Options struct {
 	RegisterInterval time.Duration     // 服务注册发现续约频率(10s)
 	RegisterTTL      time.Duration     // 服务注册发现续约生命周期(20s)
 
-	ClientRPChandler   ClientRPCHandler   // 配置RPC调用方监控器(nil)
-	ServerRPCHandler   ServerRPCHandler   // 配置RPC服务方监控器(nil)
-	RpcCompleteHandler RpcCompleteHandler // 配置RPC执行结果监控器(nil)
-	RPCExpired         time.Duration      // RPC调用超时(10s)
-	RPCMaxCoroutine    int                // 默认0(不限制) 没用
+	RPCExpired      time.Duration // RPC调用超时(10s)
+	RPCMaxCoroutine int           // 默认0(不限制) 没用
+
+	ClientRPChandler ClientRPCHandler // 配置全局的RPC调用方监控器(nil)
+	ServerRPCHandler ServerRPCHandler // 配置全局的RPC服务方监控器(nil)
+	//RpcCompleteHandler RpcCompleteHandler // 配置全局的RPC执行结果监控器(nil)
 
 	// 自定义日志文件名字(主要作用方便k8s映射日志不会被冲突，建议使用k8s pod实现)
 	LogFileName FileNameHandler // 日志文件名称(默认):fmt.Sprintf("%s/%v%s%s", logdir, prefix, processID, suffix)
 	// 自定义BI日志名字
 	BIFileName FileNameHandler //  BI文件名称(默认):fmt.Sprintf("%s/%v%s%s", logdir, prefix, processID, suffix)
 }
+
+// Option 应用级别配置项
+type Option func(*Options)
 
 // Version 应用版本
 func Version(v string) Option {
@@ -303,13 +294,13 @@ func SetServerRPCHandler(t ServerRPCHandler) Option {
 }
 
 // SetServerRPCCompleteHandler 服务RPC执行结果监控器
-func SetRpcCompleteHandler(t RpcCompleteHandler) Option {
-	return func(o *Options) {
-		o.RpcCompleteHandler = t
-	}
-}
+// func SetRpcCompleteHandler(t RpcCompleteHandler) Option {
+// 	return func(o *Options) {
+// 		o.RpcCompleteHandler = t
+// 	}
+// }
 
-// Parse mqant框架是否解析环境参数
+// Parse river框架是否解析环境参数
 func Parse(t bool) Option {
 	return func(o *Options) {
 		o.Parse = t

@@ -165,8 +165,8 @@ func (s *RPCServer) doCallback(callInfo *mqrpc.CallInfo) {
 			log.Warning("rpc callback erro :\n%s", callInfo.Result.Error)
 		}
 	}
-	if app.Default().Options().ServerRPCHandler != nil {
-		app.Default().Options().ServerRPCHandler(s.module, callInfo)
+	if handler := app.Default().Options().ServerRPCHandler; handler != nil {
+		handler(s.module, callInfo)
 	}
 }
 
@@ -307,9 +307,9 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 			rs[i] = v.Interface()
 		}
 	}
-	if app.Default().Options().RpcCompleteHandler != nil {
-		app.Default().Options().RpcCompleteHandler(s.module, callInfo, input, rs, time.Since(start))
-	}
+	// if handler := app.Default().Options().RpcCompleteHandler; handler != nil {
+	// 	handler(s.module, callInfo, input, rs, time.Since(start))
+	// }
 	var rerr string
 	switch e := rs[1].(type) {
 	case string:
