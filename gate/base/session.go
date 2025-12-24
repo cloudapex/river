@@ -274,7 +274,7 @@ func (s *sessionAgent) GetTraceSpan() log.TraceSpan {
 
 // update local Session(从Gate拉取最新数据)
 func (s *sessionAgent) ToUpdate() error {
-	server, err := app.App().GetServerByID(s.session.ServerId)
+	server, err := app.Default().GetServerByID(s.session.ServerId)
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
@@ -290,10 +290,10 @@ func (s *sessionAgent) ToUpdate() error {
 
 // Bind the session with the the userId.
 func (s *sessionAgent) ToBind(userId string) error {
-	if app.App() == nil {
+	if app.Default() == nil {
 		return fmt.Errorf("app.App is nil")
 	}
-	server, err := app.App().GetServerByID(s.session.ServerId)
+	server, err := app.Default().GetServerByID(s.session.ServerId)
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
@@ -309,10 +309,10 @@ func (s *sessionAgent) ToBind(userId string) error {
 
 // UnBind the session with the the userId.
 func (s *sessionAgent) ToUnBind() error {
-	if app.App() == nil {
+	if app.Default() == nil {
 		return fmt.Errorf("app.App is nil")
 	}
-	server, err := app.App().GetServerByID(s.session.ServerId)
+	server, err := app.Default().GetServerByID(s.session.ServerId)
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
@@ -328,10 +328,10 @@ func (s *sessionAgent) ToUnBind() error {
 
 // Set values (one) for the session.
 func (s *sessionAgent) ToSet(key string, value string) error {
-	if app.App() == nil {
+	if app.Default() == nil {
 		return fmt.Errorf("app.App is nil")
 	}
-	server, err := app.App().GetServerByID(s.session.ServerId)
+	server, err := app.Default().GetServerByID(s.session.ServerId)
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
@@ -348,10 +348,10 @@ func (s *sessionAgent) ToSet(key string, value string) error {
 
 // Set values (many) for the session(直接用参数Push).
 func (s *sessionAgent) ToSetBatch(settings map[string]string) error {
-	if app.App() == nil {
+	if app.Default() == nil {
 		return fmt.Errorf("app.App is nil")
 	}
-	server, err := app.App().GetServerByID(s.session.ServerId)
+	server, err := app.Default().GetServerByID(s.session.ServerId)
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
@@ -367,10 +367,10 @@ func (s *sessionAgent) ToSetBatch(settings map[string]string) error {
 
 // Push all Settings values for the session(拿自己的Settings去Push).
 func (s *sessionAgent) ToPush() error {
-	if app.App() == nil {
+	if app.Default() == nil {
 		return fmt.Errorf("app.App is nil")
 	}
-	server, err := app.App().GetServerByID(s.session.ServerId)
+	server, err := app.Default().GetServerByID(s.session.ServerId)
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
@@ -392,10 +392,10 @@ func (s *sessionAgent) ToPush() error {
 
 // Remove value from the session.
 func (s *sessionAgent) ToDel(key string) error {
-	if app.App() == nil {
+	if app.Default() == nil {
 		return fmt.Errorf("app.App is nil")
 	}
-	server, err := app.App().GetServerByID(s.session.ServerId)
+	server, err := app.Default().GetServerByID(s.session.ServerId)
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
@@ -411,10 +411,10 @@ func (s *sessionAgent) ToDel(key string) error {
 
 // Send message to the session.
 func (s *sessionAgent) ToSend(topic string, body []byte) error {
-	if app.App() == nil {
+	if app.Default() == nil {
 		return fmt.Errorf("app.App is nil")
 	}
-	server, err := app.App().GetServerByID(s.session.ServerId)
+	server, err := app.Default().GetServerByID(s.session.ServerId)
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
@@ -423,10 +423,10 @@ func (s *sessionAgent) ToSend(topic string, body []byte) error {
 
 // the session is connect status
 func (s *sessionAgent) ToConnected() (bool, error) {
-	if app.App() == nil {
+	if app.Default() == nil {
 		return false, fmt.Errorf("app.App is nil")
 	}
-	server, err := app.App().GetServerByID(s.session.ServerId)
+	server, err := app.Default().GetServerByID(s.session.ServerId)
 	if err != nil {
 		return false, fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
@@ -436,10 +436,10 @@ func (s *sessionAgent) ToConnected() (bool, error) {
 
 // Close the session connect
 func (s *sessionAgent) ToClose() error {
-	if app.App() == nil {
+	if app.Default() == nil {
 		return fmt.Errorf("app.App is nil")
 	}
-	server, err := app.App().GetServerByID(s.session.ServerId)
+	server, err := app.Default().GetServerByID(s.session.ServerId)
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}

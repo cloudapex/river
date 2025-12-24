@@ -13,9 +13,19 @@ import (
 )
 
 // default app instance
-var DefaultApp IApp = nil
+var defaultApp IApp = nil
 
-func App() IApp { return DefaultApp }
+func Default(set ...IApp) IApp {
+	if defaultApp != nil {
+		return defaultApp
+	}
+
+	if len(set) != 0 {
+		defaultApp = set[0]
+	}
+
+	return defaultApp
+}
 
 // IApp mqant应用定义
 type IApp interface {

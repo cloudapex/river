@@ -88,7 +88,7 @@ func (s *NatsServer) Callback(callinfo *mqrpc.CallInfo) error {
 		return err
 	}
 	reply_to := callinfo.Props["reply_to"].(string)
-	return app.App().Transporter().Publish(reply_to, body)
+	return app.Default().Transporter().Publish(reply_to, body)
 }
 
 /*
@@ -113,7 +113,7 @@ func (s *NatsServer) on_request_handle() (err error) {
 			fmt.Println(errstr)
 		}
 	}()
-	s.subs, err = app.App().Transporter().SubscribeSync(s.addr)
+	s.subs, err = app.Default().Transporter().SubscribeSync(s.addr)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func (s *NatsServer) on_request_handle() (err error) {
 			//log.Warning("NatsServer error with '%v'",err)
 			if !s.subs.IsValid() {
 				//订阅已关闭，需要重新订阅
-				s.subs, err = app.App().Transporter().SubscribeSync(s.addr)
+				s.subs, err = app.Default().Transporter().SubscribeSync(s.addr)
 				if err != nil {
 					log.Error("NatsServer SubscribeSync[1] error with '%v'", err)
 					continue
@@ -144,7 +144,7 @@ func (s *NatsServer) on_request_handle() (err error) {
 			log.Warning("NatsServer error with '%v'", err)
 			if !s.subs.IsValid() {
 				//订阅已关闭，需要重新订阅
-				s.subs, err = app.App().Transporter().SubscribeSync(s.addr)
+				s.subs, err = app.Default().Transporter().SubscribeSync(s.addr)
 				if err != nil {
 					log.Error("NatsServer SubscribeSync[2] error with '%v'", err)
 					continue

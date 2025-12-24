@@ -37,7 +37,7 @@ var DefaultRoute = func(r *http.Request) (*Service, error) {
 	if service == "" {
 		return nil, errors.New("module server is nil")
 	}
-	session, err := app.App().GetRouteServer(service,
+	session, err := app.Default().GetRouteServer(service,
 		selector.WithStrategy(func(services []*registry.Service) selector.Next {
 			var nodes []*registry.Node
 

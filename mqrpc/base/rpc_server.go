@@ -40,7 +40,7 @@ func NewRPCServer(module app.IModule) (mqrpc.RPCServer, error) {
 	rpc_server.nats_server = nats_server
 
 	//go rpc_server.on_call_handle(rpc_server.mq_chan, rpc_server.call_chan_done)
-	maxCoroutine := uint32(app.App().Options().RPCMaxCoroutine)
+	maxCoroutine := uint32(app.Default().Options().RPCMaxCoroutine)
 	if rpc_server.control == nil && maxCoroutine > 0 {
 		rpc_server.control = NewGoroutineControl(maxCoroutine)
 	}
@@ -165,8 +165,8 @@ func (s *RPCServer) doCallback(callInfo *mqrpc.CallInfo) {
 			log.Warning("rpc callback erro :\n%s", callInfo.Result.Error)
 		}
 	}
-	if app.App().Options().ServerRPCHandler != nil {
-		app.App().Options().ServerRPCHandler(s.module, callInfo)
+	if app.Default().Options().ServerRPCHandler != nil {
+		app.Default().Options().ServerRPCHandler(s.module, callInfo)
 	}
 }
 
@@ -307,8 +307,8 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 			rs[i] = v.Interface()
 		}
 	}
-	if app.App().Options().RpcCompleteHandler != nil {
-		app.App().Options().RpcCompleteHandler(s.module, callInfo, input, rs, time.Since(start))
+	if app.Default().Options().RpcCompleteHandler != nil {
+		app.Default().Options().RpcCompleteHandler(s.module, callInfo, input, rs, time.Since(start))
 	}
 	var rerr string
 	switch e := rs[1].(type) {
@@ -338,7 +338,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 	callInfo.Result = resultInfo
 	callInfo.ExecTime = time.Since(start).Nanoseconds()
 	s.doCallback(callInfo)
-	if app.App().Config().RpcLog {
+	if app.Default().Config().RpcLog {
 		log.TInfo(traceSpan, "rpc Exec ModuleType = %v Func = %v Elapsed = %v", s.module.GetType(), callInfo.RPCInfo.Fn, time.Since(start))
 	}
 	if s.listener != nil {

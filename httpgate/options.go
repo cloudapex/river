@@ -33,7 +33,7 @@ func NewOptions(opts ...Option) Options {
 		Addr:           ":8090",
 		Route:          DefaultRoute,
 		TLS:            false,
-		TimeOut:        app.App().Options().RPCExpired,
+		TimeOut:        app.Default().Options().RPCExpired,
 		ReadTimeout:    5 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		IdleTimeout:    60 * time.Second,

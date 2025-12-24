@@ -39,22 +39,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-// CreateApp 创建app实例
+// CreateApp 创建应用
 func CreateApp(opts ...app.Option) app.IApp {
-	out := NewApp(append(opts, app.Version(version))...)
-	if app.DefaultApp == nil {
-		app.DefaultApp = out
-	}
-	return out
-}
-
-// NewApp 创建app
-func NewApp(opts ...app.Option) app.IApp {
-	out := &DefaultApp{
+	return app.Default(&DefaultApp{
 		opts:    app.NewOptions(opts...),
 		manager: module.NewModuleManager(),
-	}
-	return out
+	})
 }
 
 // DefaultApp 默认应用
@@ -65,18 +55,19 @@ type DefaultApp struct {
 
 	serverList sync.Map
 
-	//将一个RPC调用路由到新的路由上
+	// 将一个RPC调用路由到新的路由上
 	serviceRoute func(route string) string
 
+	// 回调方法:
 	onConfigurationLoaded func()                              // 应用启动配置初始化完成后回调
 	onModuleInited        func(module app.IModule)            // 每个模块初始化完成后回调
 	onStartup             func()                              // 应用启动完成后回调
 	onServiceDeleteds     []func(moduleName, serverId string) // 当模块服务断开删除时回调
 }
 
-// 初始化 consul
+// initConsul 初始化 consul
 func (this *DefaultApp) initConsul() error {
-	err := this.opts.Selector.Apply(selector.SetWatcher(this.Watcher))
+	err := this.opts.Selector.Apply(selector.SetWatcher(this.watcherNodeDel))
 	if err != nil {
 		return err
 	}
@@ -95,7 +86,7 @@ func (this *DefaultApp) initConsul() error {
 	return nil
 }
 
-// 初始化 config
+// initConfig 初始化 config
 func (this *DefaultApp) initConfig() error {
 	confData, err := this.Options().Registry.GetKV(this.Options().ConfigKey)
 	if err != nil {
@@ -108,7 +99,7 @@ func (this *DefaultApp) initConfig() error {
 	return nil
 }
 
-// 初始化 logs
+// initLogs 初始化 logs
 func (this *DefaultApp) initLogs() error {
 	log.Init(
 		log.WithDebug(this.opts.Debug),
@@ -122,7 +113,7 @@ func (this *DefaultApp) initLogs() error {
 	return nil
 }
 
-// 初始化 nats
+// initNats 初始化 nats
 func (this *DefaultApp) initNats() error {
 	if this.opts.Nats == nil {
 		nc, err := nats.Connect(fmt.Sprintf("nats://%s", conf.Conf.Nats.Addr),
@@ -135,6 +126,12 @@ func (this *DefaultApp) initNats() error {
 	log.Info("nats addr:%s", conf.Conf.Nats.Addr)
 	return nil
 }
+
+// OnInit 初始化(初始化modules之前执行)
+func (this *DefaultApp) OnInit() error { return nil }
+
+// OnDestroy 应用退出
+func (this *DefaultApp) OnDestroy() error { this.manager.Destroy(); return nil }
 
 // Run 运行应用
 func (this *DefaultApp) Run(mods ...app.IModule) error {
@@ -219,7 +216,7 @@ func (this *DefaultApp) Run(mods ...app.IModule) error {
 // Config 获取启动配置
 func (this *DefaultApp) Config() conf.Config { return conf.Conf }
 
-// Options 获取应用配置
+// Options 获取应用选项
 func (this *DefaultApp) Options() app.Options { return this.opts }
 
 // Transporter 获取消息传输对象
@@ -234,7 +231,7 @@ func (this *DefaultApp) WorkDir() string { return this.opts.WorkDir }
 // GetProcessEnv 获取应用进程分组环境ID
 func (this *DefaultApp) GetProcessEnv() string { return this.opts.ProcessEnv }
 
-// UpdateOptions 允许再次更新应用配置(before this.Run)
+// UpdateOptions 允许再次更新应用配置(before app.Run)
 func (this *DefaultApp) UpdateOptions(opts ...app.Option) error {
 	for _, o := range opts {
 		o(&this.opts)
@@ -242,8 +239,8 @@ func (this *DefaultApp) UpdateOptions(opts ...app.Option) error {
 	return nil
 }
 
-// Watcher 监视服务节点注销(ServerSession删除掉)
-func (this *DefaultApp) Watcher(node *registry.Node) {
+// watcherNodeDel 监视服务节点注销(ServerSession删除掉)
+func (this *DefaultApp) watcherNodeDel(node *registry.Node) {
 	session, ok := this.serverList.Load(node.Id)
 	if ok && session != nil {
 		session.(app.IServerSession).GetRPC().Done()
@@ -261,12 +258,6 @@ func (this *DefaultApp) Watcher(node *registry.Node) {
 		}
 	}
 }
-
-// OnInit 初始化
-func (this *DefaultApp) OnInit() error { return nil }
-
-// OnDestroy 应用退出
-func (this *DefaultApp) OnDestroy() error { this.manager.Destroy(); return nil }
 
 // SetServiceRoute 设置服务路由器(动态转换service名称)
 func (this *DefaultApp) SetServiceRoute(fn func(route string) string) error {
@@ -412,9 +403,7 @@ func (this *DefaultApp) OnModuleInited(_func func(module app.IModule)) error {
 }
 
 // GetModuleInited 获取每个模块初始化完成后回调函数
-func (this *DefaultApp) GetModuleInited() func(module app.IModule) {
-	return this.onModuleInited
-}
+func (this *DefaultApp) GetModuleInited() func(module app.IModule) { return this.onModuleInited }
 
 // OnStartup 设置应用启动完成后回调
 func (this *DefaultApp) OnStartup(_func func()) error {
