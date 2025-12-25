@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-	mqrpc.RegTransContextKey(gate.CONTEXT_TRANSKEY_SESSION, func() mqrpc.Marshaler {
+	mqrpc.RegTransContextKey(gate.RPC_CONTEXT_KEY_SESSION, func() mqrpc.Marshaler {
 		s, _ := NewSessionByMap(map[string]any{})
 		return s
 	})
@@ -256,8 +256,8 @@ func (s *sessionAgent) IsGuest() bool {
 // GenRPCContext 生成RPC方法需要的context
 func (s *sessionAgent) GenRPCContext() context.Context {
 	ctx := context.Background()
-	mqrpc.ContextWithValue(ctx, gate.CONTEXT_TRANSKEY_SESSION, s)
-	mqrpc.ContextWithValue(ctx, log.CONTEXT_TRANSKEY_TRACE, s.GetTraceSpan())
+	mqrpc.ContextWithValue(ctx, gate.RPC_CONTEXT_KEY_SESSION, s)
+	mqrpc.ContextWithValue(ctx, log.RPC_CONTEXT_KEY_TRACE, s.GetTraceSpan())
 	return ctx
 }
 

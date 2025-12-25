@@ -40,11 +40,11 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...any) (any,
 	var argTypes []string = make([]string, len(params)+1)
 	var argDatas [][]byte = make([][]byte, len(params)+1)
 	// 检测是否含有log.TraceSpan
-	span, ok := ctx.Value(log.CONTEXT_TRANSKEY_TRACE).(log.TraceSpan)
+	span, ok := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
 	if !ok {
-		_ctx = mqrpc.ContextWithValue(_ctx, log.CONTEXT_TRANSKEY_TRACE, log.CreateRootTrace())
+		_ctx = mqrpc.ContextWithValue(_ctx, log.RPC_CONTEXT_KEY_TRACE, log.CreateRootTrace())
 	} else {
-		_ctx = mqrpc.ContextWithValue(_ctx, log.CONTEXT_TRANSKEY_TRACE, span.ExtractSpan())
+		_ctx = mqrpc.ContextWithValue(_ctx, log.RPC_CONTEXT_KEY_TRACE, span.ExtractSpan())
 	}
 
 	params = append([]any{_ctx}, params...)
@@ -58,7 +58,7 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...any) (any,
 	start := time.Now()
 	r, err := c.CallArgs(ctx, _func, argTypes, argDatas)
 	if app.App().Config().RpcLog {
-		span, _ := ctx.Value(log.CONTEXT_TRANSKEY_TRACE).(log.TraceSpan)
+		span, _ := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
 		log.TInfo(span, "rpc Call ServerId = %v Func = %v Elapsed = %v Result = %v ERROR = %v", c.nats_client.session.GetID(), _func, time.Since(start), r, err)
 	}
 	return r, err
@@ -145,11 +145,11 @@ func (c *RPCClient) CallNR(ctx context.Context, _func string, params ...any) (er
 	var argTypes []string = make([]string, len(params)+1)
 	var argDatas [][]byte = make([][]byte, len(params)+1)
 	// 检测是否含有log.TraceSpan
-	span, ok := ctx.Value(log.CONTEXT_TRANSKEY_TRACE).(log.TraceSpan)
+	span, ok := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
 	if !ok {
-		_ctx = mqrpc.ContextWithValue(_ctx, log.CONTEXT_TRANSKEY_TRACE, log.CreateRootTrace())
+		_ctx = mqrpc.ContextWithValue(_ctx, log.RPC_CONTEXT_KEY_TRACE, log.CreateRootTrace())
 	} else {
-		_ctx = mqrpc.ContextWithValue(_ctx, log.CONTEXT_TRANSKEY_TRACE, span.ExtractSpan())
+		_ctx = mqrpc.ContextWithValue(_ctx, log.RPC_CONTEXT_KEY_TRACE, span.ExtractSpan())
 	}
 	params = append([]any{_ctx}, params...)
 	for k, arg := range params {
@@ -161,7 +161,7 @@ func (c *RPCClient) CallNR(ctx context.Context, _func string, params ...any) (er
 	start := time.Now()
 	err = c.CallNRArgs(ctx, _func, argTypes, argDatas)
 	if app.App().Config().RpcLog {
-		span, _ := ctx.Value(log.CONTEXT_TRANSKEY_TRACE).(log.TraceSpan)
+		span, _ := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
 		log.TInfo(span, "rpc CallNR ServerId = %v Func = %v Elapsed = %v ERROR = %v", c.nats_client.session.GetID(), _func, time.Since(start), err)
 	}
 	return err

@@ -15,13 +15,13 @@ const (
 	// RPC_CLIENT_MSG RPC处理来自客户端的消息
 	RPC_CLIENT_MSG string = "RPC_CLIENT_MSG"
 	// RPC_CLIENT_DISCONNECT_MSG RPC处理客户端断开连接的消息
-	RPC_CLIENT_DISCONNECT_MSG string = "RPC_CLIENT_MSG"
+	RPC_CLIENT_DISCONNECT_MSG string = "RPC_CLIENT_DISCONNECT"
 
 	PACK_HEAD_TOTAL_LEN_SIZE       = 2          // 包头中这几个字节存放总pack的长度值
 	PACK_HEAD_MSG_ID_LEN_SIZE      = 2          // 包头中这几个字节存放msgId的长度值
 	PACK_BODY_DEFAULT_SIZE_IN_POOL = 512 * 1024 // 缓存池中定义的缓存区大小
 
-	CONTEXT_TRANSKEY_SESSION = "session" // 定义需要RPC传输session的ContextKey
+	RPC_CONTEXT_KEY_SESSION = "session" // 定义需要RPC传输session的ContextKey
 )
 
 // Pack 消息包
@@ -32,7 +32,7 @@ type Pack struct {
 
 // get session from context
 func GetContextSession(ctx context.Context) ISession {
-	session, ok := ctx.Value(CONTEXT_TRANSKEY_SESSION).(ISession)
+	session, ok := ctx.Value(RPC_CONTEXT_KEY_SESSION).(ISession)
 	if !ok {
 		return nil
 	}
