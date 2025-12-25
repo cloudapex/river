@@ -22,20 +22,20 @@ import (
 type ModuleBase struct {
 	//context.Context
 
-	Impl     app.IRPCModule
+	impl     app.IRPCModule
 	settings *conf.ModuleSettings
 
 	serviceStoped chan bool
 	exit          context.CancelFunc
+	service       service.Service // 内含server
 
-	service  service.Service // 内含server
 	listener mqrpc.RPCListener
 }
 
 // Init 模块初始化(由派生类调用)
 func (this *ModuleBase) Init(impl app.IRPCModule, settings *conf.ModuleSettings, opt ...server.Option) {
 	// 初始化模块
-	this.Impl = impl
+	this.impl = impl
 	this.settings = settings
 
 	// 创建一个供远程调用的RPCService
@@ -58,7 +58,7 @@ func (this *ModuleBase) Init(impl app.IRPCModule, settings *conf.ModuleSettings,
 	}
 
 	if len(opts.Name) == 0 {
-		opt = append(opt, server.Name(this.Impl.GetType()))
+		opt = append(opt, server.Name(this.impl.GetType()))
 	}
 
 	if len(opts.ID) == 0 {
@@ -70,11 +70,11 @@ func (this *ModuleBase) Init(impl app.IRPCModule, settings *conf.ModuleSettings,
 	}
 
 	if len(opts.Version) == 0 {
-		opt = append(opt, server.Version(this.Impl.Version()))
+		opt = append(opt, server.Version(this.impl.Version()))
 	}
 
 	server := server.NewServer(opt...) // opts.Address = nats_server.addr
-	err := server.OnInit(this.Impl, settings)
+	err := server.OnInit(this.impl, settings)
 	if err != nil {
 		log.Warning("server OnInit fail id(%s) error(%s)", this.GetServerID(), err)
 	}
@@ -93,7 +93,7 @@ func (this *ModuleBase) Init(impl app.IRPCModule, settings *conf.ModuleSettings,
 	go func() {
 		err := this.service.Run()
 		if err != nil {
-			log.Warning("service run fail id(%s) error(%s)", this.GetServerID(), err)
+			log.Warning("module service run fail id(%s) error(%s)", this.GetServerID(), err)
 		}
 		close(this.serviceStoped)
 	}()
@@ -102,28 +102,23 @@ func (this *ModuleBase) Init(impl app.IRPCModule, settings *conf.ModuleSettings,
 
 // OnInit 当模块初始化时调用
 func (this *ModuleBase) OnInit(settings *conf.ModuleSettings) {
-	// 所有初始化逻辑都放到Init中, 重载OnInit不可调用基类!
+	// 所有初始化逻辑都放到Init中, 重载OnInit不可调用基类OnInit!
 	panic("ModuleBase: OnInit() must be implemented")
 }
 
 // OnDestroy 当模块注销时调用
 func (this *ModuleBase) OnDestroy() {
-	this.exit()
+	this.exit() // 让service退出
 
 	select {
-	case <-this.serviceStoped: // 等待注册中心注销完成
+	case <-this.serviceStoped: // 等待service退出完成(注册中心注销)
 	}
 	_ = this.GetServer().OnDestroy() //一定别忘了关闭RPC
 }
 
-// SetListener  mqrpc.RPCListener
-func (this *ModuleBase) SetListener(listener mqrpc.RPCListener) {
-	this.listener = listener
-}
-
 // GetImpl 获取子类
 func (this *ModuleBase) GetImpl() app.IRPCModule {
-	return this.Impl
+	return this.impl
 }
 
 // GetServer server.Server
@@ -145,6 +140,11 @@ func (this *ModuleBase) GetModuleSettings() *conf.ModuleSettings {
 	return this.settings
 }
 
+// SetListener  mqrpc.RPCListener
+func (this *ModuleBase) SetListener(listener mqrpc.RPCListener) {
+	this.listener = listener
+}
+
 // OnConfChanged 当配置变更时调用(目前没用)
 func (this *ModuleBase) OnConfChanged(settings *conf.ModuleSettings) {}
 
@@ -154,22 +154,22 @@ func (this *ModuleBase) OnAppConfigurationLoaded() {
 }
 
 // GetRouteServer 获取服务实例(通过服务ID|服务类型,可设置选择器过滤)
-func (this *ModuleBase) GetRouteServer(service string, opts ...selector.SelectOption) (s app.IServerSession, err error) {
+func (this *ModuleBase) GetRouteServer(service string, opts ...selector.SelectOption) (s app.IModuleServerSession, err error) {
 	return app.App().GetRouteServer(service, opts...)
 }
 
 // GetServerByID 通过服务ID(moduleType@id)获取服务实例
-func (this *ModuleBase) GetServerByID(serverID string) (app.IServerSession, error) {
+func (this *ModuleBase) GetServerByID(serverID string) (app.IModuleServerSession, error) {
 	return app.App().GetServerByID(serverID)
 }
 
 // GetServersByType 通过服务类型(moduleType)获取服务实例列表
-func (this *ModuleBase) GetServersByType(serviceName string) []app.IServerSession {
+func (this *ModuleBase) GetServersByType(serviceName string) []app.IModuleServerSession {
 	return app.App().GetServersByType(serviceName)
 }
 
 // GetServerBySelector 通过服务类型(moduleType)获取服务实例(可设置选择器)
-func (this *ModuleBase) GetServerBySelector(serviceName string, opts ...selector.SelectOption) (app.IServerSession, error) {
+func (this *ModuleBase) GetServerBySelector(serviceName string, opts ...selector.SelectOption) (app.IModuleServerSession, error) {
 	return app.App().GetServerBySelector(serviceName, opts...)
 }
 
@@ -188,7 +188,7 @@ func (this *ModuleBase) CallBroadcast(ctx context.Context, moduleType, _func str
 	app.App().CallBroadcast(ctx, moduleType, _func, params...)
 }
 
-// ================= RPCListener[监听事件]
+// ================= RPCListener[监听器]
 
 // NoFoundFunction  当hander未找到时调用
 func (this *ModuleBase) NoFoundFunction(fn string) (*mqrpc.FunctionInfo, error) {
@@ -221,11 +221,8 @@ func (this *ModuleBase) OnError(fn string, callInfo *mqrpc.CallInfo, err error) 
 }
 
 // OnComplete hander成功执行完成时调用
-// fn 		方法名
-// params		参数
-// result		执行结果
-// exec_time 	方法执行时间 单位为 Nano 纳秒  1000000纳秒等于1毫秒
 func (this *ModuleBase) OnComplete(fn string, callInfo *mqrpc.CallInfo, result *core.ResultInfo, execTime int64) {
+	// exec_time 	方法执行时间 单位为 Nano 纳秒  1000000纳秒等于1毫秒
 	if this.listener != nil {
 		this.listener.OnComplete(fn, callInfo, result, execTime)
 	}

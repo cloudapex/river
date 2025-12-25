@@ -11,14 +11,14 @@ import (
 type Options struct {
 	Registry  registry.Registry
 	Metadata  map[string]string
-	Name      string
+	Name      string // module的类型
 	Address   string // use host:port nats_server.addr 不重要
 	Advertise string // use host:port (优先) 不重要
-	ID        string
+	ID        string // 指定id
 	Version   string // module的版本
 
-	RegisterInterval time.Duration
-	RegisterTTL      time.Duration
+	RegisterInterval time.Duration // 注册间隔
+	RegisterTTL      time.Duration // 注册超时
 
 	// Other options for implementations of the interface
 	// can be stored in a context

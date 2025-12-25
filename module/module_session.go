@@ -11,8 +11,8 @@ import (
 	"github.com/cloudapex/river/registry"
 )
 
-// NewModuleSession 创建一个节点实例的访问Session(rpcClient)
-func NewModuleSession(name string, node *registry.Node) (app.IServerSession, error) {
+// NewModuleServerSession 创建一个节点实例的访问Session(rpcClient)
+func NewModuleServerSession(name string, node *registry.Node) (app.IModuleServerSession, error) {
 	session := &moduleServerSession{
 		name: name,
 		node: node,

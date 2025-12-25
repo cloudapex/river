@@ -23,10 +23,10 @@ type NatsClient struct {
 	done              chan error
 	subs              *nats.Subscription
 	isClose           bool
-	session           app.IServerSession
+	session           app.IModuleServerSession
 }
 
-func NewNatsClient(session app.IServerSession) (client *NatsClient, err error) {
+func NewNatsClient(session app.IModuleServerSession) (client *NatsClient, err error) {
 	client = new(NatsClient)
 	client.session = session
 	client.callinfos = tools.NewSafeMap[string]()

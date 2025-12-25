@@ -38,13 +38,13 @@ type IApp interface {
 	SetServiceRoute(fn func(route string) string) error
 
 	// 获取服务实例(通过服务ID|服务类型,可设置selector.WithFilter和selector.WithStrategy)
-	GetRouteServer(service string, opts ...selector.SelectOption) (IServerSession, error)
+	GetRouteServer(service string, opts ...selector.SelectOption) (IModuleServerSession, error)
 	// 获取服务实例(通过服务ID(moduleType@id))
-	GetServerByID(serverID string) (IServerSession, error)
+	GetServerByID(serverID string) (IModuleServerSession, error)
 	// 获取服务实例(通过服务类型(moduleType),可设置可设置selector.WithFilter和selector.WithStrategy)
-	GetServerBySelector(serviceName string, opts ...selector.SelectOption) (IServerSession, error)
+	GetServerBySelector(serviceName string, opts ...selector.SelectOption) (IModuleServerSession, error)
 	// 获取多个服务实例(通过服务类型(moduleType))
-	GetServersByType(serviceName string) []IServerSession
+	GetServersByType(serviceName string) []IModuleServerSession
 
 	// Call RPC调用(需要等待结果)
 	Call(ctx context.Context, moduleServer, _func string, param mqrpc.ParamOption, opts ...selector.SelectOption) (any, error)
@@ -84,21 +84,22 @@ type IRPCModule interface {
 	GetModuleSettings() (settings *conf.ModuleSettings)
 
 	// 获取服务实例(通过服务ID|服务类型,可设置选择器过滤)
-	GetRouteServer(service string, opts ...selector.SelectOption) (IServerSession, error) //获取经过筛选过的服务
+	GetRouteServer(service string, opts ...selector.SelectOption) (IModuleServerSession, error) //获取经过筛选过的服务
 	// 通过服务ID(moduleType@id)获取服务实例
-	GetServerByID(serverID string) (IServerSession, error)
+	GetServerByID(serverID string) (IModuleServerSession, error)
 	// 通过服务类型(moduleType)获取服务实例列表
-	GetServersByType(serviceName string) []IServerSession
+	GetServersByType(serviceName string) []IModuleServerSession
 	// 通过服务类型(moduleType)获取服务实例(可设置选择器)
-	GetServerBySelector(serviceName string, opts ...selector.SelectOption) (IServerSession, error)
+	GetServerBySelector(serviceName string, opts ...selector.SelectOption) (IModuleServerSession, error)
 
+	// RPC方法:
 	Call(ctx context.Context, moduleServer, _func string, params mqrpc.ParamOption, opts ...selector.SelectOption) (any, error)
 	CallNR(ctx context.Context, moduleServer, _func string, params ...any) error
 	CallBroadcast(ctx context.Context, moduleType, _func string, params ...any)
 }
 
-// IServerSession 服务代理
-type IServerSession interface {
+// IModuleServerSession Module服务会话代理
+type IModuleServerSession interface {
 	GetID() string
 	GetName() string
 	GetRPC() mqrpc.RPCClient

@@ -17,7 +17,7 @@ type RPCClient struct {
 	nats_client *NatsClient
 }
 
-func NewRPCClient(session app.IServerSession) (mqrpc.RPCClient, error) {
+func NewRPCClient(session app.IModuleServerSession) (mqrpc.RPCClient, error) {
 	rpc_client := new(RPCClient)
 	nats_client, err := NewNatsClient(session)
 	if err != nil {

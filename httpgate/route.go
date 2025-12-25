@@ -18,7 +18,7 @@ type Service struct {
 	// URL.Path
 	Hander string
 	// node
-	SrvSession app.IServerSession
+	SrvSession app.IModuleServerSession
 }
 
 // Router 路由器定义

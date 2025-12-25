@@ -154,7 +154,7 @@ func (this *DefaultApp) Run(mods ...app.IModule) error {
 	log.Info("river %v starting...", this.opts.Version)
 
 	// 1 RegisterRunMod
-	this.manager.RegisterRunMod(modules.TimerModule()) // 先注册时间轮模块 每一个进程都默认运行
+	this.manager.RegisterRun(modules.TimerModule()) // 先注册时间轮模块 每一个进程都默认运行
 
 	// 2 Register
 	for i := 0; i < len(mods); i++ {
@@ -227,7 +227,7 @@ func (this *DefaultApp) UpdateOptions(opts ...app.Option) error {
 func (this *DefaultApp) watcherNodeDel(node *registry.Node) {
 	session, ok := this.serverList.Load(node.Id)
 	if ok && session != nil {
-		session.(app.IServerSession).GetRPC().Done()
+		session.(app.IModuleServerSession).GetRPC().Done()
 		this.serverList.Delete(node.Id)
 	}
 
@@ -250,7 +250,7 @@ func (this *DefaultApp) SetServiceRoute(fn func(route string) string) error {
 }
 
 // GetRouteServer 获取服务实例(通过服务ID|服务类型,可设置可设置selector.WithFilter和selector.WithStrategy)
-func (this *DefaultApp) GetRouteServer(service string, opts ...selector.SelectOption) (app.IServerSession, error) {
+func (this *DefaultApp) GetRouteServer(service string, opts ...selector.SelectOption) (app.IModuleServerSession, error) {
 	if this.serviceRoute != nil { // 进行一次路由转换
 		service = this.serviceRoute(service)
 	}
@@ -267,7 +267,7 @@ func (this *DefaultApp) GetRouteServer(service string, opts ...selector.SelectOp
 }
 
 // GetServerByID 获取服务实例(通过服务ID(moduleType@id))
-func (this *DefaultApp) GetServerByID(serverID string) (app.IServerSession, error) {
+func (this *DefaultApp) GetServerByID(serverID string) (app.IModuleServerSession, error) {
 	session, ok := this.serverList.Load(serverID)
 	if !ok {
 		// s[0] + @ + s[1] = moduleType@moduleID
@@ -283,13 +283,13 @@ func (this *DefaultApp) GetServerByID(serverID string) (app.IServerSession, erro
 			}
 		}
 	} else {
-		return session.(app.IServerSession), nil
+		return session.(app.IModuleServerSession), nil
 	}
 	return nil, errors.Errorf("nofound %v", serverID)
 }
 
 // GetServerBySelector 获取服务实例(通过服务类型(moduleType),可设置可设置selector.WithFilter和selector.WithStrategy)
-func (this *DefaultApp) GetServerBySelector(moduleType string, opts ...selector.SelectOption) (app.IServerSession, error) {
+func (this *DefaultApp) GetServerBySelector(moduleType string, opts ...selector.SelectOption) (app.IModuleServerSession, error) {
 	next, err := this.opts.Selector.Select(moduleType, opts...)
 	if err != nil {
 		return nil, err
@@ -302,12 +302,12 @@ func (this *DefaultApp) GetServerBySelector(moduleType string, opts ...selector.
 	if err != nil {
 		return nil, err
 	}
-	return session.(app.IServerSession), nil
+	return session.(app.IModuleServerSession), nil
 }
 
 // GetServersByType 获取多个服务实例(通过服务类型(moduleType))
-func (this *DefaultApp) GetServersByType(moduleType string) []app.IServerSession {
-	sessions := make([]app.IServerSession, 0)
+func (this *DefaultApp) GetServersByType(moduleType string) []app.IModuleServerSession {
+	sessions := make([]app.IModuleServerSession, 0)
 	services, err := this.opts.Selector.GetService(moduleType)
 	if err != nil {
 		log.Warning("GetServersByType %v", err)
@@ -320,26 +320,26 @@ func (this *DefaultApp) GetServersByType(moduleType string) []app.IServerSession
 				log.Warning("getServerSessionSafe %v", err)
 				continue
 			}
-			sessions = append(sessions, session.(app.IServerSession))
+			sessions = append(sessions, session.(app.IModuleServerSession))
 		}
 	}
 	return sessions
 }
 
 // getServerSessionSafe create and store serverSession safely
-func (this *DefaultApp) getServerSessionSafe(node *registry.Node, moduleType string) (app.IServerSession, error) {
+func (this *DefaultApp) getServerSessionSafe(node *registry.Node, moduleType string) (app.IModuleServerSession, error) {
 	session, ok := this.serverList.Load(node.Id)
 	if ok {
-		session.(app.IServerSession).SetNode(node)
-		return session.(app.IServerSession), nil
+		session.(app.IModuleServerSession).SetNode(node)
+		return session.(app.IModuleServerSession), nil
 	}
 	// new
-	s, err := module.NewModuleSession(moduleType, node)
+	s, err := module.NewModuleServerSession(moduleType, node)
 	if err != nil {
 		return nil, err
 	}
 	_session, _ := this.serverList.LoadOrStore(node.Id, s)
-	_s := _session.(app.IServerSession)
+	_s := _session.(app.IModuleServerSession)
 	if s != _s { // 释放自己创建的那个
 		go s.GetRPC().Done()
 	}
