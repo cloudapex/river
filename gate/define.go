@@ -31,7 +31,7 @@ type Pack struct {
 }
 
 // get session from context
-func ContextValueSession(ctx context.Context) ISession {
+func GetContextSession(ctx context.Context) ISession {
 	session, ok := ctx.Value(CONTEXT_TRANSKEY_SESSION).(ISession)
 	if !ok {
 		return nil

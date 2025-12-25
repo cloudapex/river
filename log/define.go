@@ -13,7 +13,7 @@ import (
 const CONTEXT_TRANSKEY_TRACE = "trace"
 
 // get TraceSpan from context
-func ContextValueTrace(ctx context.Context) TraceSpan {
+func GetContextTrace(ctx context.Context) TraceSpan {
 	traceSpan, ok := ctx.Value(CONTEXT_TRANSKEY_TRACE).(TraceSpan)
 	if !ok {
 		return nil
