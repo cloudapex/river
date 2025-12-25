@@ -66,17 +66,17 @@ func (this *GateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSetting
 	this.recvPackHandler = this.defaultRecvPackHandler
 
 	// for session
-	this.GetServer().RegisterGO("Load", delegate.OnRpcLoad)
-	this.GetServer().RegisterGO("Bind", delegate.OnRpcBind)
-	this.GetServer().RegisterGO("UnBind", delegate.OnRpcUnBind)
-	this.GetServer().RegisterGO("Push", delegate.OnRpcPush)
-	this.GetServer().RegisterGO("Set", delegate.OnRpcSet)
-	this.GetServer().RegisterGO("Del", delegate.OnRpcDel)
-	this.GetServer().RegisterGO("Send", delegate.OnRpcSend)
-	this.GetServer().RegisterGO("Connected", delegate.OnRpcConnected)
-	this.GetServer().RegisterGO("Close", delegate.OnRpcClose)
+	this.RegisterGO("Load", delegate.OnRpcLoad)
+	this.RegisterGO("Bind", delegate.OnRpcBind)
+	this.RegisterGO("UnBind", delegate.OnRpcUnBind)
+	this.RegisterGO("Push", delegate.OnRpcPush)
+	this.RegisterGO("Set", delegate.OnRpcSet)
+	this.RegisterGO("Del", delegate.OnRpcDel)
+	this.RegisterGO("Send", delegate.OnRpcSend)
+	this.RegisterGO("Connected", delegate.OnRpcConnected)
+	this.RegisterGO("Close", delegate.OnRpcClose)
 	// for global
-	this.GetServer().RegisterGO("Broadcast", delegate.OnRpcBroadcast)
+	this.RegisterGO("Broadcast", delegate.OnRpcBroadcast)
 }
 func (this *GateBase) GetType() string { return "Gate" }
 
