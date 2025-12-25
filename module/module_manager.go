@@ -62,7 +62,7 @@ func (this *ModuleManager) Init(processEnv string) {
 
 	// 程序注册的module与配置中的module进行匹配
 	for i := 0; i < len(this.mods); i++ {
-		for typ, modSettings := range app.Default().Config().Module {
+		for typ, modSettings := range app.App().Config().Module {
 			if this.mods[i].mi.GetType() == typ { // this.mods[i]匹配Conf.ModuleType
 				for _, setting := range modSettings {
 					// 这里可能有BUG 公网IP和局域网IP处理方式可能不一样,先不管
@@ -81,8 +81,8 @@ func (this *ModuleManager) Init(processEnv string) {
 		m := this.runMods[i]
 		m.mi.OnInit(m.settings)
 
-		if app.Default().GetModuleInited() != nil {
-			app.Default().GetModuleInited()(m.mi)
+		if app.App().GetModuleInited() != nil {
+			app.App().GetModuleInited()(m.mi)
 		}
 
 		m.wg.Add(1)
@@ -119,7 +119,7 @@ func (this *ModuleManager) Destroy() {
 // CheckModuleSettings module配置文件规则检查(ID全局必须唯一) 且 每个类型的Module在同一个ProcessEnv中只能配置一个
 func (this *ModuleManager) CheckModuleSettings() {
 	gid := map[string]string{} // 用来保存全局ID:ModuleType
-	for typ, modSettings := range app.Default().Config().Module {
+	for typ, modSettings := range app.App().Config().Module {
 		pid := map[string]string{} // 用来保存模块中的 ProcessEnv:ID
 		for _, setting := range modSettings {
 			if Stype, ok := gid[setting.ID]; ok {

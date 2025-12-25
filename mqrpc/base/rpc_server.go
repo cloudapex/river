@@ -40,7 +40,7 @@ func NewRPCServer(module app.IModule) (mqrpc.RPCServer, error) {
 	rpc_server.nats_server = nats_server
 
 	//go rpc_server.on_call_handle(rpc_server.mq_chan, rpc_server.call_chan_done)
-	maxCoroutine := uint32(app.Default().Options().RPCMaxCoroutine)
+	maxCoroutine := uint32(app.App().Options().RPCMaxCoroutine)
 	if rpc_server.control == nil && maxCoroutine > 0 {
 		rpc_server.control = NewGoroutineControl(maxCoroutine)
 	}
@@ -165,7 +165,7 @@ func (s *RPCServer) doCallback(callInfo *mqrpc.CallInfo) {
 			log.Warning("rpc callback erro :\n%s", callInfo.Result.Error)
 		}
 	}
-	if handler := app.Default().Options().ServerRPCHandler; handler != nil {
+	if handler := app.App().Options().ServerRPCHandler; handler != nil {
 		handler(s.module, callInfo)
 	}
 }
@@ -338,7 +338,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 	callInfo.Result = resultInfo
 	callInfo.ExecTime = time.Since(start).Nanoseconds()
 	s.doCallback(callInfo)
-	if app.Default().Config().RpcLog {
+	if app.App().Config().RpcLog {
 		log.TInfo(traceSpan, "rpc Exec ModuleType = %v Func = %v Elapsed = %v", s.module.GetType(), callInfo.RPCInfo.Fn, time.Since(start))
 	}
 	if s.listener != nil {

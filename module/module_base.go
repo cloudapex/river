@@ -46,15 +46,15 @@ func (this *ModuleBase) Init(impl app.IRPCModule, settings *conf.ModuleSettings,
 		o(&opts)
 	}
 	if opts.Registry == nil {
-		opt = append(opt, server.Registry(app.Default().Registrar()))
+		opt = append(opt, server.Registry(app.App().Registrar()))
 	}
 
 	if opts.RegisterInterval == 0 {
-		opt = append(opt, server.RegisterInterval(app.Default().Options().RegisterInterval))
+		opt = append(opt, server.RegisterInterval(app.App().Options().RegisterInterval))
 	}
 
 	if opts.RegisterTTL == 0 {
-		opt = append(opt, server.RegisterTTL(app.Default().Options().RegisterTTL))
+		opt = append(opt, server.RegisterTTL(app.App().Options().RegisterTTL))
 	}
 
 	if len(opts.Name) == 0 {
@@ -86,7 +86,7 @@ func (this *ModuleBase) Init(impl app.IRPCModule, settings *conf.ModuleSettings,
 	this.serviceStoped = make(chan bool)
 	this.service = service.NewService(
 		service.Server(server),
-		service.RegisterInterval(app.Default().Options().RegisterInterval),
+		service.RegisterInterval(app.App().Options().RegisterInterval),
 		service.Context(ctx),
 	)
 
@@ -155,37 +155,37 @@ func (this *ModuleBase) OnAppConfigurationLoaded() {
 
 // GetRouteServer 获取服务实例(通过服务ID|服务类型,可设置选择器过滤)
 func (this *ModuleBase) GetRouteServer(service string, opts ...selector.SelectOption) (s app.IServerSession, err error) {
-	return app.Default().GetRouteServer(service, opts...)
+	return app.App().GetRouteServer(service, opts...)
 }
 
 // GetServerByID 通过服务ID(moduleType@id)获取服务实例
 func (this *ModuleBase) GetServerByID(serverID string) (app.IServerSession, error) {
-	return app.Default().GetServerByID(serverID)
+	return app.App().GetServerByID(serverID)
 }
 
 // GetServersByType 通过服务类型(moduleType)获取服务实例列表
 func (this *ModuleBase) GetServersByType(serviceName string) []app.IServerSession {
-	return app.Default().GetServersByType(serviceName)
+	return app.App().GetServersByType(serviceName)
 }
 
 // GetServerBySelector 通过服务类型(moduleType)获取服务实例(可设置选择器)
 func (this *ModuleBase) GetServerBySelector(serviceName string, opts ...selector.SelectOption) (app.IServerSession, error) {
-	return app.Default().GetServerBySelector(serviceName, opts...)
+	return app.App().GetServerBySelector(serviceName, opts...)
 }
 
 // Call  RPC调用(需要等待结果)
 func (this *ModuleBase) Call(ctx context.Context, moduleServer, _func string, params mqrpc.ParamOption, opts ...selector.SelectOption) (any, error) {
-	return app.Default().Call(ctx, moduleServer, _func, params, opts...)
+	return app.App().Call(ctx, moduleServer, _func, params, opts...)
 }
 
 // CallNR  RPC调用(需要等待结果)
 func (this *ModuleBase) CallNR(ctx context.Context, moduleServer, _func string, params ...any) (err error) {
-	return app.Default().CallNR(ctx, moduleServer, _func, params...)
+	return app.App().CallNR(ctx, moduleServer, _func, params...)
 }
 
 // CallBroadcast RPC调用(群发,无需等待结果)
 func (this *ModuleBase) CallBroadcast(ctx context.Context, moduleType, _func string, params ...any) {
-	app.Default().CallBroadcast(ctx, moduleType, _func, params...)
+	app.App().CallBroadcast(ctx, moduleType, _func, params...)
 }
 
 // ================= RPCListener[监听事件]

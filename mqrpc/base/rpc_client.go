@@ -57,7 +57,7 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...any) (any,
 	}
 	start := time.Now()
 	r, err := c.CallArgs(ctx, _func, argTypes, argDatas)
-	if app.Default().Config().RpcLog {
+	if app.App().Config().RpcLog {
 		span, _ := ctx.Value(log.CONTEXT_TRANSKEY_TRACE).(log.TraceSpan)
 		log.TInfo(span, "rpc Call ServerId = %v Func = %v Elapsed = %v Result = %v ERROR = %v", c.nats_client.session.GetID(), _func, time.Since(start), r, err)
 	}
@@ -80,7 +80,7 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 	rpcInfo := &core.RPCInfo{
 		Fn:       _func,
 		Reply:    true,
-		Expired:  (start.UTC().Add(app.Default().Options().RPCExpired).UnixNano()) / 1000000,
+		Expired:  (start.UTC().Add(app.App().Options().RPCExpired).UnixNano()) / 1000000,
 		Cid:      correlation_id,
 		Args:     argDatas,
 		ArgsType: argTypes,
@@ -89,9 +89,9 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 	}
 	defer func() {
 		//异常日志都应该打印
-		if app.Default().Options().ClientRPChandler != nil {
+		if app.App().Options().ClientRPChandler != nil {
 			exec_time := time.Since(start).Nanoseconds()
-			app.Default().Options().ClientRPChandler(*c.nats_client.session.GetNode(), rpcInfo, result, err, exec_time)
+			app.App().Options().ClientRPChandler(*c.nats_client.session.GetNode(), rpcInfo, result, err, exec_time)
 		}
 	}()
 	callInfo := &mqrpc.CallInfo{
@@ -110,7 +110,7 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 	// 没有设置超时的话使用默认超时
 	var cancel context.CancelFunc
 	if _, ok := ctx.Deadline(); !ok {
-		ctx, cancel = context.WithTimeout(ctx, app.Default().Options().RPCExpired)
+		ctx, cancel = context.WithTimeout(ctx, app.App().Options().RPCExpired)
 	}
 	defer func() {
 		if cancel != nil {
@@ -160,7 +160,7 @@ func (c *RPCClient) CallNR(ctx context.Context, _func string, params ...any) (er
 	}
 	start := time.Now()
 	err = c.CallNRArgs(ctx, _func, argTypes, argDatas)
-	if app.Default().Config().RpcLog {
+	if app.App().Config().RpcLog {
 		span, _ := ctx.Value(log.CONTEXT_TRANSKEY_TRACE).(log.TraceSpan)
 		log.TInfo(span, "rpc CallNR ServerId = %v Func = %v Elapsed = %v ERROR = %v", c.nats_client.session.GetID(), _func, time.Since(start), err)
 	}
@@ -179,7 +179,7 @@ func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argTypes []str
 	rpcInfo := &core.RPCInfo{
 		Fn:       _func,
 		Reply:    false,
-		Expired:  (time.Now().UTC().Add(app.Default().Options().RPCExpired).UnixNano()) / 1000000,
+		Expired:  (time.Now().UTC().Add(app.App().Options().RPCExpired).UnixNano()) / 1000000,
 		Cid:      correlation_id,
 		Args:     argDatas,
 		ArgsType: argTypes,

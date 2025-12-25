@@ -1,18 +1,18 @@
 package app
 
 // default app instance
-var defaultApp IApp = nil
+var app IApp = nil
 
-func Default(set ...IApp) IApp {
-	if defaultApp != nil {
-		return defaultApp
+func App(set ...IApp) IApp {
+	if app != nil {
+		return app
 	}
 
 	if len(set) != 0 {
-		defaultApp = set[0]
+		app = set[0]
 	}
 
-	return defaultApp
+	return app
 }
 
 // 启动参数(命令行优先级比环境变量高)

@@ -92,7 +92,7 @@ func (c *NatsClient) Call(callInfo *mqrpc.CallInfo, callback chan *core.ResultIn
 	if err != nil {
 		return err
 	}
-	return app.Default().Transporter().Publish(c.session.GetNode().Address, body)
+	return app.App().Transporter().Publish(c.session.GetNode().Address, body)
 }
 
 /*
@@ -104,7 +104,7 @@ func (c *NatsClient) CallNR(callInfo *mqrpc.CallInfo) error {
 	if err != nil {
 		return err
 	}
-	return app.Default().Transporter().Publish(c.session.GetNode().Address, body)
+	return app.App().Transporter().Publish(c.session.GetNode().Address, body)
 }
 
 /*
@@ -129,7 +129,7 @@ func (c *NatsClient) on_request_handle() (err error) {
 			fmt.Println(errstr)
 		}
 	}()
-	c.subs, err = app.Default().Transporter().SubscribeSync(c.callbackqueueName)
+	c.subs, err = app.App().Transporter().SubscribeSync(c.callbackqueueName)
 	if err != nil {
 		return err
 	}
@@ -146,7 +146,7 @@ func (c *NatsClient) on_request_handle() (err error) {
 			//log.Warning("NatsServer error with '%v'",err)
 			if !c.subs.IsValid() {
 				//订阅已关闭，需要重新订阅
-				c.subs, err = app.Default().Transporter().SubscribeSync(c.callbackqueueName)
+				c.subs, err = app.App().Transporter().SubscribeSync(c.callbackqueueName)
 				if err != nil {
 					log.Error("NatsClient SubscribeSync[1] error with '%v'", err)
 					continue
@@ -158,7 +158,7 @@ func (c *NatsClient) on_request_handle() (err error) {
 			log.Error("NatsClient error with '%v'", err)
 			if !c.subs.IsValid() {
 				//订阅已关闭，需要重新订阅
-				c.subs, err = app.Default().Transporter().SubscribeSync(c.callbackqueueName)
+				c.subs, err = app.App().Transporter().SubscribeSync(c.callbackqueueName)
 				if err != nil {
 					log.Error("NatsClient SubscribeSync[2] error with '%v'", err)
 					continue

@@ -235,11 +235,11 @@ func (this *GateBase) defaultRecvPackHandler(session gate.ISession, pack *gate.P
 	// 优先在已绑定的Module中提供服务
 	serverId, _ := session.Get(moduleTyp)
 	if serverId != "" {
-		return app.Default().CallNR(session.GenRPCContext(), serverId, gate.RPC_CLIENT_MSG, msgId, pack.Body)
+		return app.App().CallNR(session.GenRPCContext(), serverId, gate.RPC_CLIENT_MSG, msgId, pack.Body)
 	}
 
 	// 然后按照默认路由规则随机取得Module服务
-	server, err := app.Default().GetRouteServer(moduleTyp)
+	server, err := app.App().GetRouteServer(moduleTyp)
 	if err != nil {
 		return fmt.Errorf("Service(moduleType:%s) not found", moduleTyp)
 	}
