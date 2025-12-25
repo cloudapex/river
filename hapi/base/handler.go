@@ -1,15 +1,15 @@
-package httpgatebase
+package hapibase
 
 import (
 	"context"
 	"net/http"
 
-	"github.com/cloudapex/river/httpgate"
+	"github.com/cloudapex/river/hapi"
 	"github.com/cloudapex/river/mqrpc"
 )
 
 // NewHandler 创建常规http handler
-func NewHandler(opts httpgate.Options) http.Handler {
+func NewHandler(opts hapi.Options) http.Handler {
 	h := &HttpHandler{Opts: opts}
 	if opts.RpcHandle == nil {
 		opts.RpcHandle = h.callRpcService
@@ -19,14 +19,14 @@ func NewHandler(opts httpgate.Options) http.Handler {
 
 // HttpHandler 网关handler
 type HttpHandler struct {
-	Opts httpgate.Options
+	Opts hapi.Options
 }
 
 // API handler is the default handler which takes api.Request and returns api.Response
 func (a *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	req, err := RequestToProto(r)
 	if err != nil {
-		er := httpgate.InternalServerError("httpgateway", err.Error())
+		er := hapi.InternalServerError("httpgateway", err.Error())
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(500)
 		w.Write([]byte(er.Error()))
@@ -34,16 +34,16 @@ func (a *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	service, err := a.Opts.Route(r)
 	if err != nil {
-		er := httpgate.InternalServerError("httpgateway", err.Error())
+		er := hapi.InternalServerError("httpgateway", err.Error())
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(500)
 		w.Write([]byte(er.Error()))
 		return
 	}
-	rsp := &httpgate.Response{}
+	rsp := &hapi.Response{}
 	if err = a.Opts.RpcHandle(service, req, rsp); err != nil {
 		w.Header().Set("Content-Type", "application/json")
-		ce := httpgate.ParseError(err.Error())
+		ce := hapi.ParseError(err.Error())
 		switch ce.Code {
 		case 0:
 			w.WriteHeader(500)
@@ -69,7 +69,7 @@ func (a *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(int(rsp.StatusCode))
 	w.Write([]byte(rsp.Body))
 }
-func (a *HttpHandler) callRpcService(service *httpgate.Service, req *httpgate.Request, rsp *httpgate.Response) error {
+func (a *HttpHandler) callRpcService(service *hapi.Service, req *hapi.Request, rsp *hapi.Response) error {
 	ctx, cancel := context.WithTimeout(context.TODO(), a.Opts.TimeOut)
 	defer cancel()
 	return mqrpc.MsgPack(rsp, mqrpc.RpcResult(service.SrvSession.Call(ctx, service.Hander, req)))

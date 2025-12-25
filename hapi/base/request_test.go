@@ -1,4 +1,4 @@
-package httpgatebase
+package hapibase
 
 import (
 	"net/http"

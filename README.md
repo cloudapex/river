@@ -160,9 +160,9 @@ docker run -d --name consul -p 8500:8500 consul:latest
         }
       }
     ],
-    "httpgate": [
+    "hapi": [
       {
-        "ID": "httpgate-1",
+        "ID": "hapi-1",
         "ProcessEnv": "dev",
         "Settings": {
           "Addr": ":8090",
@@ -246,7 +246,7 @@ gateModule.SetAgentCreater(func(netTyp string) gate.IConnAgent {
 })
 
 // HTTP网关
-import "github.com/cloudapex/river/httpgate/base"
+import "github.com/cloudapex/river/hapi/base"
 
 httpGateModule := &httpgatebase.HttpGateBase{}
 ```
@@ -290,13 +290,13 @@ session.ToSet("key", "value")
 
 ```go
 // 配置HTTP网关选项
-opts := httpgate.NewOptions(
-  httpgate.Addr(":8080"),
-  httpgate.TLS(true),
-  httpgate.CertFile("/path/to/cert.pem"),
-  httpgate.KeyFile("/path/to/key.pem"),
-  httpgate.ReadTimeout(10*time.Second),
-  httpgate.WriteTimeout(15*time.Second),
+opts := hapi.NewOptions(
+  hapi.Addr(":8080"),
+  hapi.TLS(true),
+  hapi.CertFile("/path/to/cert.pem"),
+  hapi.KeyFile("/path/to/key.pem"),
+  hapi.ReadTimeout(10*time.Second),
+  hapi.WriteTimeout(15*time.Second),
 )
 ```
 
@@ -348,9 +348,9 @@ River提供了多个内置模块：
         }
       }
     ],
-    "httpgate": [
+    "hapi": [
       {
-        "ID": "httpgate-1",
+        "ID": "hapi-1",
         "ProcessEnv": "dev",
         "Settings": {
           "Addr": ":8090",

@@ -1,4 +1,4 @@
-package httpgate
+package hapi
 
 type Pair struct {
 	Key    string   `msgpack:"key" json:"key"`

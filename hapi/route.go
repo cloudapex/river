@@ -1,4 +1,4 @@
-package httpgate
+package hapi
 
 import (
 	"errors"

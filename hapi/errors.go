@@ -1,6 +1,6 @@
 // Package errors provides a way to return detailed information
 // for an rpc request error. The error is normally JSON encoded.
-package httpgate
+package hapi
 
 import (
 	"encoding/json"

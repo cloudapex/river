@@ -39,7 +39,7 @@ func (this *GateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSetting
 		this.opts.WsAddr = WSAddr.(string)
 	}
 	if TCPAddr, ok := settings.Settings["TCPAddr"]; ok { // 可以从Settings中配置
-		this.opts.TCPAddr = TCPAddr.(string)
+		this.opts.TcpAddr = TCPAddr.(string)
 	}
 
 	if tls, ok := settings.Settings["TLS"]; ok { // 可以从Settings中配置
@@ -109,9 +109,9 @@ func (this *GateBase) Run(closeSig chan bool) {
 	}
 	// for tcp
 	var tcpServer *network.TCPServer
-	if this.opts.TCPAddr != "" {
+	if this.opts.TcpAddr != "" {
 		tcpServer = new(network.TCPServer)
-		tcpServer.Addr = this.opts.TCPAddr
+		tcpServer.Addr = this.opts.TcpAddr
 		tcpServer.TLS = this.opts.TLS
 		tcpServer.CertFile = this.opts.CertFile
 		tcpServer.KeyFile = this.opts.KeyFile

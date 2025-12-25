@@ -12,20 +12,20 @@ type Option func(*Options)
 
 // Options 网关配置项
 type Options struct {
+	WsAddr          string
+	TcpAddr         string
 	ConcurrentTasks int // 单个连接允许的同时并发协程数,控制流量(20)(目前没用)
 	BufSize         int // 连接数据缓存大小(2048)
 	MaxPackSize     int // 单个协议包数据最大值(65535)
 	SendPackBuffNum int // 发送消息的缓冲队列(100)
 	TLS             bool
-	TCPAddr         string
-	WsAddr          string
 	CertFile        string
 	KeyFile         string
 	EncryptKey      string        // 消息包加密key
 	OverTime        time.Duration // 建立连接超时(10s)
 	HeartOverTimer  time.Duration // 心跳超时时间(本质是读取超时)(60s)
 
-	Opts []server.Option // 用来控制Module属性的
+	Opts []server.Option // 用来控制module server属性的
 }
 
 // NewOptions 网关配置项
@@ -109,14 +109,14 @@ func TLS(s bool) Option {
 // Deprecated: 因为命名规范问题函数将废弃,请用TCPAddr代替
 func TcpAddr(s string) Option {
 	return func(o *Options) {
-		o.TCPAddr = s
+		o.TcpAddr = s
 	}
 }
 
 // TCPAddr tcp监听端口
 func TCPAddr(s string) Option {
 	return func(o *Options) {
-		o.TCPAddr = s
+		o.TcpAddr = s
 	}
 }
 

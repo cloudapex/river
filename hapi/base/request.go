@@ -1,4 +1,4 @@
-package httpgatebase
+package hapibase
 
 import (
 	"fmt"
@@ -8,20 +8,20 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudapex/river/httpgate"
+	"github.com/cloudapex/river/hapi"
 )
 
-func RequestToProto(r *http.Request) (*httpgate.Request, error) {
+func RequestToProto(r *http.Request) (*hapi.Request, error) {
 	if err := r.ParseForm(); err != nil {
 		return nil, fmt.Errorf("Error parsing form: %v", err)
 	}
 
-	req := &httpgate.Request{
+	req := &hapi.Request{
 		Path:   r.URL.Path,
 		Method: r.Method,
-		Header: make(map[string]*httpgate.Pair),
-		Get:    make(map[string]*httpgate.Pair),
-		Post:   make(map[string]*httpgate.Pair),
+		Header: make(map[string]*hapi.Pair),
+		Get:    make(map[string]*hapi.Pair),
+		Post:   make(map[string]*hapi.Pair),
 		Url:    r.URL.String(),
 	}
 
@@ -50,14 +50,14 @@ func RequestToProto(r *http.Request) (*httpgate.Request, error) {
 		}
 
 		// Set the header
-		req.Header["X-Forwarded-For"] = &httpgate.Pair{
+		req.Header["X-Forwarded-For"] = &hapi.Pair{
 			Key:    "X-Forwarded-For",
 			Values: []string{ip},
 		}
 	}
 
 	// Host is stripped from net/http Headers so let's add it
-	req.Header["Host"] = &httpgate.Pair{
+	req.Header["Host"] = &hapi.Pair{
 		Key:    "Host",
 		Values: []string{r.Host},
 	}
@@ -66,7 +66,7 @@ func RequestToProto(r *http.Request) (*httpgate.Request, error) {
 	for key, vals := range r.URL.Query() {
 		header, ok := req.Get[key]
 		if !ok {
-			header = &httpgate.Pair{
+			header = &hapi.Pair{
 				Key: key,
 			}
 			req.Get[key] = header
@@ -78,7 +78,7 @@ func RequestToProto(r *http.Request) (*httpgate.Request, error) {
 	for key, vals := range r.PostForm {
 		header, ok := req.Post[key]
 		if !ok {
-			header = &httpgate.Pair{
+			header = &hapi.Pair{
 				Key: key,
 			}
 			req.Post[key] = header
@@ -89,7 +89,7 @@ func RequestToProto(r *http.Request) (*httpgate.Request, error) {
 	for key, vals := range r.Header {
 		header, ok := req.Header[key]
 		if !ok {
-			header = &httpgate.Pair{
+			header = &hapi.Pair{
 				Key: key,
 			}
 			req.Header[key] = header

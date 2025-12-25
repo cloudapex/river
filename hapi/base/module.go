@@ -1,4 +1,4 @@
-package httpgatebase
+package hapibase
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/conf"
-	"github.com/cloudapex/river/httpgate"
+	"github.com/cloudapex/river/hapi"
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/module"
 	"github.com/gin-gonic/gin"
@@ -18,13 +18,13 @@ var _ app.IRPCModule = &HttpGateBase{}
 type HttpGateBase struct {
 	module.ModuleBase
 
-	opts httpgate.Options
+	opts hapi.Options
 
 	router *gin.Engine
 }
 
-func (this *HttpGateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSettings, opts ...httpgate.Option) {
-	this.opts = httpgate.NewOptions(opts...)
+func (this *HttpGateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSettings, opts ...hapi.Option) {
+	this.opts = hapi.NewOptions(opts...)
 	this.ModuleBase.Init(subclass, settings, this.opts.Opts...) // 这是必须的
 
 	if WSAddr, ok := settings.Settings["Addr"]; ok {
@@ -77,13 +77,13 @@ func (this *HttpGateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSet
 }
 func (this *HttpGateBase) GetType() string {
 	// 很关键,需要与配置文件中的Module配置对应
-	return "httpgate"
+	return "hapi"
 }
 func (this *HttpGateBase) Version() string {
 	// 可以在监控时了解代码版本
 	return "1.0.0"
 }
-func (this *HttpGateBase) Options() httpgate.Options { return this.opts }
+func (this *HttpGateBase) Options() hapi.Options { return this.opts }
 
 func (this *HttpGateBase) RouterGroup() *gin.RouterGroup { return &this.router.RouterGroup }
 
