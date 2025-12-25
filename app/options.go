@@ -164,7 +164,7 @@ type Options struct {
 	RegisterTTL      time.Duration     // 服务注册发现续约生命周期(20s)
 
 	RPCExpired      time.Duration // RPC调用超时(10s)
-	RPCMaxCoroutine int           // 默认0(不限制) 没用
+	RPCMaxCoroutine int           // 默认0(不限制)
 
 	ClientRPChandler ClientRPCHandler // 配置全局的RPC调用方监控器(nil)
 	ServerRPCHandler ServerRPCHandler // 配置全局的RPC服务方监控器(nil)

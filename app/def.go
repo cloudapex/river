@@ -17,8 +17,8 @@ func App(set ...IApp) IApp {
 
 // 启动参数(命令行优先级比环境变量高)
 type startUpArgs struct {
-	WordDir    string `env:"wd" env-default:""`
-	ProcessEnv string `env:"env" env-default:"dev"`
+	WordDir    string `env:"wd" env-default:""`                   // word dir
+	ProcessEnv string `env:"env" env-default:"dev"`               // process env
 	ConsulAddr string `env:"consul" env-default:"127.0.0.1:8500"` // use configKey: config/{env}/server
 	LogPath    string `env:"log" env-default:""`
 	BiPath     string `env:"bi" env-default:""`
