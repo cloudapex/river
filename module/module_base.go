@@ -153,6 +153,16 @@ func (this *ModuleBase) OnAppConfigurationLoaded() {
 	// 当App初始化时调用，这个接口不管这个模块是否在这个进程运行都会调用
 }
 
+// Register 注册rpc消息
+func (this *ModuleBase) Register(msg string, f interface{}) {
+	this.GetServer().Register(msg, f)
+}
+
+// RegisterGO 注册rpc消息(go)
+func (this *ModuleBase) RegisterGO(msg string, f interface{}) {
+	this.GetServer().RegisterGO(msg, f)
+}
+
 // GetRouteServer 获取服务实例(通过服务ID|服务类型,可设置选择器过滤)
 func (this *ModuleBase) GetRouteServer(service string, opts ...selector.SelectOption) (s app.IModuleServerSession, err error) {
 	return app.App().GetRouteServer(service, opts...)

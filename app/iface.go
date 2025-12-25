@@ -83,6 +83,10 @@ type IRPCModule interface {
 	GetServerID() string
 	GetModuleSettings() (settings *conf.ModuleSettings)
 
+	// 注册RPC方法
+	Register(msg string, f interface{})
+	RegisterGO(msg string, f interface{})
+
 	// 获取服务实例(通过服务ID|服务类型,可设置选择器过滤)
 	GetRouteServer(service string, opts ...selector.SelectOption) (IModuleServerSession, error) //获取经过筛选过的服务
 	// 通过服务ID(moduleType@id)获取服务实例
