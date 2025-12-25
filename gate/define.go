@@ -30,6 +30,15 @@ type Pack struct {
 	Body  []byte
 }
 
+// get session from context
+func ContextValueSession(ctx context.Context) ISession {
+	session, ok := ctx.Value(CONTEXT_TRANSKEY_SESSION).(ISession)
+	if !ok {
+		return nil
+	}
+	return session
+}
+
 // IGate 网关代理定义
 type IGate interface {
 	app.IRPCModule

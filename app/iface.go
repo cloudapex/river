@@ -96,7 +96,7 @@ type IRPCModule interface {
 	// 通过服务类型(moduleType)获取服务实例(可设置选择器)
 	GetServerBySelector(serviceName string, opts ...selector.SelectOption) (IModuleServerSession, error)
 
-	// RPC方法:
+	// RPC方法
 	Call(ctx context.Context, moduleServer, _func string, params mqrpc.ParamOption, opts ...selector.SelectOption) (any, error)
 	CallNR(ctx context.Context, moduleServer, _func string, params ...any) error
 	CallBroadcast(ctx context.Context, moduleType, _func string, params ...any)
@@ -115,11 +115,6 @@ type IModuleServerSession interface {
 	CallArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (any, error)  // 内部使用(ctx参数必须装进args中)
 	CallNR(ctx context.Context, _func string, params ...any) (err error)                            // 无需等待结果
 	CallNRArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (err error) // 内部使用(ctx参数必须装进args中)
-}
-
-// RPC传输时Context中的数据可能会需要赋值跨服务的app(为什么会有这个接口,会循环import)
-type ICtxTransSetApp interface {
-	SetApp(IApp)
 }
 
 // FileNameHandler 自定义日志文件名字

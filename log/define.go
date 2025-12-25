@@ -2,6 +2,7 @@
 package log
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -10,6 +11,15 @@ import (
 
 // 定义需要RPC传输session的ContextKey
 const CONTEXT_TRANSKEY_TRACE = "trace"
+
+// get TraceSpan from context
+func ContextValueTrace(ctx context.Context) TraceSpan {
+	traceSpan, ok := ctx.Value(CONTEXT_TRANSKEY_TRACE).(TraceSpan)
+	if !ok {
+		return nil
+	}
+	return traceSpan
+}
 
 // TraceSpan A SpanID refers to a single span.
 type TraceSpan interface {
