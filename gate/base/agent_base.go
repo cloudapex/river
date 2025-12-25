@@ -20,6 +20,7 @@ type agentBase struct {
 
 	gate         gate.IGate
 	session      gate.ISession
+	recvHandler  gate.FunRecvPackHandler
 	conn         network.Conn
 	r            *bufio.Reader
 	w            *bufio.Writer
@@ -45,7 +46,7 @@ func (this *agentBase) Init(impl gate.IClientAgent, gt gate.IGate, conn network.
 	this.isShaked = 0
 	this.recvNum = 0
 	this.sendNum = 0
-	this.sendPackChan = make(chan *gate.Pack, gt.Options().SendPackBuffNum)
+	this.sendPackChan = make(chan *gate.Pack, gt.Options().SendPackBuffSize)
 	return nil
 }
 func (this *agentBase) Close() {
@@ -200,7 +201,7 @@ func (this *agentBase) recvLoop() error {
 				continue
 			}
 		}
-		if err := this.onRecvPack(pack); err != nil {
+		if err := this.recvHandler(this.GetSession(), pack); err != nil {
 			this.lastError = err
 			return err
 		}
@@ -220,12 +221,6 @@ func (this *agentBase) recvFinish() {
 	case <-this.ch:
 	default:
 	}
-}
-
-// 处理收到的数据包
-func (this *agentBase) onRecvPack(pack *gate.Pack) error {
-	handle := this.gate.GetRecvPackHandler()
-	return handle(this.GetSession(), pack)
 }
 
 // ========== Pack编码默认实现

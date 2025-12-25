@@ -42,7 +42,7 @@ type IGate interface {
 	GetStorageHandler() StorageHandler
 	GetRouteHandler() RouteHandler
 	GetSendMessageHook() FunSendMessageHook
-	GetRecvPackHandler() FunRecvPackHandler
+	//GetRecvPackHandler() FunRecvPackHandler
 }
 
 // IDelegater session管理接口

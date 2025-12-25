@@ -11,8 +11,9 @@ import (
 	"github.com/cloudapex/river/tools/aes"
 )
 
-func NewTCPClientAgent() gate.IClientAgent {
+func NewTCPClientAgent(h gate.FunRecvPackHandler) gate.IClientAgent {
 	return &TCPClientAgent{
+		agentBase: agentBase{recvHandler: h},
 		pkgLenDataPool: &sync.Pool{
 			New: func() interface{} {
 				return make([]byte, gate.PACK_HEAD_TOTAL_LEN_SIZE)

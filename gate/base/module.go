@@ -33,27 +33,32 @@ type GateBase struct {
 }
 
 func (this *GateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSettings, opts ...gate.Option) {
-	this.opts = gate.NewOptions(opts...)
 	this.ModuleBase.Init(subclass, settings, this.opts.Opts...) // 这是必须的
-	if WSAddr, ok := settings.Settings["WSAddr"]; ok {          // 可以从Settings中配置
+
+	// 使用settings的配置覆盖opts
+	this.opts = gate.NewOptions(opts...)
+	if WSAddr, ok := settings.Settings["WSAddr"]; ok {
 		this.opts.WsAddr = WSAddr.(string)
 	}
-	if TCPAddr, ok := settings.Settings["TCPAddr"]; ok { // 可以从Settings中配置
+	if TCPAddr, ok := settings.Settings["TCPAddr"]; ok {
 		this.opts.TcpAddr = TCPAddr.(string)
 	}
 
-	if tls, ok := settings.Settings["TLS"]; ok { // 可以从Settings中配置
+	if tls, ok := settings.Settings["TLS"]; ok {
 		this.opts.TLS = tls.(bool)
 	}
-
-	if CertFile, ok := settings.Settings["CertFile"]; ok { // 可以从Settings中配置
+	if CertFile, ok := settings.Settings["CertFile"]; ok {
 		this.opts.CertFile = CertFile.(string)
 	}
-
-	if KeyFile, ok := settings.Settings["KeyFile"]; ok { // 可以从Settings中配置
+	if KeyFile, ok := settings.Settings["KeyFile"]; ok {
 		this.opts.KeyFile = KeyFile.(string)
 	}
 
+	if EncryptKey, ok := settings.Settings["EncryptKey"]; ok {
+		this.opts.EncryptKey = EncryptKey.(string)
+	}
+
+	// for member
 	delegate := NewDelegate(this)
 	this.delegater = delegate
 	this.agentLearner = delegate
@@ -73,17 +78,21 @@ func (this *GateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSetting
 	// for global
 	this.GetServer().RegisterGO("Broadcast", delegate.OnRpcBroadcast)
 }
-func (this *GateBase) OnDestroy() {
-	this.ModuleBase.OnDestroy() // 这是必须的
-}
 func (this *GateBase) GetType() string { return "Gate" }
 
 func (this *GateBase) Version() string { return "1.0.0" }
 
 func (this *GateBase) Options() gate.Options { return this.opts }
 
+func (this *GateBase) OnInit(settings *conf.ModuleSettings) {
+	// 所有初始化逻辑都放到Init中, 重载OnInit不可调用基类OnInit!
+	panic("GateBase: OnInit() must be implemented")
+}
+func (this *GateBase) OnDestroy() {
+	this.ModuleBase.OnDestroy()
+}
 func (this *GateBase) OnAppConfigurationLoaded() {
-	this.ModuleBase.OnAppConfigurationLoaded() // 这是必须的
+	this.ModuleBase.OnAppConfigurationLoaded()
 }
 func (this *GateBase) OnConfChanged(settings *conf.ModuleSettings) {
 	this.ModuleBase.OnConfChanged(settings)
@@ -95,7 +104,7 @@ func (this *GateBase) Run(closeSig chan bool) {
 	if this.opts.WsAddr != "" {
 		wsServer = new(network.WSServer)
 		wsServer.Addr = this.opts.WsAddr
-		wsServer.HTTPTimeout = 30 * time.Second
+		wsServer.HTTPTimeout = 12 * time.Second
 		wsServer.TLS = this.opts.TLS
 		wsServer.CertFile = this.opts.CertFile
 		wsServer.KeyFile = this.opts.KeyFile
@@ -140,24 +149,27 @@ func (this *GateBase) Run(closeSig chan bool) {
 	}
 }
 
-// 设置创建客户端Agent的函数
-func (this *GateBase) SetAgentCreater(cfunc func(netTyp string) gate.IClientAgent) error {
+// --------------- AgentCreater
+
+// SetAgentCreater 设置创建客户端Agent的函数
+func (this *GateBase) SetAgentCreater(cfunc func(netTyp string) gate.IClientAgent) {
 	this.agentCreater = cfunc
-	return nil
 }
 
-// 默认的创建客户端连接Agent的方法
+// defaultClientAgentCreater 默认的创建客户端连接Agent的方法
 func (this *GateBase) defaultClientAgentCreater(netTyp string) gate.IClientAgent {
 	switch netTyp {
 	case "ws":
-		return NewWSClientAgent()
+		return NewWSClientAgent(this.recvPackHandler)
 	case "tcp":
-		return NewTCPClientAgent()
+		return NewTCPClientAgent(this.recvPackHandler)
 	}
-	return NewWSClientAgent() // default use ws
+	return NewWSClientAgent(this.recvPackHandler) // default use ws
 }
 
-// SetGateHandler 设置代理处理器
+// --------------- Delegater
+
+// SetDelegater 设置代理处理器
 func (this *GateBase) SetDelegater(handler gate.IDelegater) error {
 	this.delegater = handler
 	return nil
@@ -165,6 +177,8 @@ func (this *GateBase) SetDelegater(handler gate.IDelegater) error {
 
 // GetDelegater 获取代理处理器
 func (this *GateBase) GetDelegater() gate.IDelegater { return this.delegater }
+
+// --------------- ShakeHandler
 
 // SetShakeHandler 设置建立连接时鉴权器(ws)
 func (this *GateBase) SetShakeHandler(handler func(r *http.Request) error) error {
@@ -175,6 +189,8 @@ func (this *GateBase) SetShakeHandler(handler func(r *http.Request) error) error
 // GetShakeHandler 获取建立连接时鉴权器(ws)
 func (this *GateBase) GetShakeHandler() func(r *http.Request) error { return this.shakeHandle }
 
+// --------------- StorageHandler
+
 // SetStorageHandler 设置Session信息持久化接口
 func (this *GateBase) SetStorageHandler(storager gate.StorageHandler) error {
 	this.storager = storager
@@ -183,6 +199,8 @@ func (this *GateBase) SetStorageHandler(storager gate.StorageHandler) error {
 
 // GetStorageHandler 获取Session信息持久化接口
 func (this *GateBase) GetStorageHandler() (storager gate.StorageHandler) { return this.storager }
+
+// --------------- RouteHandler
 
 // SetRouteHandler 设置路由接口
 func (this *GateBase) SetRouteHandler(router gate.RouteHandler) error {
@@ -193,6 +211,8 @@ func (this *GateBase) SetRouteHandler(router gate.RouteHandler) error {
 // GetRouteHandler 获取路由接口
 func (this *GateBase) GetRouteHandler() gate.RouteHandler { return this.router }
 
+// --------------- ISessionLearner
+
 // SetSessionLearner 设置客户端连接和断开的监听器
 func (this *GateBase) SetSessionLearner(learner gate.ISessionLearner) error {
 	this.sessionLearner = learner
@@ -201,6 +221,8 @@ func (this *GateBase) SetSessionLearner(learner gate.ISessionLearner) error {
 
 // GetSessionLearner 获取客户端连接和断开的监听器
 func (this *GateBase) GetSessionLearner() gate.ISessionLearner { return this.sessionLearner }
+
+// --------------- IAgentLearner(内部用)
 
 // SetAgentLearner 设置客户端连接和断开的监听器(内部用)
 func (this *GateBase) SetAgentLearner(learner gate.IAgentLearner) error {
@@ -211,14 +233,13 @@ func (this *GateBase) SetAgentLearner(learner gate.IAgentLearner) error {
 // SetAgentLearner 获取客户端连接和断开的监听器(内部用)
 func (this *GateBase) GetAgentLearner() gate.IAgentLearner { return this.agentLearner }
 
+// --------------- FunRecvPackHandler
+
 // SetRecvPackHandler 设置接收数据包处理接口
 func (this *GateBase) SetRecvPackHandler(handler gate.FunRecvPackHandler) error {
 	this.recvPackHandler = handler
 	return nil
 }
-
-// GetRecvPackHandler 获取接收数据包处理接口
-func (this *GateBase) GetRecvPackHandler() gate.FunRecvPackHandler { return this.recvPackHandler }
 
 // defaultRecvPackHandler 默认接收数据包处理接口
 func (this *GateBase) defaultRecvPackHandler(session gate.ISession, pack *gate.Pack) error {
@@ -246,6 +267,8 @@ func (this *GateBase) defaultRecvPackHandler(session gate.ISession, pack *gate.P
 
 	return server.CallNR(session.GenRPCContext(), gate.RPC_CLIENT_MSG, msgId, pack.Body)
 }
+
+// --------------- FunSendMessageHook
 
 // SetsendMessageHook 设置发送消息时的钩子回调
 func (this *GateBase) SetSendMessageHook(hook gate.FunSendMessageHook) error {

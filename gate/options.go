@@ -12,18 +12,18 @@ type Option func(*Options)
 
 // Options 网关配置项
 type Options struct {
-	WsAddr          string
-	TcpAddr         string
-	ConcurrentTasks int // 单个连接允许的同时并发协程数,控制流量(20)(目前没用)
-	BufSize         int // 连接数据缓存大小(2048)
-	MaxPackSize     int // 单个协议包数据最大值(65535)
-	SendPackBuffNum int // 发送消息的缓冲队列(100)
-	TLS             bool
-	CertFile        string
-	KeyFile         string
-	EncryptKey      string        // 消息包加密key
-	OverTime        time.Duration // 建立连接超时(10s)
-	HeartOverTimer  time.Duration // 心跳超时时间(本质是读取超时)(60s)
+	WsAddr           string
+	TcpAddr          string
+	ConcurrentTasks  int // 单个连接允许的同时并发协程数,控制流量(20)(目前没用)
+	BufSize          int // 连接数据缓存大小(2048)(只对TCP有用)
+	MaxPackSize      int // 单个协议包数据最大值(65535)
+	SendPackBuffSize int // 发送消息的缓冲队列(100)
+	TLS              bool
+	CertFile         string
+	KeyFile          string
+	EncryptKey       string // 消息包加密key
+	//OverTime        time.Duration // 建立连接超时(10s)
+	HeartOverTimer time.Duration // 心跳超时时间(本质是读取超时)(60s)
 
 	Opts []server.Option // 用来控制module server属性的
 }
@@ -31,14 +31,14 @@ type Options struct {
 // NewOptions 网关配置项
 func NewOptions(opts ...Option) Options {
 	opt := Options{
-		Opts:            []server.Option{},
-		ConcurrentTasks: 20,
-		BufSize:         2048,
-		MaxPackSize:     65535,
-		SendPackBuffNum: 100,
-		OverTime:        time.Second * 10,
-		HeartOverTimer:  time.Second * 60,
-		TLS:             false,
+		Opts:             []server.Option{},
+		ConcurrentTasks:  20,
+		BufSize:          2048,
+		MaxPackSize:      65535,
+		SendPackBuffSize: 100,
+		//OverTime:        time.Second * 10,
+		HeartOverTimer: time.Second * 60,
+		TLS:            false,
 	}
 
 	for _, o := range opts {
@@ -72,7 +72,7 @@ func MaxPackSize(s int) Option {
 // SendPackBuffNum 发送消息的缓冲队列数量
 func SendPackBuffNum(n int) Option {
 	return func(o *Options) {
-		o.SendPackBuffNum = n
+		o.SendPackBuffSize = n
 	}
 }
 
@@ -84,19 +84,11 @@ func HeartOverTimer(s time.Duration) Option {
 }
 
 // OverTime 超时时间
-func OverTime(s time.Duration) Option {
-	return func(o *Options) {
-		o.OverTime = s
-	}
-}
-
-// Tls Tls
-// Deprecated: 因为命名规范问题函数将废弃,请用TLS代替
-func Tls(s bool) Option {
-	return func(o *Options) {
-		o.TLS = s
-	}
-}
+// func OverTime(s time.Duration) Option {
+// 	return func(o *Options) {
+// 		o.OverTime = s
+// 	}
+// }
 
 // TLS TLS
 func TLS(s bool) Option {
@@ -108,13 +100,6 @@ func TLS(s bool) Option {
 // TcpAddr tcp监听地址
 // Deprecated: 因为命名规范问题函数将废弃,请用TCPAddr代替
 func TcpAddr(s string) Option {
-	return func(o *Options) {
-		o.TcpAddr = s
-	}
-}
-
-// TCPAddr tcp监听端口
-func TCPAddr(s string) Option {
 	return func(o *Options) {
 		o.TcpAddr = s
 	}

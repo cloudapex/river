@@ -9,8 +9,8 @@ import (
 	"github.com/cloudapex/river/tools/aes"
 )
 
-func NewWSClientAgent() gate.IClientAgent {
-	return &WSClientAgent{}
+func NewWSClientAgent(h gate.FunRecvPackHandler) gate.IClientAgent {
+	return &WSClientAgent{agentBase{recvHandler: h}}
 }
 
 type WSClientAgent struct {
