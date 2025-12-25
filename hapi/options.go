@@ -18,7 +18,7 @@ type Options struct {
 	TLS            bool
 	CertFile       string
 	KeyFile        string
-	TimeOut        time.Duration
+	TimeOut        time.Duration // rpc超时时间
 	ReadTimeout    time.Duration
 	WriteTimeout   time.Duration
 	IdleTimeout    time.Duration

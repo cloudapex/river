@@ -24,6 +24,9 @@ type Service struct {
 // Router 路由器定义
 type Router func(r *http.Request) (*Service, error)
 
+// RPCHandler 函数定义
+type RPCHandler func(service *Service, req *Request, rsp *Response) error
+
 // DefaultRoute 默认路由规则
 var DefaultRoute = func(r *http.Request) (*Service, error) {
 	if r.URL.Path == "" {
@@ -65,6 +68,3 @@ var DefaultRoute = func(r *http.Request) (*Service, error) {
 	}
 	return &Service{SrvSession: session, Hander: r.URL.Path}, err
 }
-
-// RPCHandler 函数定义
-type RPCHandler func(service *Service, req *Request, rsp *Response) error

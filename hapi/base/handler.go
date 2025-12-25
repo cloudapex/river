@@ -9,12 +9,8 @@ import (
 )
 
 // NewHandler 创建常规http handler
-func NewHandler(opts hapi.Options) http.Handler {
-	h := &HttpHandler{Opts: opts}
-	if opts.RpcHandle == nil {
-		opts.RpcHandle = h.callRpcService
-	}
-	return h
+func NewHandler(opts hapi.Options) *HttpHandler {
+	return &HttpHandler{Opts: opts}
 }
 
 // HttpHandler 网关handler

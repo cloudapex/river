@@ -13,9 +13,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var _ app.IRPCModule = &HttpGateBase{}
+var _ app.IRPCModule = &HApiBase{}
 
-type HttpGateBase struct {
+type HApiBase struct {
 	module.ModuleBase
 
 	opts hapi.Options
@@ -23,10 +23,11 @@ type HttpGateBase struct {
 	router *gin.Engine
 }
 
-func (this *HttpGateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSettings, opts ...hapi.Option) {
-	this.opts = hapi.NewOptions(opts...)
+func (this *HApiBase) Init(subclass app.IRPCModule, settings *conf.ModuleSettings, opts ...hapi.Option) {
 	this.ModuleBase.Init(subclass, settings, this.opts.Opts...) // 这是必须的
 
+	// 使用settings的配置覆盖opts
+	this.opts = hapi.NewOptions(opts...)
 	if WSAddr, ok := settings.Settings["Addr"]; ok {
 		this.opts.Addr = WSAddr.(string)
 	}
@@ -69,25 +70,36 @@ func (this *HttpGateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSet
 	this.router.Use(gin.Logger())
 	this.router.Use(gin.Recovery())
 
+	// 创建处理器
 	_handler := NewHandler(this.opts)
+	if this.opts.RpcHandle == nil {
+		this.opts.RpcHandle = _handler.callRpcService
+	}
 	this.router.NoRoute(func(ctx *gin.Context) {
 		// 将 gin.Context 转换为标准 http.ResponseWriter 和 *http.Request
 		_handler.ServeHTTP(ctx.Writer, ctx.Request)
 	})
 }
-func (this *HttpGateBase) GetType() string {
+func (this *HApiBase) GetType() string {
 	// 很关键,需要与配置文件中的Module配置对应
 	return "hapi"
 }
-func (this *HttpGateBase) Version() string {
+func (this *HApiBase) Version() string {
 	// 可以在监控时了解代码版本
 	return "1.0.0"
 }
-func (this *HttpGateBase) Options() hapi.Options { return this.opts }
+func (this *HApiBase) Options() hapi.Options { return this.opts }
 
-func (this *HttpGateBase) RouterGroup() *gin.RouterGroup { return &this.router.RouterGroup }
+func (this *HApiBase) OnInit(settings *conf.ModuleSettings) {
+	// 所有初始化逻辑都放到Init中, 重载OnInit不可调用基类OnInit!
+	panic("HApiBase: OnInit() must be implemented")
+}
+func (this *HApiBase) OnDestroy() {
+	this.ModuleBase.OnDestroy() // 一定别忘了继承
+}
+func (this *HApiBase) RouterGroup() *gin.RouterGroup { return &this.router.RouterGroup }
 
-func (this *HttpGateBase) Run(closeSig chan bool) {
+func (this *HApiBase) Run(closeSig chan bool) {
 	srv := this.startHttpServer()
 
 	<-closeSig
@@ -96,14 +108,10 @@ func (this *HttpGateBase) Run(closeSig chan bool) {
 		log.Error("Shutdown() error: %s", err)
 	}
 }
-func (this *HttpGateBase) OnDestroy() {
-	// 一定别忘了继承
-	this.ModuleBase.OnDestroy()
-}
 
 // ---------------
 
-func (this *HttpGateBase) startHttpServer() *http.Server {
+func (this *HApiBase) startHttpServer() *http.Server {
 	srv := &http.Server{
 		Addr:           this.opts.Addr,
 		Handler:        this.router,
