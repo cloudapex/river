@@ -15,32 +15,34 @@ package tools
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBase62ToInt(t *testing.T) {
 	i := FromBase62("LLqbOL1")
-	assertEqual(t, int64(100600020001), i)
+	assert.Equal(t, int64(100600020001), i)
 
 	i1 := FromBase62("eg")
-	assertEqual(t, int64(1006), i1)
+	assert.Equal(t, int64(1006), i1)
 
 	i2 := FromBase62("2cq")
-	assertEqual(t, int64(100690), i2)
+	assert.Equal(t, int64(100690), i2)
 
 	i3 := FromBase62("mim3")
-	assertEqual(t, int64(800690), i3)
+	assert.Equal(t, int64(800690), i3)
 }
 
 func TestIntToBase62(t *testing.T) {
 	b := ToBase62(100600020001)
-	assertEqual(t, "LLqbOL1", b)
+	assert.Equal(t, "LLqbOL1", b)
 
 	b1 := ToBase62(1006)
-	assertEqual(t, "eg", b1)
+	assert.Equal(t, "eg", b1)
 
 	b2 := ToBase62(100690)
-	assertEqual(t, "2cq", b2)
+	assert.Equal(t, "2cq", b2)
 
 	b3 := ToBase62(800690)
-	assertEqual(t, "mim3", b3)
+	assert.Equal(t, "mim3", b3)
 }

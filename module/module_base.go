@@ -15,7 +15,6 @@ import (
 	"github.com/cloudapex/river/mqrpc/core"
 	"github.com/cloudapex/river/selector"
 	"github.com/cloudapex/river/tools"
-	"github.com/pkg/errors"
 )
 
 // ModuleBase 默认的RPCModule实现
@@ -205,7 +204,7 @@ func (this *ModuleBase) NoFoundFunction(fn string) (*mqrpc.FunctionInfo, error) 
 	if this.listener != nil {
 		return this.listener.NoFoundFunction(fn)
 	}
-	return nil, errors.Errorf("Remote function(%s) not found", fn)
+	return nil, fmt.Errorf("Remote function(%s) not found", fn)
 }
 
 // BeforeHandle  hander执行前调用

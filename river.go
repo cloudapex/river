@@ -21,7 +21,6 @@ import (
 	"github.com/cloudapex/river/registry/consul"
 	"github.com/cloudapex/river/selector"
 	"github.com/nats-io/nats.go"
-	"github.com/pkg/errors"
 )
 
 // CreateApp 创建应用
@@ -273,7 +272,7 @@ func (this *DefaultApp) GetServerByID(serverID string) (app.IModuleServerSession
 		// s[0] + @ + s[1] = moduleType@moduleID
 		s := strings.Split(serverID, "@")
 		if len(s) != 2 {
-			return nil, errors.Errorf("serverID is error %v", serverID)
+			return nil, fmt.Errorf("serverID is error %v", serverID)
 		}
 		moduleType := s[0]
 		sessions := this.GetServersByType(moduleType)
@@ -285,7 +284,7 @@ func (this *DefaultApp) GetServerByID(serverID string) (app.IModuleServerSession
 	} else {
 		return session.(app.IModuleServerSession), nil
 	}
-	return nil, errors.Errorf("nofound %v", serverID)
+	return nil, fmt.Errorf("nofound %v", serverID)
 }
 
 // GetServerBySelector 获取服务实例(通过服务类型(moduleType),可设置可设置selector.WithFilter和selector.WithStrategy)

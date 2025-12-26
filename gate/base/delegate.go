@@ -3,6 +3,7 @@ package gatebase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"sync"
@@ -10,7 +11,6 @@ import (
 	"github.com/cloudapex/river/gate"
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/tools"
-	"github.com/pkg/errors"
 )
 
 // NewDelegate NewDelegate

@@ -4,14 +4,13 @@ go 1.25.0
 
 require (
 	github.com/gin-gonic/gin v1.11.0
+	github.com/google/uuid v1.0.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/consul/api v1.32.4
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/json-iterator/go v1.1.12
 	github.com/mitchellh/hashstructure v1.1.0
 	github.com/nats-io/nats.go v1.47.0
-	github.com/pborman/uuid v1.2.1
-	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.11.1
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 )
@@ -32,7 +31,6 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
-	github.com/google/uuid v1.0.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect

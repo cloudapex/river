@@ -7,7 +7,7 @@ import (
 	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/conf"
 	"github.com/cloudapex/river/mqrpc"
-	"github.com/pborman/uuid"
+	"github.com/google/uuid"
 )
 
 // Server Server
@@ -71,7 +71,7 @@ var (
 	// DefaultVersion DefaultVersion
 	DefaultVersion = "1.0.0"
 	// DefaultID DefaultID
-	DefaultID = uuid.NewUUID().String()
+	DefaultID = uuid.New().String()
 )
 
 // NewServer returns a new server with options passed in
