@@ -17,7 +17,7 @@ import (
 
 type NatsClient struct {
 	//callinfos map[string]*ClinetCallInfo
-	callinfos         *tools.SafeMap[string]
+	callinfos         *tools.Map[string]
 	cmutex            sync.Mutex //操作callinfos的锁
 	callbackqueueName string
 	done              chan error

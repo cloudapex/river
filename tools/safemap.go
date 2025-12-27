@@ -4,22 +4,22 @@ import (
 	"sync"
 )
 
-// SafeMap is a map with lock
-type SafeMap[K comparable] struct {
+// Map is a map with lock
+type Map[K comparable] struct {
 	lock *sync.RWMutex
 	bm   map[K]any
 }
 
 // NewSafeMap return new safemap
-func NewSafeMap[K comparable]() *SafeMap[K] {
-	return &SafeMap[K]{
+func NewSafeMap[K comparable]() *Map[K] {
+	return &Map[K]{
 		lock: new(sync.RWMutex),
 		bm:   make(map[K]any),
 	}
 }
 
 // Get from maps return the k's value
-func (m *SafeMap[K]) Get(k K) any {
+func (m *Map[K]) Get(k K) any {
 	m.lock.RLock()
 	if val, ok := m.bm[k]; ok {
 		m.lock.RUnlock()
@@ -31,7 +31,7 @@ func (m *SafeMap[K]) Get(k K) any {
 
 // Set Maps the given key and value. Returns false
 // if the key is already in the map and changes nothing.
-func (m *SafeMap[K]) Set(k K, v any) bool {
+func (m *Map[K]) Set(k K, v any) bool {
 	m.lock.Lock()
 	if val, ok := m.bm[k]; !ok {
 		m.bm[k] = v
@@ -47,7 +47,7 @@ func (m *SafeMap[K]) Set(k K, v any) bool {
 }
 
 // Check Returns true if k is exist in the map.
-func (m *SafeMap[K]) Check(k K) bool {
+func (m *Map[K]) Check(k K) bool {
 	m.lock.RLock()
 	if _, ok := m.bm[k]; !ok {
 		m.lock.RUnlock()
@@ -58,14 +58,14 @@ func (m *SafeMap[K]) Check(k K) bool {
 }
 
 // Delete the given key and value.
-func (m *SafeMap[K]) Delete(k K) {
+func (m *Map[K]) Delete(k K) {
 	m.lock.Lock()
 	delete(m.bm, k)
 	m.lock.Unlock()
 }
 
 // DeleteAll DeleteAll
-func (m *SafeMap[K]) DeleteAll() {
+func (m *Map[K]) DeleteAll() {
 	m.lock.Lock()
 	for k := range m.bm {
 		delete(m.bm, k)
@@ -75,7 +75,7 @@ func (m *SafeMap[K]) DeleteAll() {
 }
 
 // Items returns all items in safemap.
-func (m *SafeMap[K]) Items() map[K]any {
+func (m *Map[K]) Items() map[K]any {
 	m.lock.RLock()
 	r := make(map[K]any)
 	for k, v := range m.bm {
