@@ -83,7 +83,7 @@ type IRPCModule interface {
 	GetServerID() string
 	GetModuleSettings() (settings *conf.ModuleSettings)
 
-	// 注册RPC方法
+	// 注册RPC方法(f的第一个参数必须是context.Context,返回参数(最多两个)最后一个必须是error)
 	Register(msg string, f interface{})   // 同步
 	RegisterGO(msg string, f interface{}) // 并发
 

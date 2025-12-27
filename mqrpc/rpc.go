@@ -70,8 +70,8 @@ type IRPCClient interface {
 	Done() (err error)
 	Call(ctx context.Context, _func string, params ...any) (any, error)
 	CallArgs(ctx context.Context, _func string, argTypes []string, args [][]byte) (any, error) // ctx参数必须装进args中
-	CallNR(ctx context.Context, _func string, params ...any) (err error)
-	CallNRArgs(ctx context.Context, _func string, argTypes []string, args [][]byte) (err error) // ctx参数必须装进args中
+	CallNR(ctx context.Context, _func string, params ...any) error
+	CallNRArgs(ctx context.Context, _func string, argTypes []string, args [][]byte) error // ctx参数必须装进args中
 }
 
 // IMarshaler is a simple encoding interface used for the broker/transport

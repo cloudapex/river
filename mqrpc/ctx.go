@@ -5,51 +5,53 @@ import (
 	"sync"
 )
 
+type FunMakeCtxValue func() IMarshaler
+
 // 支持rpc trans的Context Keys
 var (
-	contextKeysMutex sync.RWMutex
-	transContextKeys = map[string]func() IMarshaler{}
+	contextKeysMutex    sync.RWMutex
+	translatableCtxKeys = map[string]FunMakeCtxValue{}
 )
 
 // 使用此WithValue方法才能通过Context传递数据
 func ContextWithValue(ctx context.Context, key string, val any) context.Context {
-	addTransContextKey(key)
+	addTranslatableCtxKey(key)
 	return context.WithValue(ctx, key, val)
 }
 
 // 提前注册复合类型的Context val数据(基本类型不需要注册)
-func RegTransContextKey(key string, makeFun func() IMarshaler) {
-	transContextKeys[key] = makeFun
+func RegTranslatableCtxKey(key string, makeFun FunMakeCtxValue) {
+	translatableCtxKeys[key] = makeFun
 }
 
-func addTransContextKey(key string) {
-	if hasTransContextKey(key) {
+func addTranslatableCtxKey(key string) {
+	if hasTranslatableCtxKey(key) {
 		return
 	}
 	contextKeysMutex.Lock()
 	defer contextKeysMutex.Unlock()
 
-	transContextKeys[key] = nil
+	translatableCtxKeys[key] = nil
 }
-func hasTransContextKey(key string) bool {
+func hasTranslatableCtxKey(key string) bool {
 	contextKeysMutex.RLock()
 	defer contextKeysMutex.RUnlock()
 
-	_, exists := transContextKeys[key]
+	_, exists := translatableCtxKeys[key]
 	return exists
 }
-func getTransContextKeys() []string {
+func getTranslatableCtxKeys() []string {
 	contextKeysMutex.RLock()
 	defer contextKeysMutex.RUnlock()
 
-	ks := make([]string, len(transContextKeys))
-	for k := range transContextKeys {
+	ks := make([]string, len(translatableCtxKeys))
+	for k := range translatableCtxKeys {
 		ks = append(ks, k)
 	}
 	return ks
 }
-func getTransContextKeyItem(key string) func() IMarshaler {
+func getTranslatableCtxValMakeFun(key string) FunMakeCtxValue {
 	contextKeysMutex.RLock()
 	defer contextKeysMutex.RUnlock()
-	return transContextKeys[key]
+	return translatableCtxKeys[key]
 }

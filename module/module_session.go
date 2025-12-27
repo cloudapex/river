@@ -2,7 +2,6 @@
 package module
 
 import (
-	"context"
 	"sync"
 
 	"github.com/cloudapex/river/app"
@@ -54,24 +53,4 @@ func (this *moduleServerSession) SetNode(node *registry.Node) (err error) {
 	defer this.mu.Unlock()
 	this.node = node
 	return
-}
-
-// 消息请求 需要回复
-func (this *moduleServerSession) Call(ctx context.Context, _func string, params ...any) (any, error) {
-	return this.rpc.Call(ctx, _func, params...)
-}
-
-// 消息请求 不需要回复
-func (this *moduleServerSession) CallNR(ctx context.Context, _func string, params ...any) (err error) {
-	return this.rpc.CallNR(ctx, _func, params...)
-}
-
-// 消息请求 需要回复
-func (this *moduleServerSession) CallArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (any, error) {
-	return this.rpc.CallArgs(ctx, _func, argTypes, argDatas)
-}
-
-// 消息请求 不需要回复
-func (this *moduleServerSession) CallNRArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (err error) {
-	return this.rpc.CallNRArgs(ctx, _func, argTypes, argDatas)
 }

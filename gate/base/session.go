@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-	mqrpc.RegTransContextKey(gate.RPC_CONTEXT_KEY_SESSION, func() mqrpc.IMarshaler {
+	mqrpc.RegTranslatableCtxKey(gate.RPC_CONTEXT_KEY_SESSION, func() mqrpc.IMarshaler {
 		s, _ := NewSessionByMap(map[string]any{})
 		return s
 	})

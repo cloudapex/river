@@ -39,7 +39,8 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...any) (any,
 	_ctx := ctx
 	var argTypes []string = make([]string, len(params)+1)
 	var argDatas [][]byte = make([][]byte, len(params)+1)
-	// 检测是否含有log.TraceSpan
+
+	// 检测添加log.TraceSpan到ctx
 	span, ok := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
 	if !ok {
 		_ctx = mqrpc.ContextWithValue(_ctx, log.RPC_CONTEXT_KEY_TRACE, log.CreateRootTrace())
@@ -47,6 +48,7 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...any) (any,
 		_ctx = mqrpc.ContextWithValue(_ctx, log.RPC_CONTEXT_KEY_TRACE, span.ExtractSpan())
 	}
 
+	// 重新组装参数(ctx放到首位)
 	params = append([]any{_ctx}, params...)
 	for k, arg := range params {
 		var err error = nil
@@ -55,13 +57,9 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...any) (any,
 			return nil, fmt.Errorf("args[%d] error %s", k, err.Error())
 		}
 	}
-	start := time.Now()
-	r, err := c.CallArgs(ctx, _func, argTypes, argDatas)
-	if app.App().Config().RpcLog {
-		span, _ := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
-		log.TInfo(span, "rpc Call ServerId = %v Func = %v Elapsed = %v Result = %v ERROR = %v", c.nats_client.session.GetID(), _func, time.Since(start), r, err)
-	}
-	return r, err
+
+	// CallArgs
+	return c.CallArgs(ctx, _func, argTypes, argDatas)
 }
 func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (any, error) {
 	var err error
@@ -86,21 +84,23 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 		Caller:   caller,
 		Hostname: caller,
 	}
-	defer func() {
-		//异常日志都应该打印
-		if app.App().Options().ClientRPChandler != nil {
-			exec_time := time.Since(start).Nanoseconds()
-			app.App().Options().ClientRPChandler(*c.nats_client.session.GetNode(), rpcInfo, result, err, exec_time)
+
+	defer func() { // 全局监控(调用方)
+		if app.App().Config().RpcLog { // 打印调用日志
+			span, _ := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
+			log.TInfo(span, "rpc Call ServerId = %v Func = %v Elapsed = %v Result = %v ERROR = %v",
+				c.nats_client.session.GetID(), _func, time.Since(start), result, err)
+		}
+		if handle := app.App().Options().ClientRPCHandler; handle != nil {
+			handle(*c.nats_client.session.GetNode(), rpcInfo, result, err, time.Since(start).Nanoseconds())
 		}
 	}()
+
+	// call
 	callInfo := &mqrpc.CallInfo{
 		RPCInfo: rpcInfo,
 	}
 	callback := make(chan *core.ResultInfo, 1)
-	//优先使用本地rpc
-	//if c.local_client != nil {
-	//	err = c.local_client.Call(*callInfo, callback)
-	//} else
 	err = c.nats_client.Call(callInfo, callback)
 	if err != nil {
 		return nil, err
@@ -110,15 +110,11 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 	var cancel context.CancelFunc
 	if _, ok := ctx.Deadline(); !ok {
 		ctx, cancel = context.WithTimeout(ctx, app.App().Options().RPCExpired)
+		defer cancel()
 	}
-	defer func() {
-		if cancel != nil {
-			cancel()
-		}
-	}()
 
 	select {
-	case resultInfo, ok := <-callback:
+	case resultInfo, ok := <-callback: // 结果
 		if !ok {
 			return nil, fmt.Errorf("client closed")
 		}
@@ -126,46 +122,43 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 		if err != nil {
 			return nil, err
 		}
-
 		return result, fmt.Errorf(resultInfo.Error)
-	case <-ctx.Done():
+
+	case <-ctx.Done(): // 超时
 		_ = c.nats_client.Delete(rpcInfo.Cid)
 		c.close_callback_chan(callback)
 		return nil, fmt.Errorf("deadline exceeded")
-		//case <-time.After(time.Second * time.Duration(app.App().GetSettings().rpc.RPCExpired)):
-		//	close(callback)
-		//	c.nats_client.Delete(rpcInfo.Cid)
-		//	return nil, "deadline exceeded"
 	}
 }
 
-func (c *RPCClient) CallNR(ctx context.Context, _func string, params ...any) (err error) {
+func (c *RPCClient) CallNR(ctx context.Context, _func string, params ...any) error {
 	_ctx := ctx
 	var argTypes []string = make([]string, len(params)+1)
 	var argDatas [][]byte = make([][]byte, len(params)+1)
-	// 检测是否含有log.TraceSpan
+
+	// 检测添加log.TraceSpan到ctx
 	span, ok := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
 	if !ok {
 		_ctx = mqrpc.ContextWithValue(_ctx, log.RPC_CONTEXT_KEY_TRACE, log.CreateRootTrace())
 	} else {
 		_ctx = mqrpc.ContextWithValue(_ctx, log.RPC_CONTEXT_KEY_TRACE, span.ExtractSpan())
 	}
+
+	// 重新组装参数(ctx放到首位)
 	params = append([]any{_ctx}, params...)
 	for k, arg := range params {
+		var err error = nil
 		argTypes[k], argDatas[k], err = mqrpc.ArgToData(arg)
 		if err != nil {
 			return fmt.Errorf("args[%d] error %s", k, err.Error())
 		}
 	}
-	start := time.Now()
-	err = c.CallNRArgs(ctx, _func, argTypes, argDatas)
-	if app.App().Config().RpcLog {
-		span, _ := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
-		log.TInfo(span, "rpc CallNR ServerId = %v Func = %v Elapsed = %v ERROR = %v", c.nats_client.session.GetID(), _func, time.Since(start), err)
-	}
-	return err
+
+	// CallNRArgs
+	return c.CallNRArgs(ctx, _func, argTypes, argDatas)
 }
-func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (err error) {
+func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) error {
+	var err error
 	caller, _ := os.Hostname()
 	if ctx != nil {
 		cr, ok := ctx.Value("caller").(string)
@@ -187,11 +180,19 @@ func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argTypes []str
 	callInfo := &mqrpc.CallInfo{
 		RPCInfo: rpcInfo,
 	}
-	//优先使用本地rpc
-	//if c.local_client != nil {
-	//	err = c.local_client.CallNR(*callInfo)
-	//} else
-	return c.nats_client.CallNR(callInfo)
+
+	defer func() { // 全局监控(调用方)
+		if app.App().Config().RpcLog { // 打印调用日志
+			span, _ := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
+			log.TInfo(span, "rpc CallNR ServerId = %v Func = %v Elapsed = %v Result = %v ERROR = %v",
+				c.nats_client.session.GetID(), _func, 0, nil, err)
+		}
+		if handle := app.App().Options().ClientRPCHandler; handle != nil {
+			handle(*c.nats_client.session.GetNode(), rpcInfo, nil, err, 0)
+		}
+	}()
+	err = c.nats_client.CallNR(callInfo)
+	return err
 }
 
 func (c *RPCClient) close_callback_chan(ch chan *core.ResultInfo) {

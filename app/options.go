@@ -166,7 +166,7 @@ type Options struct {
 	RPCExpired      time.Duration // RPC调用超时(10s)
 	RPCMaxCoroutine int           // 默认0(不限制)
 
-	ClientRPChandler ClientRPCHandler // 配置全局的RPC调用方监控器(nil)
+	ClientRPCHandler ClientRPCHandler // 配置全局的RPC调用方监控器(nil)
 	ServerRPCHandler ServerRPCHandler // 配置全局的RPC服务方监控器(nil)
 	//RpcCompleteHandler RpcCompleteHandler // 配置全局的RPC执行结果监控器(nil)
 
@@ -282,7 +282,7 @@ func KillWaitTTL(t time.Duration) Option {
 // SetClientRPChandler 配置调用者监控器
 func SetClientRPChandler(t ClientRPCHandler) Option {
 	return func(o *Options) {
-		o.ClientRPChandler = t
+		o.ClientRPCHandler = t
 	}
 }
 

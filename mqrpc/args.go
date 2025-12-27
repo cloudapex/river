@@ -63,18 +63,18 @@ func ArgToData(arg any) (string, []byte, error) {
 		return JSMAP, bytes, err
 	case context.Context:
 		maps := map[string]any{} // 把支持trans的kv序列化到map中再编码进行传输
-		for _, k := range getTransContextKeys() {
+		for _, k := range getTranslatableCtxKeys() {
 			v := v2.Value(k)
 			if v == nil {
 				continue
 			}
 
 			// can Marshaler value
-			_v, _ok := v.(IMarshaler)
-			if _ok {
-				b, err := _v.Marshal()
+			val, ok := v.(IMarshaler)
+			if ok {
+				b, err := val.Marshal()
 				if err != nil {
-					return "", nil, fmt.Errorf("ArgToData args [%s] contextValues.marshal error %v", reflect.TypeOf(arg), err)
+					return "", nil, fmt.Errorf("ArgToData args [%s] contextValue.marshal error %v", reflect.TypeOf(arg), err)
 				}
 				maps[string(k)] = b
 			} else { // basic value
@@ -146,7 +146,7 @@ func DataToArg(argType string, argData []byte) (any, error) {
 
 		ctx := context.Background()
 		for k, v := range mps {
-			makefun := getTransContextKeyItem(k)
+			makefun := getTranslatableCtxValMakeFun(k)
 			if makefun == nil {
 				ctx = ContextWithValue(ctx, k, v)
 				continue
