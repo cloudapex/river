@@ -48,9 +48,12 @@ func onRPCFunc3(ctx context.Context, u *user, m map[string]string) (*out, error)
 func TestBytes(t *testing.T) {
 	var c = context.Context(nil)
 	var i any = c
-	if i == nil {
-		t.Log("i = nil")
-	}
+
+	func(a any) {
+		if a == nil {
+			t.Log("i = nil")
+		}
+	}(i)
 
 	str, err := String(call(context.TODO(), "rpc", true, int32(100), int64(111), float32(1.1), 1.2222, []byte("0000"), "000"))
 	t.Log("rpc", str, err)
