@@ -76,12 +76,11 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 	}
 
 	start := time.Now()
-	var correlation_id = uuid.New().String()
 	rpcInfo := &core.RPCInfo{
 		Fn:       _func,
 		Reply:    true,
 		Expired:  (start.UTC().Add(app.App().Options().RPCExpired).UnixNano()) / 1000000,
-		Cid:      correlation_id,
+		Cid:      uuid.New().String(),
 		Args:     argDatas,
 		ArgsType: argTypes,
 		Caller:   caller,
@@ -175,12 +174,11 @@ func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argTypes []str
 		}
 	}
 
-	var correlation_id = uuid.New().String()
 	rpcInfo := &core.RPCInfo{
 		Fn:       _func,
 		Reply:    false,
 		Expired:  (time.Now().UTC().Add(app.App().Options().RPCExpired).UnixNano()) / 1000000,
-		Cid:      correlation_id,
+		Cid:      uuid.New().String(),
 		Args:     argDatas,
 		ArgsType: argTypes,
 		Caller:   caller,

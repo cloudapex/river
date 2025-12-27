@@ -105,12 +105,11 @@ func call(ctx context.Context, _func string, params ...any) (any, error) {
 		}
 	}
 	start := time.Now()
-	var correlation_id = uuid.New().String()
 	rpcInfo := &core.RPCInfo{
 		Fn:       (_func),
 		Reply:    (true),
 		Expired:  ((start.UTC().Add(10 * time.Second).UnixNano()) / 1000000),
-		Cid:      (correlation_id),
+		Cid:      uuid.New().String(),
 		Args:     args,
 		ArgsType: argTypes,
 		Caller:   (caller),
