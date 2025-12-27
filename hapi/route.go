@@ -15,8 +15,8 @@ import (
 
 // Service represents an API service
 type Service struct {
-	// URL.Path
-	Hander string
+	// topic
+	Topic string // {server}_{msg_id}
 	// node
 	SrvSession app.IModuleServerSession
 }
@@ -66,5 +66,5 @@ var DefaultRoute = func(r *http.Request) (*Service, error) {
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
-	return &Service{SrvSession: session, Hander: r.URL.Path}, err
+	return &Service{SrvSession: session, Topic: r.URL.Path}, err
 }

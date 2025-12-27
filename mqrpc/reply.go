@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/cloudapex/river/tools"
 	"github.com/vmihailenco/msgpack/v5"
 )
 
@@ -212,4 +213,19 @@ func MsgPack(pObj any, ret callResult) error {
 		return ErrNil
 	}
 	return fmt.Errorf("mqrpc: unexpected type for %v, got type %T", reflect.ValueOf(ret.Reply), ret.Reply)
+}
+
+// MsgJson MsgJson
+func MsgJson(reply any, err error) (string, error) {
+	switch r := reply.(type) {
+	case []byte:
+		js_data, err := tools.MsgPackToJSON(r)
+		if err != nil {
+			return "", fmt.Errorf("MsgPackToJSON error: %v", err)
+		}
+		return js_data, nil
+	case nil:
+		return "", ErrNil
+	}
+	return "", fmt.Errorf("mqrpc: unexpected type for []byte, got type %T", reply)
 }

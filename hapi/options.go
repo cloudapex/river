@@ -3,7 +3,6 @@ package hapi
 import (
 	"time"
 
-	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/module/server"
 )
 
@@ -18,7 +17,6 @@ type Options struct {
 	TLS            bool
 	CertFile       string
 	KeyFile        string
-	TimeOut        time.Duration // rpc超时时间
 	ReadTimeout    time.Duration
 	WriteTimeout   time.Duration
 	IdleTimeout    time.Duration
@@ -33,7 +31,6 @@ func NewOptions(opts ...Option) Options {
 		Addr:           ":8090",
 		Route:          DefaultRoute,
 		TLS:            false,
-		TimeOut:        app.App().Options().RPCExpired,
 		ReadTimeout:    5 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		IdleTimeout:    60 * time.Second,
@@ -58,13 +55,6 @@ func Route(s Router) Option {
 func RpcHandler(h RPCHandler) Option {
 	return func(o *Options) {
 		o.RpcHandle = h
-	}
-}
-
-// TimeOut 设置网关超时时间
-func TimeOut(s time.Duration) Option {
-	return func(o *Options) {
-		o.TimeOut = s
 	}
 }
 

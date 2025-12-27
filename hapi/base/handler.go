@@ -66,7 +66,5 @@ func (a *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(rsp.Body))
 }
 func (a *HttpHandler) callRpcService(service *hapi.Service, req *hapi.Request, rsp *hapi.Response) error {
-	ctx, cancel := context.WithTimeout(context.TODO(), a.Opts.TimeOut)
-	defer cancel()
-	return mqrpc.MsgPack(rsp, mqrpc.RpcResult(service.SrvSession.Call(ctx, service.Hander, req)))
+	return mqrpc.MsgPack(rsp, mqrpc.RpcResult(service.SrvSession.Call(context.TODO(), service.Topic, req)))
 }

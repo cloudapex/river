@@ -44,10 +44,6 @@ func (this *HApiBase) Init(subclass app.IRPCModule, settings *conf.ModuleSetting
 		this.opts.KeyFile = KeyFile.(string)
 	}
 
-	if TimeOut, ok := settings.Settings["TimeOut"]; ok {
-		this.opts.TimeOut = time.Duration(TimeOut.(int)) * time.Second
-	}
-
 	if ReadTimeout, ok := settings.Settings["ReadTimeout"]; ok {
 		this.opts.ReadTimeout = time.Duration(ReadTimeout.(int)) * time.Second
 	}
