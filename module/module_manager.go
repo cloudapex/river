@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	mqrpc.RegTransContextKey(log.RPC_CONTEXT_KEY_TRACE, func() mqrpc.Marshaler {
+	mqrpc.RegTransContextKey(log.RPC_CONTEXT_KEY_TRACE, func() mqrpc.IMarshaler {
 		return log.CreateRootTrace()
 	})
 }

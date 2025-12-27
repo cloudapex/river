@@ -175,7 +175,7 @@ func Marshal(pObj any, ret callResult) error {
 		//不是指针
 		return fmt.Errorf("pObj [%v] not *mqrpc.marshaler pointer type", rv.Type())
 	}
-	if v2, ok := pObj.(Marshaler); ok {
+	if v2, ok := pObj.(IMarshaler); ok {
 		switch r := ret.Reply.(type) {
 		case []byte:
 			err := v2.Unmarshal(r)

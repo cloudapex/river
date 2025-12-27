@@ -29,7 +29,7 @@ type moduleServerSession struct {
 	mu   sync.RWMutex
 	node *registry.Node
 	name string
-	rpc  mqrpc.RPCClient
+	rpc  mqrpc.IRPCClient
 }
 
 func (this *moduleServerSession) GetID() string {
@@ -39,7 +39,7 @@ func (this *moduleServerSession) GetID() string {
 func (this *moduleServerSession) GetName() string {
 	return this.name
 }
-func (this *moduleServerSession) GetRPC() mqrpc.RPCClient {
+func (this *moduleServerSession) GetRPC() mqrpc.IRPCClient {
 	return this.rpc
 }
 

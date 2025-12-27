@@ -28,7 +28,7 @@ type ModuleBase struct {
 	exit          context.CancelFunc
 	service       service.Service // 内含server
 
-	listener mqrpc.RPCListener
+	listener mqrpc.IRPCListener
 }
 
 // Init 模块初始化(由派生类调用)
@@ -140,7 +140,7 @@ func (this *ModuleBase) GetModuleSettings() *conf.ModuleSettings {
 }
 
 // SetListener  mqrpc.RPCListener
-func (this *ModuleBase) SetListener(listener mqrpc.RPCListener) {
+func (this *ModuleBase) SetListener(listener mqrpc.IRPCListener) {
 	this.listener = listener
 }
 
@@ -199,18 +199,18 @@ func (this *ModuleBase) CallBroadcast(ctx context.Context, moduleType, _func str
 
 // ================= RPCListener[监听器]
 
-// NoFoundFunction  当hander未找到时调用
-func (this *ModuleBase) NoFoundFunction(fn string) (*mqrpc.FunctionInfo, error) {
+// OnMethodNotFound  当hander未找到时调用
+func (this *ModuleBase) OnMethodNotFound(fn string) (*mqrpc.MethodInfo, error) {
 	if this.listener != nil {
-		return this.listener.NoFoundFunction(fn)
+		return this.listener.OnMethodNotFound(fn)
 	}
 	return nil, fmt.Errorf("Remote function(%s) not found", fn)
 }
 
-// BeforeHandle  hander执行前调用
-func (this *ModuleBase) BeforeHandle(fn string, callInfo *mqrpc.CallInfo) error {
+// OnBeforeHandle  hander执行前调用
+func (this *ModuleBase) OnBeforeHandle(fn string, callInfo *mqrpc.CallInfo) error {
 	if this.listener != nil {
-		return this.listener.BeforeHandle(fn, callInfo)
+		return this.listener.OnBeforeHandle(fn, callInfo)
 	}
 	return nil
 }

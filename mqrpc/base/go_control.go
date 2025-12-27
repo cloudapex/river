@@ -2,7 +2,7 @@ package rpcbase
 
 import "github.com/cloudapex/river/mqrpc"
 
-func NewGoroutineControl(size uint32) mqrpc.GoroutineControl {
+func NewGoroutineControl(size uint32) mqrpc.IGoroutineControl {
 	control := GtControl{
 		listCtr: make(chan int, size),
 		maxSize: size,

@@ -84,8 +84,8 @@ type IRPCModule interface {
 	GetModuleSettings() (settings *conf.ModuleSettings)
 
 	// 注册RPC方法
-	Register(msg string, f interface{})
-	RegisterGO(msg string, f interface{})
+	Register(msg string, f interface{})   // 同步
+	RegisterGO(msg string, f interface{}) // 并发
 
 	// 获取服务实例(通过服务ID|服务类型,可设置选择器过滤)
 	GetRouteServer(service string, opts ...selector.SelectOption) (IModuleServerSession, error) //获取经过筛选过的服务
@@ -104,17 +104,16 @@ type IRPCModule interface {
 
 // IModuleServerSession Module服务会话代理
 type IModuleServerSession interface {
+	// 服务ID
 	GetID() string
+	// 服务名称(moduleType)
 	GetName() string
-	GetRPC() mqrpc.RPCClient
+	// RPC客户端
+	GetRPC() mqrpc.IRPCClient
 
+	// 服务节点信息
 	GetNode() *registry.Node
 	SetNode(node *registry.Node) (err error)
-
-	Call(ctx context.Context, _func string, params ...any) (any, error)                             // 等待返回结果
-	CallArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (any, error)  // 内部使用(ctx参数必须装进args中)
-	CallNR(ctx context.Context, _func string, params ...any) (err error)                            // 无需等待结果
-	CallNRArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (err error) // 内部使用(ctx参数必须装进args中)
 }
 
 // FileNameHandler 自定义日志文件名字

@@ -29,7 +29,7 @@ type server struct {
 	opts Options
 	// used for first registration
 	registered bool
-	server     mqrpc.RPCServer
+	server     mqrpc.IRPCServer
 	id         string
 	// graceful exit
 	wg sync.WaitGroup
@@ -64,7 +64,7 @@ func (s *server) OnInit(module app.IModule, settings *conf.ModuleSettings) error
 func (s *server) OnDestroy() error {
 	return s.Stop()
 }
-func (s *server) SetListener(listener mqrpc.RPCListener) { s.server.SetListener(listener) }
+func (s *server) SetListener(listener mqrpc.IRPCListener) { s.server.SetListener(listener) }
 
 func (s *server) Register(id string, f any) {
 	if s.server == nil {

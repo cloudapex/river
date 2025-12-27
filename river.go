@@ -351,7 +351,7 @@ func (this *DefaultApp) Call(ctx context.Context, moduleServer, _func string, pa
 	if err != nil {
 		return nil, err
 	}
-	return server.Call(ctx, _func, param()...)
+	return server.GetRPC().Call(ctx, _func, param()...)
 }
 
 // Call RPC调用(无需等待结果)
@@ -360,14 +360,14 @@ func (this *DefaultApp) CallNR(ctx context.Context, moduleServer, _func string, 
 	if err != nil {
 		return
 	}
-	return server.CallNR(ctx, _func, params...)
+	return server.GetRPC().CallNR(ctx, _func, params...)
 }
 
 // CallBroadcast RPC调用(群发,无需等待结果)
 func (this *DefaultApp) CallBroadcast(ctx context.Context, moduleType, _func string, params ...any) {
 	listSvr := this.GetServersByType(moduleType)
 	for _, svr := range listSvr {
-		svr.CallNR(ctx, _func, params...)
+		svr.GetRPC().CallNR(ctx, _func, params...)
 	}
 }
 

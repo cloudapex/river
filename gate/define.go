@@ -94,7 +94,7 @@ type IDelegater interface {
 
 // ISession session代表一个客户端连接,不是线程安全的
 type ISession interface {
-	mqrpc.Marshaler
+	mqrpc.IMarshaler
 
 	// --------------- 固定属性区(Gate管理,理论上不可更改)
 

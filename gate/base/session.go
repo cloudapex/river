@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-	mqrpc.RegTransContextKey(gate.RPC_CONTEXT_KEY_SESSION, func() mqrpc.Marshaler {
+	mqrpc.RegTransContextKey(gate.RPC_CONTEXT_KEY_SESSION, func() mqrpc.IMarshaler {
 		s, _ := NewSessionByMap(map[string]any{})
 		return s
 	})
@@ -278,7 +278,7 @@ func (s *sessionAgent) ToUpdate() error {
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
-	result, err := server.Call(context.TODO(), "Load", s.session.SessionId)
+	result, err := server.GetRPC().Call(context.TODO(), "Load", s.session.SessionId)
 	if err != nil {
 		return fmt.Errorf("Call Gate serverId(%v) 'Load' err:%v", s.session.ServerId, err)
 	}
@@ -297,7 +297,7 @@ func (s *sessionAgent) ToBind(userId string) error {
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
-	result, err := server.Call(context.TODO(), "Bind", s.session.SessionId, userId)
+	result, err := server.GetRPC().Call(context.TODO(), "Bind", s.session.SessionId, userId)
 	if err != nil {
 		return fmt.Errorf("Call Gate serverId(%v) 'Bind' err:%v", s.session.ServerId, err)
 	}
@@ -316,7 +316,7 @@ func (s *sessionAgent) ToUnBind() error {
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
-	result, err := server.Call(context.TODO(), "UnBind", s.session.SessionId)
+	result, err := server.GetRPC().Call(context.TODO(), "UnBind", s.session.SessionId)
 	if err != nil {
 		return fmt.Errorf("Call Gate serverId(%v) 'UnBind' err:%v", s.session.ServerId, err)
 	}
@@ -336,7 +336,7 @@ func (s *sessionAgent) ToSet(key string, value string) error {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
 
-	result, err := server.Call(context.TODO(), "Set", s.session.SessionId, s.session.SessionId, key, value)
+	result, err := server.GetRPC().Call(context.TODO(), "Set", s.session.SessionId, s.session.SessionId, key, value)
 	if err != nil {
 		return fmt.Errorf("Call Gate serverId(%v) 'Set' err:%v", s.session.ServerId, err)
 	}
@@ -355,7 +355,7 @@ func (s *sessionAgent) ToSetBatch(settings map[string]string) error {
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
-	result, err := server.Call(context.TODO(), "Push", s.session.SessionId, settings)
+	result, err := server.GetRPC().Call(context.TODO(), "Push", s.session.SessionId, settings)
 	if err != nil {
 		return fmt.Errorf("Call Gate serverId(%v) 'Push' err:%v", s.session.ServerId, err)
 	}
@@ -380,7 +380,7 @@ func (s *sessionAgent) ToPush() error {
 		tmp[k] = v
 	}
 	s.lock.Unlock()
-	result, err := server.Call(context.TODO(), "Push", s.session.SessionId, tmp)
+	result, err := server.GetRPC().Call(context.TODO(), "Push", s.session.SessionId, tmp)
 	if err != nil {
 		return fmt.Errorf("Call Gate serverId(%v) 'Push' err:%v", s.session.ServerId, err)
 	}
@@ -399,7 +399,7 @@ func (s *sessionAgent) ToDel(key string) error {
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
-	result, err := server.Call(context.TODO(), "Del", s.session.SessionId, key)
+	result, err := server.GetRPC().Call(context.TODO(), "Del", s.session.SessionId, key)
 	if err != nil {
 		return fmt.Errorf("Call Gate serverId(%v) 'Remove' err:%v", s.session.ServerId, err)
 	}
@@ -418,7 +418,7 @@ func (s *sessionAgent) ToSend(topic string, body []byte) error {
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
-	return server.CallNR(context.TODO(), "Send", s.session.SessionId, topic, body)
+	return server.GetRPC().CallNR(context.TODO(), "Send", s.session.SessionId, topic, body)
 }
 
 // the session is connect status
@@ -430,7 +430,7 @@ func (s *sessionAgent) ToConnected() (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
-	result, err := server.Call(context.TODO(), "Connected", s.session.SessionId)
+	result, err := server.GetRPC().Call(context.TODO(), "Connected", s.session.SessionId)
 	return result.(bool), err
 }
 
@@ -443,7 +443,7 @@ func (s *sessionAgent) ToClose() error {
 	if err != nil {
 		return fmt.Errorf("Gate not found serverId(%s), err:%v", s.session.ServerId, err)
 	}
-	return server.CallNR(context.TODO(), "Close", s.session.SessionId)
+	return server.GetRPC().CallNR(context.TODO(), "Close", s.session.SessionId)
 }
 
 // ========== mqrpc.Marshaler 接口

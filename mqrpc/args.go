@@ -70,7 +70,7 @@ func ArgToData(arg any) (string, []byte, error) {
 			}
 
 			// can Marshaler value
-			_v, _ok := v.(Marshaler)
+			_v, _ok := v.(IMarshaler)
 			if _ok {
 				b, err := _v.Marshal()
 				if err != nil {
@@ -98,7 +98,7 @@ func ArgToData(arg any) (string, []byte, error) {
 		}
 
 		// 1 struct for mqrpc.Marshaler
-		if v2, ok := arg.(Marshaler); ok {
+		if v2, ok := arg.(IMarshaler); ok {
 			b, err := v2.Marshal()
 			if err != nil {
 				return "", nil, fmt.Errorf("args [%s] marshal error %v", reflect.TypeOf(arg), err)

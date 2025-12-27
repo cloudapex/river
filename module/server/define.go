@@ -20,7 +20,7 @@ type Server interface {
 
 	Register(id string, f any)   // 注册RPC方法
 	RegisterGO(id string, f any) // 注册RPC方法
-	SetListener(listener mqrpc.RPCListener)
+	SetListener(listener mqrpc.IRPCListener)
 	ServiceRegister() error   // 向Registry注册自己
 	ServiceDeregister() error // 向Registry注销自己
 

@@ -265,7 +265,7 @@ func (this *GateBase) defaultRecvPackHandler(session gate.ISession, pack *gate.P
 		return fmt.Errorf("Service(moduleType:%s) not found", moduleTyp)
 	}
 
-	return server.CallNR(session.GenRPCContext(), gate.RPC_CLIENT_MSG, msgId, pack.Body)
+	return server.GetRPC().CallNR(session.GenRPCContext(), gate.RPC_CLIENT_MSG, msgId, pack.Body)
 }
 
 // --------------- FunSendMessageHook

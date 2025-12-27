@@ -18,7 +18,7 @@ type Service struct {
 	// topic
 	Topic string // {server}_{msg_id}
 	// node
-	SrvSession app.IModuleServerSession
+	Server app.IModuleServerSession
 }
 
 // Router 路由器定义
@@ -66,5 +66,5 @@ var DefaultRoute = func(r *http.Request) (*Service, error) {
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
-	return &Service{SrvSession: session, Topic: r.URL.Path}, err
+	return &Service{Server: session, Topic: r.URL.Path}, err
 }

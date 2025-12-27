@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
-var functions = map[string]*FunctionInfo{}
+var functions = map[string]*MethodInfo{}
 
 func init() {
 	registerFun("rpc", onRPCFunc)
@@ -71,7 +71,7 @@ func registerFun(id string, f any) {
 		panic(fmt.Sprintf("function id %v: already registered", id))
 	}
 
-	finfo := &FunctionInfo{
+	finfo := &MethodInfo{
 		Function:  reflect.ValueOf(f),
 		FuncType:  reflect.ValueOf(f).Type(),
 		Goroutine: true,

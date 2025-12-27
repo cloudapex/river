@@ -16,21 +16,21 @@ import (
 
 type RPCServer struct {
 	module         app.IModule
-	functions      map[string]*mqrpc.FunctionInfo
+	methods        map[string]*mqrpc.MethodInfo
 	nats_server    *NatsServer
 	mq_chan        chan mqrpc.CallInfo //接收到请求信息的队列
 	wg             sync.WaitGroup      //任务阻塞
 	call_chan_done chan error
-	listener       mqrpc.RPCListener
-	control        mqrpc.GoroutineControl //控制模块可同时开启的最大协程数
-	executing      int64                  //正在执行的goroutine数量
+	listener       mqrpc.IRPCListener
+	control        mqrpc.IGoroutineControl //控制模块可同时开启的最大协程数
+	executing      int64                   //正在执行的goroutine数量
 }
 
-func NewRPCServer(module app.IModule) (mqrpc.RPCServer, error) {
+func NewRPCServer(module app.IModule) (mqrpc.IRPCServer, error) {
 	rpc_server := new(RPCServer)
 	rpc_server.module = module
 	rpc_server.call_chan_done = make(chan error)
-	rpc_server.functions = make(map[string]*mqrpc.FunctionInfo)
+	rpc_server.methods = make(map[string]*mqrpc.MethodInfo)
 	rpc_server.mq_chan = make(chan mqrpc.CallInfo)
 
 	nats_server, err := NewNatsServer(rpc_server)
@@ -51,10 +51,10 @@ func (s *RPCServer) Addr() string {
 	return s.nats_server.Addr()
 }
 
-func (s *RPCServer) SetListener(listener mqrpc.RPCListener) {
+func (s *RPCServer) SetListener(listener mqrpc.IRPCListener) {
 	s.listener = listener
 }
-func (s *RPCServer) SetGoroutineControl(control mqrpc.GoroutineControl) {
+func (s *RPCServer) SetGoroutineControl(control mqrpc.IGoroutineControl) {
 	s.control = control
 }
 
@@ -66,13 +66,13 @@ func (s *RPCServer) GetExecuting() int64 {
 	return s.executing
 }
 
-// you must call the function before calling Open and Go
+// you must call the method before calling Open and Go
 func (s *RPCServer) Register(id string, f any) {
 
-	if _, ok := s.functions[id]; ok {
-		panic(fmt.Sprintf("function id %v: already registered", id))
+	if _, ok := s.methods[id]; ok {
+		panic(fmt.Sprintf("method id %v: already registered", id))
 	}
-	finfo := &mqrpc.FunctionInfo{
+	finfo := &mqrpc.MethodInfo{
 		Function:  reflect.ValueOf(f),
 		FuncType:  reflect.ValueOf(f).Type(),
 		Goroutine: false,
@@ -83,18 +83,18 @@ func (s *RPCServer) Register(id string, f any) {
 		rv := finfo.FuncType.In(i)
 		finfo.InType = append(finfo.InType, rv)
 	}
-	s.functions[id] = finfo
+	s.methods[id] = finfo
 
 }
 
-// you must call the function before calling Open and Go
+// you must call the method before calling Open and Go
 func (s *RPCServer) RegisterGO(id string, f any) {
 
-	if _, ok := s.functions[id]; ok {
-		panic(fmt.Sprintf("function id %v: already registered", id))
+	if _, ok := s.methods[id]; ok {
+		panic(fmt.Sprintf("method id %v: already registered", id))
 	}
 
-	finfo := &mqrpc.FunctionInfo{
+	finfo := &mqrpc.MethodInfo{
 		Function:  reflect.ValueOf(f),
 		FuncType:  reflect.ValueOf(f).Type(),
 		Goroutine: true,
@@ -105,7 +105,7 @@ func (s *RPCServer) RegisterGO(id string, f any) {
 		rv := finfo.FuncType.In(i)
 		finfo.InType = append(finfo.InType, rv)
 	}
-	s.functions[id] = finfo
+	s.methods[id] = finfo
 }
 
 func (s *RPCServer) Done() (err error) {
@@ -145,7 +145,7 @@ func (s *RPCServer) Call(callInfo *mqrpc.CallInfo) error {
 func (s *RPCServer) doCallback(callInfo *mqrpc.CallInfo) {
 	if callInfo.RPCInfo.Reply {
 		//需要回复的才回复
-		err := callInfo.Agent.(mqrpc.MQServer).Callback(callInfo)
+		err := callInfo.Agent.(mqrpc.IMQServer).Callback(callInfo)
 		if err != nil {
 			log.Warning("rpc callback erro :\n%s", err.Error())
 		}
@@ -187,10 +187,10 @@ func (s *RPCServer) _errorCallback(start time.Time, callInfo *mqrpc.CallInfo, Ci
 	}
 }
 
-func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, callInfo *mqrpc.CallInfo) {
-	f := functionInfo.Function
-	fType := functionInfo.FuncType
-	fInType := functionInfo.InType
+func (s *RPCServer) _runFunc(start time.Time, methodInfo *mqrpc.MethodInfo, callInfo *mqrpc.CallInfo) {
+	f := methodInfo.Function
+	fType := methodInfo.FuncType
+	fInType := methodInfo.InType
 	params := callInfo.RPCInfo.Args
 	ArgsType := callInfo.RPCInfo.ArgsType
 	if len(params) != fType.NumIn() {
@@ -288,7 +288,7 @@ func (s *RPCServer) _runFunc(start time.Time, functionInfo *mqrpc.FunctionInfo, 
 	}
 
 	if s.listener != nil {
-		errs := s.listener.BeforeHandle(callInfo.RPCInfo.Fn, callInfo)
+		errs := s.listener.OnBeforeHandle(callInfo.RPCInfo.Fn, callInfo)
 		if errs != nil {
 			s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, errs.Error())
 			return
@@ -368,20 +368,20 @@ func (s *RPCServer) runFunc(callInfo *mqrpc.CallInfo) {
 		//协程数量达到最大限制
 		s.control.Wait()
 	}
-	functionInfo, ok := s.functions[callInfo.RPCInfo.Fn]
+	methodInfo, ok := s.methods[callInfo.RPCInfo.Fn]
 	if !ok {
 		if s.listener != nil {
-			fInfo, err := s.listener.NoFoundFunction(callInfo.RPCInfo.Fn)
+			fInfo, err := s.listener.OnMethodNotFound(callInfo.RPCInfo.Fn)
 			if err != nil {
 				s._errorCallback(start, callInfo, callInfo.RPCInfo.Cid, err.Error())
 				return
 			}
-			functionInfo = fInfo
+			methodInfo = fInfo
 		}
 	}
-	if functionInfo.Goroutine {
-		go s._runFunc(start, functionInfo, callInfo)
+	if methodInfo.Goroutine {
+		go s._runFunc(start, methodInfo, callInfo)
 	} else {
-		s._runFunc(start, functionInfo, callInfo)
+		s._runFunc(start, methodInfo, callInfo)
 	}
 }
