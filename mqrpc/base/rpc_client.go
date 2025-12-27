@@ -10,7 +10,7 @@ import (
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/mqrpc"
 	"github.com/cloudapex/river/mqrpc/core"
-	"github.com/cloudapex/river/tools/uuid"
+	"github.com/google/uuid"
 )
 
 type RPCClient struct {
@@ -76,7 +76,7 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 	}
 
 	start := time.Now()
-	var correlation_id = uuid.Rand().Hex()
+	var correlation_id = uuid.New().String()
 	rpcInfo := &core.RPCInfo{
 		Fn:       _func,
 		Reply:    true,
@@ -175,7 +175,7 @@ func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argTypes []str
 		}
 	}
 
-	var correlation_id = uuid.Rand().Hex()
+	var correlation_id = uuid.New().String()
 	rpcInfo := &core.RPCInfo{
 		Fn:       _func,
 		Reply:    false,

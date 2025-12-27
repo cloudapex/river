@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/cloudapex/river/mqrpc/core"
-	"github.com/cloudapex/river/tools/uuid"
+	"github.com/google/uuid"
 )
 
 var functions = map[string]*FunctionInfo{}
@@ -105,7 +105,7 @@ func call(ctx context.Context, _func string, params ...any) (any, error) {
 		}
 	}
 	start := time.Now()
-	var correlation_id = uuid.Rand().Hex()
+	var correlation_id = uuid.New().String()
 	rpcInfo := &core.RPCInfo{
 		Fn:       (_func),
 		Reply:    (true),
