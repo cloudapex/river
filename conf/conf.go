@@ -13,11 +13,11 @@ import (
 var Conf = Config{}
 
 // LoadConfig 加载本地配置
-func LoadConfig(Path string) {
-	fmt.Println("app configuration path :", Path)
+func LoadConfig(path string) {
+	fmt.Println("app configuration path :", path)
 
 	// Read config
-	if err := readFileInto(Path); err != nil {
+	if err := readFileInto(path); err != nil {
 		panic(err)
 	}
 }

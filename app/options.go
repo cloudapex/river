@@ -105,9 +105,9 @@ func NewOptions(opts ...Option) Options {
 		opt.ConfigKey = fmt.Sprintf("config/%v/server", startArgs.ProcessEnv)
 	}
 
-	// 创建日志文件
-	defaultLogPath := fmt.Sprintf("%s/bin/logs", appWorkDirPath)
-	defaultBIPath := fmt.Sprintf("%s/bin/bi", appWorkDirPath)
+	// 创建日志目录
+	defaultLogPath := fmt.Sprintf("%s/logs", appWorkDirPath)
+	defaultBIPath := fmt.Sprintf("%s/logBI", appWorkDirPath)
 	if opt.LogDir == "" {
 		opt.LogDir = startArgs.LogPath
 		if opt.LogDir == "" {
@@ -152,8 +152,8 @@ type Options struct {
 	ProcessEnv  string   // 进程分组名称(from startUpArgs.ProcessEnv)
 	ConfigKey   string   // consul configKey(default: config/{env}/server)
 	ConsulAddr  []string // consul addr(from startUpArgs.ConsulAddr)
-	LogDir      string   // Log目录(from startUpArgs.LogPath default: ./bin/logs)
-	BIDir       string   // BI目录(from startUpArgs.BiPath default: ./bin/bi)
+	LogDir      string   // Log目录(from startUpArgs.LogPath default: ./logs)
+	BIDir       string   // BI目录(from startUpArgs.BiPath default: ./logBI)
 	PProfAddr   string
 	KillWaitTTL time.Duration // 服务关闭超时强杀(60s)
 
