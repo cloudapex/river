@@ -181,26 +181,15 @@ docker run -d --name consul -p 8500:8500 consul:latest
 
 ```json
 {
-  "Nats": {
-    "Addr": "127.0.0.1:4222",
-    "MaxReconnects": 100
-  },
-  "Log": {
-    "console": {
-      "level": "debug"
-    }
-  },
+  "RpcLog": true,
   "Module": {
-    "Gate": [
+    "gate": [
       {
         "ID": "gate-1",
         "ProcessEnv": "dev",
         "Settings": {
-          "TCPAddr": ":3653",
-          "WsAddr": ":3654",
-          "TLS": false,
-          "HeartOverTimer": "60s",
-          "MaxPackSize": 65535
+          "TCPAddr": ":8091",
+          "WsAddr": ":8092"
         }
       }
     ],
@@ -209,14 +198,26 @@ docker run -d --name consul -p 8500:8500 consul:latest
         "ID": "hapi-1",
         "ProcessEnv": "dev",
         "Settings": {
-          "Addr": ":8090",
-          "TLS": false,
-          "ReadTimeout": "5s",
-          "WriteTimeout": "10s",
-          "IdleTimeout": "60s"
+          "Addr": ":8088"
         }
       }
     ]
+  },
+  "Nats": {
+    "Addr": "127.0.0.1:4222",
+    "MaxReconnects": 1000
+  },
+  "BI": {
+    "file": {
+      "prefix": "",
+      "suffix": ".log"
+    }
+  },
+  "Log": {
+    "file": {
+      "prefix": "",
+      "suffix": ".log"
+    }
   }
 }
 ```
