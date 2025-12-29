@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/cloudapex/river/mqrpc/core"
+	"github.com/cloudapex/river/tools"
 	"github.com/google/uuid"
 )
 
@@ -62,6 +63,25 @@ func TestBytes(t *testing.T) {
 	ret := &out{}
 	err = MsgPack(ret, RpcResult(call(context.TODO(), "rpc3", context.Background(), (*user)(nil) /*&user{X: 1, N: 2, S: "str"}*/, map[string]string{"a": "b"})))
 	t.Log("rpc3", ret, err)
+
+	jsBytes, err := tools.JSONToMsgPack(`{
+		"acct_id": "test_account",
+		"login_token": "test_token",
+		"device_id": "device_123",
+		"device_name": "chrome"
+		}`)
+	t.Log("rpc4 1", len(jsBytes), err)
+	req := HallLoginReq{}
+	err = MsgPack(&req, RpcResult(jsBytes, nil))
+	t.Log("rpc4 2", req, err)
+
+}
+
+type HallLoginReq struct {
+	AcctID     string `msgpack:"acct_id"`     // 账号ID
+	LoginToken string `msgpack:"login_token"` // 登陆令牌
+	DeviceId   string `msgpack:"device_id"`   // 设备号
+	DeviceName string `msgpack:"device_name"` // 设备名(edge,android,chrome,...)
 }
 
 // register

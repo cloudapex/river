@@ -1,6 +1,7 @@
 package rpcbase
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"runtime"
@@ -172,7 +173,7 @@ func (s *RPCServer) doCallback(callInfo *mqrpc.CallInfo) {
 
 func (s *RPCServer) _errorCallback(start time.Time, callInfo *mqrpc.CallInfo, Cid string, Error string) {
 	//异常日志都应该打印
-	//log.TError(span, "rpc Exec ModuleType = %v Func = %v Elapsed = %v ERROR:\n%v", s.module.GetType(), callInfo.RPCInfo.Fn, time.Since(start), Error)
+	//log.TError(span, "rpc Exec ModuleType = %v, Func = %v, Elapsed = %v, ERROR:\n%v", s.module.GetType(), callInfo.RPCInfo.Fn, time.Since(start), Error)
 	resultInfo := &core.ResultInfo{
 		Cid:        Cid,
 		Error:      Error,
@@ -183,7 +184,11 @@ func (s *RPCServer) _errorCallback(start time.Time, callInfo *mqrpc.CallInfo, Ci
 	callInfo.ExecTime = time.Since(start).Nanoseconds()
 	s.doCallback(callInfo)
 	if s.listener != nil {
-		s.listener.OnError(callInfo.RPCInfo.Fn, callInfo, fmt.Errorf(Error))
+		var err error
+		if Error != "" {
+			err = errors.New(Error)
+		}
+		s.listener.OnError(callInfo.RPCInfo.Fn, callInfo, err)
 	}
 }
 
@@ -339,7 +344,7 @@ func (s *RPCServer) _runFunc(start time.Time, methodInfo *mqrpc.MethodInfo, call
 	callInfo.ExecTime = time.Since(start).Nanoseconds()
 	s.doCallback(callInfo)
 	if app.App().Config().RpcLog {
-		log.TInfo(traceSpan, "rpc Exec ModuleType = %v Func = %v Elapsed = %v", s.module.GetType(), callInfo.RPCInfo.Fn, time.Since(start))
+		log.TInfo(traceSpan, "rpc Exec ModuleType = %v, Func = %v, Elapsed = %v", s.module.GetType(), callInfo.RPCInfo.Fn, time.Since(start))
 	}
 	if s.listener != nil {
 		s.listener.OnComplete(callInfo.RPCInfo.Fn, callInfo, resultInfo, time.Since(start).Nanoseconds())

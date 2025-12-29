@@ -2,6 +2,7 @@ package rpcbase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -88,7 +89,7 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 	defer func() { // 全局监控(调用方)
 		if app.App().Config().RpcLog { // 打印调用日志
 			span, _ := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
-			log.TInfo(span, "rpc Call ServerId = %v Func = %v Elapsed = %v Result = %v ERROR = %v",
+			log.TInfo(span, "rpc Call ServerId = %v, Func = %v, Elapsed = %v, Result = %v, ERROR = %v",
 				c.nats_client.session.GetID(), _func, time.Since(start), result, err)
 		}
 		if handle := app.App().Options().ClientRPCHandler; handle != nil {
@@ -122,7 +123,10 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 		if err != nil {
 			return nil, err
 		}
-		return result, fmt.Errorf(resultInfo.Error)
+		if resultInfo.Error == "" {
+			return result, nil
+		}
+		return result, errors.New(resultInfo.Error)
 
 	case <-ctx.Done(): // 超时
 		_ = c.nats_client.Delete(rpcInfo.Cid)
@@ -184,7 +188,7 @@ func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argTypes []str
 	defer func() { // 全局监控(调用方)
 		if app.App().Config().RpcLog { // 打印调用日志
 			span, _ := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
-			log.TInfo(span, "rpc CallNR ServerId = %v Func = %v Elapsed = %v Result = %v ERROR = %v",
+			log.TInfo(span, "rpc CallNR ServerId = %v, Func = %v, Elapsed = %v, Result = %v, ERROR = %v",
 				c.nats_client.session.GetID(), _func, 0, nil, err)
 		}
 		if handle := app.App().Options().ClientRPCHandler; handle != nil {

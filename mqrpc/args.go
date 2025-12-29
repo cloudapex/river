@@ -143,7 +143,6 @@ func DataToArg(argType string, argData []byte) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		ctx := context.Background()
 		for k, v := range mps {
 			makefun := getTranslatableCtxValMakeFun(k)

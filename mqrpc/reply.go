@@ -1,6 +1,7 @@
 package mqrpc
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"reflect"
@@ -42,7 +43,7 @@ func Int(reply any, err error) (int, error) {
 	case nil:
 		return 0, ErrNil
 	}
-	return 0, fmt.Errorf("mqrpc: unexpected type for Int, got type %T", reply)
+	return 0, fmt.Errorf("mqrpc: unexpected type want Int, got type %T", reply)
 }
 
 // Int64 is a helper that converts a command reply to 64 bit integer. If err is
@@ -65,7 +66,7 @@ func Int64(reply any, err error) (int64, error) {
 	case nil:
 		return 0, ErrNil
 	}
-	return 0, fmt.Errorf("mqrpc: unexpected type for Int64, got type %T", reply)
+	return 0, fmt.Errorf("mqrpc: unexpected type want Int64, got type %T", reply)
 }
 
 // Float64 is a helper that converts a command reply to 64 bit float. If err is
@@ -87,7 +88,7 @@ func Float64(reply any, err error) (float64, error) {
 	case nil:
 		return 0, ErrNil
 	}
-	return 0, fmt.Errorf("mqrpc: unexpected type for Float64, got type %T", reply)
+	return 0, fmt.Errorf("mqrpc: unexpected type want Float64, got type %T", reply)
 }
 
 // String is a helper that converts a command reply to a string. If err is not
@@ -110,7 +111,7 @@ func String(reply any, err error) (string, error) {
 	case nil:
 		return "", ErrNil
 	}
-	return "", fmt.Errorf("mqrpc: unexpected type for String, got type %T", reply)
+	return "", fmt.Errorf("mqrpc: unexpected type want String, got type %T", reply)
 }
 
 // Bytes is a helper that converts a command reply to a slice of bytes. If err
@@ -132,7 +133,7 @@ func Bytes(reply any, err error) ([]byte, error) {
 	case nil:
 		return nil, ErrNil
 	}
-	return nil, fmt.Errorf("mqrpc: unexpected type for Bytes, got type %T", reply)
+	return nil, fmt.Errorf("mqrpc: unexpected type want Bytes, got type %T", reply)
 }
 
 func Bool(reply any, err error) (bool, error) {
@@ -146,7 +147,7 @@ func Bool(reply any, err error) (bool, error) {
 	case nil:
 		return false, ErrNil
 	}
-	return false, fmt.Errorf("mqrpc: unexpected type for Bool, got type %T", reply)
+	return false, fmt.Errorf("mqrpc: unexpected type want Bool, got type %T", reply)
 }
 
 // JsMap JsMap
@@ -161,7 +162,7 @@ func JsMap(reply any, err error) (map[string]any, error) {
 	case nil:
 		return nil, ErrNil
 	}
-	return nil, fmt.Errorf("mqrpc: unexpected type for Bool, got type %T", reply)
+	return nil, fmt.Errorf("mqrpc: unexpected type want JsMap, got type %T", reply)
 }
 
 // Marshal Marshal
@@ -171,25 +172,26 @@ func Marshal(pObj any, ret callResult) error {
 	}
 
 	rv := reflect.ValueOf(pObj)
-	if rv.Kind() != reflect.Ptr {
-		//不是指针
+	if rv.Kind() != reflect.Ptr { // 不是指针报错
 		return fmt.Errorf("pObj [%v] not *mqrpc.marshaler pointer type", rv.Type())
 	}
 	if v2, ok := pObj.(IMarshaler); ok {
 		switch r := ret.Reply.(type) {
 		case []byte:
-			err := v2.Unmarshal(r)
+			return v2.Unmarshal(r)
+		case string:
+			decoded, err := base64.StdEncoding.DecodeString(r)
 			if err != nil {
 				return err
 			}
-			return nil
+			return v2.Unmarshal(decoded)
 		case nil:
 			return ErrNil
 		}
 	} else {
 		return fmt.Errorf("pObj [%v] not *mqrpc.marshaler type", rv.Type())
 	}
-	return fmt.Errorf("mqrpc: unexpected type for %v, got type %T", reflect.ValueOf(ret.Reply), ret.Reply)
+	return fmt.Errorf("mqrpc: unexpected type want Marshal(obj), got type %T", ret.Reply)
 }
 
 // MsgPack MsgPack
@@ -199,7 +201,7 @@ func MsgPack(pObj any, ret callResult) error {
 	}
 
 	rv := reflect.ValueOf(pObj)
-	if rv.Kind() != reflect.Ptr { //不是指针
+	if rv.Kind() != reflect.Ptr { //不是指针报错
 		return fmt.Errorf("pObj [%v] not struct pointer type", rv.Type())
 	}
 
@@ -212,11 +214,15 @@ func MsgPack(pObj any, ret callResult) error {
 	case nil:
 		return ErrNil
 	}
-	return fmt.Errorf("mqrpc: unexpected type for %v, got type %T", reflect.ValueOf(ret.Reply), ret.Reply)
+	return fmt.Errorf("mqrpc: unexpected type want MsgPack([]byte), got type %T", reflect.ValueOf(ret.Reply).Type())
 }
 
 // MsgJson MsgJson
 func MsgJson(reply any, err error) (string, error) {
+	if err != nil {
+		return "", err
+	}
+
 	switch r := reply.(type) {
 	case []byte:
 		js_data, err := tools.MsgPackToJSON(r)
@@ -227,5 +233,5 @@ func MsgJson(reply any, err error) (string, error) {
 	case nil:
 		return "", ErrNil
 	}
-	return "", fmt.Errorf("mqrpc: unexpected type for []byte, got type %T", reply)
+	return "", fmt.Errorf("mqrpc: unexpected type want MsgJson([]byte), got type %T", reply)
 }
