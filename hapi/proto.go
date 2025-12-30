@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	RPC_CONTEXT_KEY_HEADER = "rcx_header" // 定义需要RPC传输session的ContextKey
+	RPC_CONTEXT_KEY_HEADER = "rtx_header" // 定义需要RPC传输session的ContextKey
 )
 
 // get Header from context

@@ -12,7 +12,7 @@ import (
 type Error struct {
 	Id     string `json:"id"`
 	Code   int32  `json:"code"`
-	Detail string `json:"detail"`
+	Detail string `json:"err"` // old : detail
 	Status string `json:"status"`
 }
 

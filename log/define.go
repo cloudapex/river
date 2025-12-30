@@ -10,7 +10,7 @@ import (
 )
 
 // 定义需要RPC传输session的ContextKey
-const RPC_CONTEXT_KEY_TRACE = "rcx_trace"
+const RPC_CONTEXT_KEY_TRACE = "rtx_trace"
 
 // get TraceSpan from context
 func GetContextTrace(ctx context.Context) TraceSpan {
