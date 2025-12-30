@@ -87,9 +87,9 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 	}
 
 	defer func() { // 全局监控(调用方)
-		if app.App().Config().RpcLog { // 打印调用日志
+		if app.App().Config().RpcLog || err != nil { // 打印调用日志
 			span, _ := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
-			log.TInfo(span, "rpc Call ServerId = %v, Func = %v, Elapsed = %v, Result = <%T-val:%v>, ERROR = %v",
+			log.TInfo(span, "rpc Call ServerId = %v, Func = %v, Elapsed = %v, Result = <%T-val:%v>, Error = %v",
 				c.nats_client.session.GetID(), _func, time.Since(start), result, result != nil, err)
 		}
 		if handle := app.App().Options().ClientRPCHandler; handle != nil {
@@ -186,9 +186,9 @@ func (c *RPCClient) CallNRArgs(ctx context.Context, _func string, argTypes []str
 	}
 
 	defer func() { // 全局监控(调用方)
-		if app.App().Config().RpcLog { // 打印调用日志
+		if app.App().Config().RpcLog || err != nil { // 打印调用日志
 			span, _ := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
-			log.TInfo(span, "rpc CallNR ServerId = %v, Func = %v, Elapsed = %v, Result = <%T-val:%v>, ERROR = %v",
+			log.TInfo(span, "rpc CallNR ServerId = %v, Func = %v, Elapsed = %v, Result = <%T-val:%v>, Error = %v",
 				c.nats_client.session.GetID(), _func, 0, nil, false, err)
 		}
 		if handle := app.App().Options().ClientRPCHandler; handle != nil {

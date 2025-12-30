@@ -172,9 +172,7 @@ func (s *RPCServer) doCallback(callInfo *mqrpc.CallInfo) {
 }
 
 func (s *RPCServer) _errorCallback(start time.Time, callInfo *mqrpc.CallInfo, Cid string, Error string) {
-	if app.App().Config().RpcLog {
-		log.TError(nil, "rpc Exec ModuleType = %v, Func = %v, Elapsed = %v, ERROR:\n%v", s.module.GetType(), callInfo.RPCInfo.Fn, time.Since(start), Error)
-	}
+	log.TError(nil, "rpc Exec ModuleType = %v, Func = %v, Elapsed = %v, Error:\n%v", s.module.GetType(), callInfo.RPCInfo.Fn, time.Since(start), Error)
 
 	resultInfo := &core.ResultInfo{
 		Cid:        Cid,
@@ -347,7 +345,7 @@ func (s *RPCServer) _runFunc(start time.Time, methodInfo *mqrpc.MethodInfo, call
 	callInfo.ExecTime = time.Since(start).Nanoseconds()
 	s.doCallback(callInfo)
 	if app.App().Config().RpcLog {
-		log.TInfo(nil, "rpc Exec ModuleType = %v, Func = %v, Result = len(%v) Error = %v Elapsed = %v", s.module.GetType(), callInfo.RPCInfo.Fn, len(resultInfo.Result), resultInfo.Error, time.Since(start))
+		log.TInfo(nil, "rpc Exec ModuleType = %v, Func = %v, Elapsed = %v, Result = len(%v), Error = %v", s.module.GetType(), callInfo.RPCInfo.Fn, time.Since(start), len(resultInfo.Result), resultInfo.Error)
 	}
 	if s.listener != nil {
 		s.listener.OnComplete(callInfo.RPCInfo.Fn, callInfo, resultInfo, time.Since(start).Nanoseconds())
