@@ -147,7 +147,7 @@ func NewOptions(opts ...Option) Options {
 type Options struct {
 	Version     string   // app的版本
 	Debug       bool     // 是否打印日志到控制台(true)
-	Parse       bool     // 是否由框架解析启动环境变量,默认为true
+	Parse       bool     // 是否由框架解析启动环境变量(true)
 	WorkDir     string   // 工作目录(from startUpArgs.WordDir)
 	ProcessEnv  string   // 进程分组名称(from startUpArgs.ProcessEnv)
 	ConfigKey   string   // consul configKey(default: config/{env}/server)

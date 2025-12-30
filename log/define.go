@@ -13,7 +13,7 @@ import (
 const RPC_CONTEXT_KEY_TRACE = "rtx_trace"
 
 // get TraceSpan from context
-func GetContextTrace(ctx context.Context) TraceSpan {
+func ContextValTrace(ctx context.Context) TraceSpan {
 	traceSpan, ok := ctx.Value(RPC_CONTEXT_KEY_TRACE).(TraceSpan)
 	if !ok {
 		return nil

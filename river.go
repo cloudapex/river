@@ -26,7 +26,7 @@ import (
 // CreateApp 创建应用
 func CreateApp(opts ...app.Option) app.IApp {
 	return app.App(&DefaultApp{
-		opts:    app.NewOptions(opts...),
+		opts:    app.NewOptions(append(opts, app.Version(version))...),
 		manager: module.NewModuleManager(),
 	})
 }

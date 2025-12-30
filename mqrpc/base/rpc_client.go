@@ -65,6 +65,7 @@ func (c *RPCClient) Call(ctx context.Context, _func string, params ...any) (any,
 func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []string, argDatas [][]byte) (any, error) {
 	var err error
 	var result any
+	var result_info = core.ResultInfo{ResultType: "unknown", Result: nil}
 
 	caller, _ := os.Hostname()
 	if ctx != nil {
@@ -89,8 +90,8 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 	defer func() { // 全局监控(调用方)
 		if app.App().Config().RpcLog || err != nil { // 打印调用日志
 			span, _ := ctx.Value(log.RPC_CONTEXT_KEY_TRACE).(log.TraceSpan)
-			log.TInfo(span, "rpc Call ServerId = %v, Func = %v, Elapsed = %v, Result = <%T-val:%v>, Error = %v",
-				c.nats_client.session.GetID(), _func, time.Since(start), result, result != nil, err)
+			log.TInfo(span, "rpc Call ServerId = %v, Func = %v, Elapsed = %v, Result = <%s-len:%d>, Error = %v",
+				c.nats_client.session.GetID(), _func, time.Since(start), result_info.ResultType, len(result_info.Result), err)
 		}
 		if handle := app.App().Options().ClientRPCHandler; handle != nil {
 			handle(*c.nats_client.session.GetNode(), rpcInfo, result, err, time.Since(start).Nanoseconds())
@@ -119,6 +120,7 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 		if !ok {
 			return nil, fmt.Errorf("client closed")
 		}
+		result_info = *resultInfo
 		result, err = mqrpc.DataToArg(resultInfo.ResultType, resultInfo.Result)
 		if err != nil {
 			return nil, err

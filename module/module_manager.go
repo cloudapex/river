@@ -8,15 +8,8 @@ import (
 	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/conf"
 	"github.com/cloudapex/river/log"
-	"github.com/cloudapex/river/mqrpc"
 	"github.com/cloudapex/river/tools"
 )
-
-func init() {
-	mqrpc.RegTranslatableCtxKey(log.RPC_CONTEXT_KEY_TRACE, func() mqrpc.IMarshaler {
-		return log.CreateRootTrace()
-	})
-}
 
 // NewModuleManager 新建模块管理器
 func NewModuleManager() *ModuleManager {

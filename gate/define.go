@@ -31,7 +31,7 @@ type Pack struct {
 }
 
 // get session from context
-func GetContextSession(ctx context.Context) ISession {
+func ContextValSession(ctx context.Context) ISession {
 	session, ok := ctx.Value(RPC_CONTEXT_KEY_SESSION).(ISession)
 	if !ok {
 		return nil

@@ -3,8 +3,11 @@ package mqrpc
 import (
 	"context"
 	"sync"
+
+	"github.com/cloudapex/river/log"
 )
 
+// Context value 复合类型的创建函数
 type FunMakeCtxValue func() IMarshaler
 
 // 支持rpc trans的Context Keys
@@ -12,6 +15,13 @@ var (
 	contextKeysMutex    sync.RWMutex
 	translatableCtxKeys = map[string]FunMakeCtxValue{}
 )
+
+// 默认注册log.RPC_CONTEXT_KEY_TRACE
+func init() {
+	RegTranslatableCtxKey(log.RPC_CONTEXT_KEY_TRACE, func() IMarshaler {
+		return log.CreateRootTrace()
+	})
+}
 
 // 使用此WithValue方法才能通过Context传递数据
 func ContextWithValue(ctx context.Context, key string, val any) context.Context {
