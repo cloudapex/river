@@ -347,7 +347,7 @@ func (s *RPCServer) _runFunc(start time.Time, methodInfo *mqrpc.MethodInfo, call
 	callInfo.ExecTime = time.Since(start).Nanoseconds()
 	s.doCallback(callInfo)
 	if app.App().Config().RpcLog {
-		log.TInfo(nil, "rpc Exec ModuleType = %v, Func = %v, Result = len(%v) Error = %v Elapsed = %v", s.module.GetType(), callInfo.RPCInfo.Fn, resultInfo, len(resultInfo.Result), resultInfo.Error, time.Since(start))
+		log.TInfo(nil, "rpc Exec ModuleType = %v, Func = %v, Result = len(%v) Error = %v Elapsed = %v", s.module.GetType(), callInfo.RPCInfo.Fn, len(resultInfo.Result), resultInfo.Error, time.Since(start))
 	}
 	if s.listener != nil {
 		s.listener.OnComplete(callInfo.RPCInfo.Fn, callInfo, resultInfo, time.Since(start).Nanoseconds())
@@ -361,7 +361,6 @@ func (s *RPCServer) runFunc(callInfo *mqrpc.CallInfo) {
 		if r := recover(); r != nil {
 			var rn = ""
 			switch r.(type) {
-
 			case string:
 				rn = r.(string)
 			case error:

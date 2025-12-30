@@ -1,5 +1,34 @@
 package hapi
 
+import (
+	"context"
+	"encoding/json"
+)
+
+const (
+	RPC_CONTEXT_KEY_HEADER = "rcx_header" // 定义需要RPC传输session的ContextKey
+)
+
+// get Header from context
+func GetContextHeader(ctx context.Context) map[string]*Pair {
+	out := map[string]*Pair{}
+	val, ok := ctx.Value(RPC_CONTEXT_KEY_HEADER).(map[string]interface{})
+	if !ok {
+		return out
+	}
+	jsonBytes, err := json.Marshal(val)
+	if err != nil {
+		return out
+	}
+
+	err = json.Unmarshal(jsonBytes, &out)
+	if err != nil {
+		return out
+	}
+	return out
+}
+
+// header's value
 type Pair struct {
 	Key    string   `msgpack:"key" json:"key"`
 	Values []string `msgpack:"values,omitempty" json:"values,omitempty"`
