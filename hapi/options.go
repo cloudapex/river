@@ -21,6 +21,8 @@ type Options struct {
 	WriteTimeout   time.Duration
 	IdleTimeout    time.Duration
 	MaxHeaderBytes int
+	DebugKey       string // 调试用(可不用加密调试)
+	EncryptKey     string // 消息包加密key
 
 	Opts []server.Option // 用来控制Module属性的
 }
@@ -118,5 +120,19 @@ func IdleTimeout(timeout time.Duration) Option {
 func MaxHeaderBytes(bytes int) Option {
 	return func(o *Options) {
 		o.MaxHeaderBytes = bytes
+	}
+}
+
+// DebugKey 调试时的key(可不用加密)
+func DebugKey(key string) Option {
+	return func(o *Options) {
+		o.DebugKey = key
+	}
+}
+
+// EncryptKey 设置消息包加密Key
+func EncryptKey(key string) Option {
+	return func(o *Options) {
+		o.EncryptKey = key
 	}
 }

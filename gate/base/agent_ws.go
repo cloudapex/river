@@ -51,7 +51,7 @@ func (this *WSClientAgent) OnReadDecodingPack() (*gate.Pack, error) {
 	// 3 从body中读取msgid长度(2个字节)
 	topicLen := binary.LittleEndian.Uint16(bodyData[0:gate.PACK_HEAD_MSG_ID_LEN_SIZE])
 
-	// 4 取得 string版msg_id 和 msg data
+	// 4 取得 msg_id(string) 和 msg data
 	return &gate.Pack{
 		Topic: string(bodyData[gate.PACK_HEAD_MSG_ID_LEN_SIZE : gate.PACK_HEAD_MSG_ID_LEN_SIZE+topicLen]),
 		Body:  bodyData[gate.PACK_HEAD_MSG_ID_LEN_SIZE+topicLen:],

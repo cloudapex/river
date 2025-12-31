@@ -60,6 +60,10 @@ func (this *HApiBase) Init(subclass app.IRPCModule, settings *conf.ModuleSetting
 		this.opts.MaxHeaderBytes = MaxHeaderBytes.(int)
 	}
 
+	if EncryptKey, ok := settings.Settings["EncryptKey"]; ok {
+		this.opts.EncryptKey = EncryptKey.(string)
+	}
+
 	// 创建路由
 	gin.SetMode(gin.ReleaseMode)
 	this.router = gin.New()
