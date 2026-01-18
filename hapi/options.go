@@ -55,9 +55,9 @@ func Route(s Router) Option {
 }
 
 // RpcHandler 设置rpc处理器
-func Transfers(h Transfer) Option {
+func Transfers(t Transfer) Option {
 	return func(o *Options) {
-		o.Transfer = h
+		o.Transfer = t
 	}
 }
 
