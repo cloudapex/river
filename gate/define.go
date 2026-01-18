@@ -21,7 +21,7 @@ const (
 	PACK_HEAD_MSG_ID_LEN_SIZE      = 2          // 包头中这几个字节存放msgId的长度值
 	PACK_BODY_DEFAULT_SIZE_IN_POOL = 512 * 1024 // 缓存池中定义的缓存区大小
 
-	RPC_CONTEXT_KEY_SESSION = "rtx_session" // 定义需要RPC传输session的ContextKey
+	RPC_CONTEXT_KEY_SESSION = "rtx_session" // 定义需要RPC传输gate.session的ContextKey
 )
 
 // Pack 消息包

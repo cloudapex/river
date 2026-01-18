@@ -60,6 +60,10 @@ func (this *HApiBase) Init(subclass app.IRPCModule, settings *conf.ModuleSetting
 		this.opts.MaxHeaderBytes = MaxHeaderBytes.(int)
 	}
 
+	if DebugKey, ok := settings.Settings["DebugKey"]; ok {
+		this.opts.DebugKey = DebugKey.(string)
+	}
+
 	if EncryptKey, ok := settings.Settings["EncryptKey"]; ok {
 		this.opts.EncryptKey = EncryptKey.(string)
 	}
@@ -72,9 +76,6 @@ func (this *HApiBase) Init(subclass app.IRPCModule, settings *conf.ModuleSetting
 
 	// 创建处理器
 	_handler := NewHandler(this.opts)
-	if this.opts.RpcHandle == nil {
-		this.opts.RpcHandle = _handler.callRpcService
-	}
 	this.router.NoRoute(func(ctx *gin.Context) {
 		// 将 gin.Context 转换为标准 http.ResponseWriter 和 *http.Request
 		_handler.ServeHTTP(ctx.Writer, ctx.Request)

@@ -1,6 +1,7 @@
 package hapi
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -9,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/cloudapex/river/app"
+	"github.com/cloudapex/river/mqrpc"
 	"github.com/cloudapex/river/registry"
 	"github.com/cloudapex/river/selector"
 )
@@ -17,15 +19,12 @@ import (
 type Service struct {
 	// topic
 	Topic string // msg_id
-	// node
+	// module server
 	Server app.IModuleServerSession
 }
 
 // Router 路由器定义
 type Router func(r *http.Request) (*Service, error)
-
-// RPCHandler 函数定义
-type RPCHandler func(service *Service, req *Request, rsp *Response) error
 
 // DefaultRoute 默认路由规则
 var DefaultRoute = func(r *http.Request) (*Service, error) {
@@ -67,4 +66,12 @@ var DefaultRoute = func(r *http.Request) (*Service, error) {
 		return nil, err
 	}
 	return &Service{Server: session, Topic: r.URL.Path}, err
+}
+
+// Transfer 函数定义（Transfer）
+type Transfer func(service *Service, req *Request, rsp *Response) error
+
+// DefaultTransfer 默认请求规则
+var DefaultTransfer = func(service *Service, req *Request, rsp *Response) error {
+	return mqrpc.MsgPack(rsp, mqrpc.RpcResult(service.Server.GetRPC().Call(context.TODO(), service.Topic, req)))
 }

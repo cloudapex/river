@@ -313,7 +313,7 @@ func (s *RPCServer) _runFunc(start time.Time, methodInfo *mqrpc.MethodInfo, call
 			rs[i] = v.Interface()
 		}
 	}
-	// if handler := app.Default().Options().RpcCompleteHandler; handler != nil {
+	// if handler := app.Default().Options().RpcCompleteHook; handler != nil {
 	// 	handler(s.module, callInfo, input, rs, time.Since(start))
 	// }
 	var rerr string

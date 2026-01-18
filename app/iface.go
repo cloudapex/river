@@ -77,7 +77,6 @@ type IModule interface {
 // IRPCModule RPC模块定义
 type IRPCModule interface {
 	IModule
-	//context.Context
 
 	// 模块服务ID
 	GetServerID() string
@@ -116,14 +115,14 @@ type IModuleServerSession interface {
 	SetNode(node *registry.Node) (err error)
 }
 
+// ClientRPCHook 调用方RPC钩子回调
+type ClientRPCHook func(server registry.Node, rpcinfo *core.RPCInfo, result any, err error, exec_time int64)
+
+// ServerRPCHook 服务方RPC钩子回调
+type ServerRPCHook func(module IModule, callInfo *mqrpc.CallInfo)
+
 // FileNameHandler 自定义日志文件名字
 type FileNameHandler func(logdir, prefix, processID, suffix string) string
 
-// ClientRPCHandler 调用方RPC监控
-type ClientRPCHandler func(server registry.Node, rpcinfo *core.RPCInfo, result any, err error, exec_time int64)
-
-// ServerRPCHandler 服务方RPC监控
-type ServerRPCHandler func(module IModule, callInfo *mqrpc.CallInfo)
-
-// ServerRPCHandler 服务方RPC完成监控
-// type RpcCompleteHandler func(module IModule, callInfo *mqrpc.CallInfo, input []any, out []any, execTime time.Duration)
+// RpcCompleteHook 服务方RPC完成监控
+// type RpcCompleteHook func(module IModule, callInfo *mqrpc.CallInfo, input []any, out []any, execTime time.Duration)

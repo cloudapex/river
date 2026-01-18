@@ -1,13 +1,11 @@
 package hapibase
 
 import (
-	"context"
 	"encoding/base64"
 	"fmt"
 	"net/http"
 
 	"github.com/cloudapex/river/hapi"
-	"github.com/cloudapex/river/mqrpc"
 	"github.com/cloudapex/river/tools/aes"
 )
 
@@ -50,7 +48,7 @@ func (h *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	rsp := &hapi.Response{}
-	if err = h.Opts.RpcHandle(service, req, rsp); err != nil {
+	if err = h.Opts.Transfer(service, req, rsp); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		ce := hapi.ParseError(err.Error())
 		switch ce.Code {
@@ -86,11 +84,6 @@ func (h *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(int(rsp.StatusCode))
 	w.Write([]byte(rsp.Body))
-}
-
-// internal RPCHandler
-func (h *HttpHandler) callRpcService(service *hapi.Service, req *hapi.Request, rsp *hapi.Response) error {
-	return mqrpc.MsgPack(rsp, mqrpc.RpcResult(service.Server.GetRPC().Call(context.TODO(), service.Topic, req)))
 }
 
 // decryptRequest ...

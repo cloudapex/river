@@ -11,9 +11,9 @@ type Option func(*Options)
 
 // Options 网关配置项
 type Options struct {
-	Addr           string
-	Route          Router     // 控制如何选择rpc服务
-	RpcHandle      RPCHandler // 控制如何处理api请求
+	Addr           string   // Settings["Addr"]
+	Route          Router   // 控制如何选择rpc服务
+	Transfer       Transfer // 控制如何处理api请求
 	TLS            bool
 	CertFile       string
 	KeyFile        string
@@ -21,8 +21,8 @@ type Options struct {
 	WriteTimeout   time.Duration
 	IdleTimeout    time.Duration
 	MaxHeaderBytes int
-	DebugKey       string // 调试用(可不用加密调试)
-	EncryptKey     string // 消息包加密key
+	DebugKey       string // 调试用(可不用加密调试)(Settings["DebugKey"])
+	EncryptKey     string // 消息包加密key(Settings["EncryptKey"])
 
 	Opts []server.Option // 用来控制Module属性的
 }
@@ -32,6 +32,7 @@ func NewOptions(opts ...Option) Options {
 	opt := Options{
 		Addr:           ":8090",
 		Route:          DefaultRoute,
+		Transfer:       DefaultTransfer,
 		TLS:            false,
 		ReadTimeout:    5 * time.Second,
 		WriteTimeout:   10 * time.Second,
@@ -54,9 +55,9 @@ func Route(s Router) Option {
 }
 
 // RpcHandler 设置rpc处理器
-func RpcHandler(h RPCHandler) Option {
+func RpcHandler(h Transfer) Option {
 	return func(o *Options) {
-		o.RpcHandle = h
+		o.Transfer = h
 	}
 }
 

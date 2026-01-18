@@ -166,9 +166,9 @@ type Options struct {
 	RPCExpired      time.Duration // RPC调用超时(10s)
 	RPCMaxCoroutine int           // 默认0(不限制)
 
-	ClientRPCHandler ClientRPCHandler // 配置全局的RPC调用方监控器(nil)
-	ServerRPCHandler ServerRPCHandler // 配置全局的RPC服务方监控器(nil)
-	//RpcCompleteHandler RpcCompleteHandler // 配置全局的RPC执行结果监控器(nil)
+	ClientRPCHandler ClientRPCHook // 配置全局的RPC调用方监控器(nil)
+	ServerRPCHandler ServerRPCHook // 配置全局的RPC服务方监控器(nil)
+	//RpcCompleteHook RpcCompleteHook // 配置全局的RPC执行结果监控器(nil)
 
 	// 自定义日志文件名字(主要作用方便k8s映射日志不会被冲突，建议使用k8s pod实现)
 	LogFileName FileNameHandler // 日志文件名称(默认):fmt.Sprintf("%s/%v%s%s", logdir, prefix, processID, suffix)
@@ -280,23 +280,23 @@ func KillWaitTTL(t time.Duration) Option {
 }
 
 // SetClientRPChandler 配置调用者监控器
-func SetClientRPChandler(t ClientRPCHandler) Option {
+func SetClientRPChandler(t ClientRPCHook) Option {
 	return func(o *Options) {
 		o.ClientRPCHandler = t
 	}
 }
 
 // SetServerRPCHandler 配置服务方监控器
-func SetServerRPCHandler(t ServerRPCHandler) Option {
+func SetServerRPCHandler(t ServerRPCHook) Option {
 	return func(o *Options) {
 		o.ServerRPCHandler = t
 	}
 }
 
 // SetServerRPCCompleteHandler 服务RPC执行结果监控器
-// func SetRpcCompleteHandler(t RpcCompleteHandler) Option {
+// func SetRpcCompleteHook(t RpcCompleteHook) Option {
 // 	return func(o *Options) {
-// 		o.RpcCompleteHandler = t
+// 		o.RpcCompleteHook = t
 // 	}
 // }
 
