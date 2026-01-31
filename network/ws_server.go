@@ -1,6 +1,7 @@
 package network
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net"
@@ -42,6 +43,7 @@ type WSServer struct {
 	handler     *WSHandler
 	ShakeFunc   func(r *http.Request) error
 	wgConns     sync.WaitGroup
+	httpServer  *http.Server // 添加 HTTP 服务器实例
 }
 
 // Start 开启监听websocket端口
@@ -141,12 +143,19 @@ func (server *WSServer) Start() {
 		WriteTimeout:   server.HTTPTimeout,
 		MaxHeaderBytes: 1024,
 	}
+	server.httpServer = httpServer // 保存 HTTP 服务器实例
 	log.Info("WS Listen :%s", server.Addr)
 	go httpServer.Serve(ln)
 }
 
 // Close 停止监听websocket端口
 func (server *WSServer) Close() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if server.httpServer != nil {
+		server.httpServer.Shutdown(ctx) // 优雅关闭 HTTP 服务器
+	}
 	server.ln.Close()
 
 	server.wgConns.Wait()

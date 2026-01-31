@@ -54,7 +54,7 @@ func getTranslatableCtxKeys() []string {
 	contextKeysMutex.RLock()
 	defer contextKeysMutex.RUnlock()
 
-	ks := make([]string, len(translatableCtxKeys))
+	ks := make([]string, 0, len(translatableCtxKeys))
 	for k := range translatableCtxKeys {
 		ks = append(ks, k)
 	}

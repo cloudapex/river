@@ -250,7 +250,7 @@ func (cw *consulWatcher) Next() (*Result, error) {
 		}
 		return r, nil
 	}
-	return nil, errors.New("result chan closed")
+	// return nil, errors.New("result chan closed")
 }
 
 func (cw *consulWatcher) Stop() {

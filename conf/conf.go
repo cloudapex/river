@@ -12,6 +12,32 @@ import (
 // Conf 全局配置结构体
 var Conf = Config{}
 
+// Config 配置结构体
+type Config struct {
+	RpcLog   bool                         `json:"rpc_log"`
+	Module   map[string][]*ModuleSettings `json:"module"`
+	Nats     Nats                         `json:"nats"`
+	Settings map[string]any               `json:"settings"`
+	Log      map[string]any               `json:"log"` // 不用定制
+	BI       map[string]any               `json:"bi"`  // 不用定制
+}
+
+// ModuleSettings 模块配置
+type ModuleSettings struct {
+	ID         string         `json:"id"`   // 节点id(指@符号后面的值)
+	Host       string         `json:"host"` // 没啥用
+	ProcessEnv string         `json:"env"`
+	Settings   map[string]any `json:"settings"`
+}
+
+// Nats nats配置
+type Nats struct {
+	Addr          string
+	MaxReconnects int
+}
+
+// --------------- 本地配置
+
 // LoadConfig 加载本地配置
 func LoadConfig(path string) {
 	fmt.Println("app configuration path :", path)
@@ -21,31 +47,6 @@ func LoadConfig(path string) {
 		panic(err)
 	}
 }
-
-// Config 配置结构体
-type Config struct {
-	Log      map[string]any // 不用定制
-	BI       map[string]any // 不用定制
-	RpcLog   bool
-	Module   map[string][]*ModuleSettings
-	Nats     Nats
-	Settings map[string]any
-}
-
-// ModuleSettings 模块配置
-type ModuleSettings struct {
-	ID         string `json:"ID"` // 节点id(指@符号后面的值)
-	Host       string // 没啥用
-	ProcessEnv string
-	Settings   map[string]any
-}
-
-// Nats nats配置
-type Nats struct {
-	Addr          string
-	MaxReconnects int
-}
-
 func readFileInto(path string) error {
 	var data []byte
 	buf := new(bytes.Buffer)

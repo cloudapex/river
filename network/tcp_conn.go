@@ -58,6 +58,8 @@ func (tcpConn *TCPConn) Write(b []byte) (n int, err error) {
 func (tcpConn *TCPConn) Read(b []byte) (int, error) {
 	return tcpConn.conn.Read(b)
 }
+
+// tcp not support ReadMessage
 func (tcpConn *TCPConn) ReadMessage() (messageType int, p []byte, err error) {
 	return 0, nil, fmt.Errorf("not impl")
 }

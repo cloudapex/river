@@ -123,7 +123,7 @@ func (c *cacheSelector) get(service string) ([]*registry.Service, error) {
 	// expired entry so get service
 	services, err := get(service)
 
-	// no error then return error
+	// no error then return nil
 	if err == nil {
 		return services, nil
 	}

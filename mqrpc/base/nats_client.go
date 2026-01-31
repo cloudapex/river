@@ -56,7 +56,8 @@ func (c *NatsClient) Done() (err error) {
 	//c.send_done<-nil
 
 	//清理 callinfos 列表
-	for key, clinetCallInfo := range c.callinfos.Items() {
+	items := c.callinfos.Items() // 获取一份副本以避免并发问题
+	for key, clinetCallInfo := range items {
 		if clinetCallInfo != nil {
 			//关闭管道
 			c.CloseFch(clinetCallInfo.(ClinetCallInfo).call)

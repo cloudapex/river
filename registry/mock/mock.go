@@ -113,5 +113,5 @@ func (m *mockRegistry) Options() registry.Options {
 	return registry.Options{}
 }
 func (m *mockRegistry) GetKV(key string) ([]byte, error) {
-	return m.GetKV(key)
+	return []byte("value"), nil
 }

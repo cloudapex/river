@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -99,7 +100,11 @@ func (s *server) ServiceRegister() error {
 	parts := strings.Split(advt, ":")
 	if len(parts) > 1 {
 		host = strings.Join(parts[:len(parts)-1], ":")
-		port, _ = strconv.Atoi(parts[len(parts)-1])
+		var err error
+		port, err = strconv.Atoi(parts[len(parts)-1])
+		if err != nil {
+			return fmt.Errorf("invalid port in address %s, err:%v", advt, err)
+		}
 	} else {
 		host = parts[0]
 	}

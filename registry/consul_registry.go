@@ -359,7 +359,7 @@ func (c *consulRegistry) GetKV(key string) ([]byte, error) {
 	}
 
 	if value == nil {
-		return nil, errors.New(fmt.Sprintf("not find key:%s", key))
+		return nil, fmt.Errorf("not find key:%s", key)
 	}
 	return value.Value, nil
 }

@@ -52,5 +52,5 @@ func (this *moduleServerSession) SetNode(node *registry.Node) (err error) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	this.node = node
-	return
+	return nil
 }
