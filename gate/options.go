@@ -16,7 +16,7 @@ type Options struct {
 	TcpAddr          string
 	ConcurrentTasks  int // 单个连接允许的同时并发协程数,控制流量(20)(目前没用)
 	BufSize          int // 连接数据缓存大小(2048)(只对TCP有用)
-	MaxPackSize      int // 单个协议包数据最大值(65535)
+	MaxPackSize      int // 单个协议包数据最大值(uint16:65535)
 	SendPackBuffSize int // 发送消息的缓冲队列(100)
 	TLS              bool
 	CertFile         string

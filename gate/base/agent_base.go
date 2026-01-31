@@ -127,7 +127,7 @@ func (this *agentBase) GetError() error {
 func (this *agentBase) sendLoop() {
 	defer func() {
 		if err := tools.Catch(recover()); err != nil {
-			log.Error("agent.sendLoop() panic:%v")
+			log.Error("agent.sendLoop() panic:%v", err)
 		}
 		this.Close()
 	}()

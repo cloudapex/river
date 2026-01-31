@@ -245,7 +245,7 @@ func (this *Delegate) OnRpcConnected(ctx context.Context, sessionId string) (boo
 	if !ok || agent == nil {
 		return false, fmt.Errorf("No Sesssion found")
 	}
-	return agent.(gate.IClientAgent).IsClosed(), nil
+	return !agent.(gate.IClientAgent).IsClosed(), nil
 }
 
 // Proactively close the connection of session

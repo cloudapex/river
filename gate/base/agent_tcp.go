@@ -48,6 +48,9 @@ func (this *TCPClientAgent) OnReadDecodingPack() (*gate.Pack, error) {
 	}
 	// 1.1 解出pack长度 pkgLen
 	pkgLen := binary.LittleEndian.Uint16(pkgLenData)
+	if pkgLen > uint16(this.gate.Options().MaxPackSize) {
+		return nil, fmt.Errorf("package body size %d exceeds max allowed size %d", pkgLen, this.gate.Options().MaxPackSize)
+	}
 
 	// 1.2 计算需要的包体大小
 	bodyLen := int(pkgLen - gate.PACK_HEAD_TOTAL_LEN_SIZE)
@@ -70,7 +73,7 @@ func (this *TCPClientAgent) OnReadDecodingPack() (*gate.Pack, error) {
 
 	// 确保缓冲区在函数结束时正确处理
 	if needPutBack {
-		defer this.bodyDataPool.Put(bodyData[:gate.PACK_BODY_DEFAULT_SIZE_IN_POOL]) // 归还完整大小的缓冲区
+		defer this.bodyDataPool.Put(bodyData) // 归还完整大小的缓冲区
 	}
 
 	// 2 读取body体

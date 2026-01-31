@@ -415,15 +415,15 @@ River提供了多个内置模块：
   "Module": {
     "Timer": [
       {
-        "ID": "timer-1",
-        "ProcessEnv": "dev"
+        "id": "timer-1",
+        "env": "dev"
       }
     ],
     "Gate": [
       {
-        "ID": "gate-1",
-        "ProcessEnv": "dev",
-        "Settings": {
+        "id": "gate-1",
+        "env": "dev",
+        "settings": {
           "TCPAddr": ":3653",
           "WsAddr": ":3654",
           "TLS": false,
@@ -434,9 +434,9 @@ River提供了多个内置模块：
     ],
     "hapi": [
       {
-        "ID": "hapi-1",
-        "ProcessEnv": "dev",
-        "Settings": {
+        "id": "hapi-1",
+        "env": "dev",
+        "settings": {
           "Addr": ":8090",
           "TLS": false,
           "ReadTimeout": "5s",
