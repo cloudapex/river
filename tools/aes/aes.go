@@ -19,13 +19,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-
-	"github.com/cloudapex/river/log"
 )
 
 func AESEncrypt(src []byte) (encrypted []byte, e error) {
 	if len(src) > MSG_PKG_MAX_LEN {
-		log.Warning("协议包超超长|Lenth=%d", len(src))
 		return encrypted, errors.New(fmt.Sprintf("协议包超过最大包长:%d", len(src)))
 	}
 
@@ -58,7 +55,6 @@ func AESDecrypt(src []byte) (decrypted []byte, e error) {
 // ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 加密
 func AES_ECB_Encrypt(src []byte, key []byte) (encrypted []byte, e error) {
-	//	log.Debug("ECB")
 	if len(key) == 0 {
 		dest := make([]byte, len(src))
 		copy(dest, src)
@@ -110,7 +106,7 @@ func AES_ECB_Decrypt(encrypted []byte, key []byte) (decrypted []byte, e error) {
 		//对B64的编解码
 		dataDecode, err_ds := base64.StdEncoding.DecodeString(string(encrypted))
 		if err_ds != nil {
-			log.Warning("B64Decode失败|解密|%v", err_ds)
+			return nil, fmt.Errorf("decrypt base64, err:%v", err_ds)
 		}
 		encrypted = dataDecode
 	}
@@ -207,8 +203,6 @@ func (x *ecbDecrypter) CryptBlocks(dst, src []byte) {
 
 // CBC 加密
 func AES_CBC_Encrypt(src []byte, key []byte) (encrypted []byte, e error) {
-
-	//	log.Debug("加密|CBC")
 	// 分组秘钥
 	// NewCipher该函数限制了输入k的长度必须为16, 24或者32
 	block, err := aes.NewCipher(key)

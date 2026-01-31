@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func TestToAcctId(t *testing.T) {
+func TestToBase34(t *testing.T) {
 	type args struct {
 		userId uint64
 	}
@@ -28,13 +28,13 @@ func TestToAcctId(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ToBase34(tt.args.userId); got != tt.want {
-				t.Errorf("ToAcctId() = %v, want %v", got, tt.want)
+				t.Errorf("TestToBase34() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestToUserId(t *testing.T) {
+func TestFromBase34(t *testing.T) {
 	type args struct {
 		acctId string
 	}
@@ -56,7 +56,7 @@ func TestToUserId(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got, _ := FromBase34(tt.args.acctId); got != tt.want {
-				t.Errorf("ToUserId() = %v, want %v", got, tt.want)
+				t.Errorf("TestFromBase34() = %v, want %v", got, tt.want)
 			}
 		})
 	}

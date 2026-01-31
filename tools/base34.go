@@ -7,8 +7,12 @@ import (
 )
 
 const (
+	// base34 进制位
+	base34 = 34
+
 	// 34进制字母表, 由0-9a-z(去掉o和l)组成
 	digits34 = "ub4zpfwj8ra72ynvgh3ism09ex5d6cq1kt"
+
 	//bitMask       = uint64(0xFFFFFFFF) // 32位掩码
 	feistelRounds = 4
 	//magicNumber   = 0x123456789ABCDEF1 // Feistel轮函数使用的魔术数
@@ -34,17 +38,16 @@ func ToBase34(d uint64) string {
 	if d == 0 {
 		return string(digits34[0])
 	}
-	// 计算位数
-	n := 0
-	for v := d; v > 0; v /= 34 {
-		n++
+	// 预分配固定大小数组
+	var buf [13]byte // log34(2^64) ≈ 12.47
+	i := len(buf)
+
+	for v := d; v > 0; v /= base34 {
+		i--
+		buf[n] = digits34[v%base34]
 	}
-	out := make([]byte, n)
-	for v := d; v > 0; v /= 34 {
-		n--
-		out[n] = digits34[v%34]
-	}
-	return string(out)
+
+	return string(buf[i:])
 }
 
 // FromBase34 ...
@@ -58,15 +61,16 @@ func FromBase34(s string) (uint64, error) {
 
 		d := position34[byte(c)]
 		// 溢出检查
-		if out > (math.MaxUint64-uint64(d))/34 {
+		if out > (math.MaxUint64-uint64(d))/base34 {
 			return 0, errors.New("value exceeds uint64 range")
 		}
-		out = out*34 + uint64(d)
+		out = out*base34 + uint64(d)
 	}
 	return out, nil
 }
 
 // ---------------
+
 // 轮函数 - 对16位输入进行非线性变换
 func roundFunc(input uint16, key uint16) uint16 {
 	// 使用位旋转、异或和加法的组合

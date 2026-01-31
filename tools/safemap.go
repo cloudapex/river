@@ -67,10 +67,7 @@ func (m *Map[K]) Delete(k K) {
 // DeleteAll DeleteAll
 func (m *Map[K]) DeleteAll() {
 	m.lock.Lock()
-	for k := range m.bm {
-		delete(m.bm, k)
-	}
-
+	m.bm = make(map[K]any)
 	m.lock.Unlock()
 }
 

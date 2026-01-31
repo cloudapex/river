@@ -21,28 +21,28 @@ import (
 
 func TestBase62ToInt(t *testing.T) {
 	i := FromBase62("LLqbOL1")
-	assert.Equal(t, int64(100600020001), i)
+	assert.Equal(t, int64(2713056317011), i)
 
 	i1 := FromBase62("eg")
-	assert.Equal(t, int64(1006), i1)
+	assert.Equal(t, int64(884), i1)
 
 	i2 := FromBase62("2cq")
-	assert.Equal(t, int64(100690), i2)
+	assert.Equal(t, int64(8458), i2)
 
 	i3 := FromBase62("mim3")
-	assert.Equal(t, int64(800690), i3)
+	assert.Equal(t, int64(5313775), i3)
 }
 
 func TestIntToBase62(t *testing.T) {
-	b := ToBase62(100600020001)
+	b := ToBase62(2713056317011)
 	assert.Equal(t, "LLqbOL1", b)
 
-	b1 := ToBase62(1006)
+	b1 := ToBase62(884)
 	assert.Equal(t, "eg", b1)
 
-	b2 := ToBase62(100690)
+	b2 := ToBase62(8458)
 	assert.Equal(t, "2cq", b2)
 
-	b3 := ToBase62(800690)
+	b3 := ToBase62(5313775)
 	assert.Equal(t, "mim3", b3)
 }
