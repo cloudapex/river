@@ -82,7 +82,8 @@ func (this *TCPClientAgent) OnReadDecodingPack() (*gate.Pack, error) {
 		return nil, err
 	}
 	if this.gate.Options().EncryptKey != "" {
-		cbc, err := aes.AES_ECB_Decrypt(bodyData, []byte(this.gate.Options().EncryptKey))
+		kl := len(this.gate.Options().EncryptKey)
+		cbc, err := aes.DecryContentWithAESCBC(bodyData, []byte(this.gate.Options().EncryptKey), []byte(this.gate.Options().EncryptKey)[kl-16:])
 		if err != nil {
 			return nil, fmt.Errorf("decrypt cbc, err:%v", err)
 		}

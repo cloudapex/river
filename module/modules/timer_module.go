@@ -18,6 +18,7 @@ type Timer struct {
 	app.IModule
 }
 
+// 换掉
 func (m *Timer) GetType() string {
 	// 很关键,需要与配置文件中的Module配置对应
 	return "Timer"

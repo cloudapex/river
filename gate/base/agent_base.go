@@ -249,7 +249,8 @@ func (this *agentBase) OnWriteEncodingPack(pack *gate.Pack) []byte {
 	// 处理加密: 先base加密 + 再ecb加密
 	if this.gate.Options().EncryptKey != "" {
 		b64Data := base64.StdEncoding.EncodeToString(bodyData)
-		encryptedData, err := aes.AES_ECB_Encrypt([]byte(b64Data), []byte(this.gate.Options().EncryptKey))
+		kl := len(this.gate.Options().EncryptKey)
+		encryptedData, err := aes.EncryContentWithAESCBC([]byte(b64Data), []byte(this.gate.Options().EncryptKey), []byte(this.gate.Options().EncryptKey)[kl-16:])
 		if err != nil {
 			bodyData = []byte(err.Error())
 			log.Error("AES_ECB_Encrypt err:%v", err)

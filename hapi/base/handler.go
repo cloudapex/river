@@ -104,8 +104,8 @@ func (h *HttpHandler) decryptRequest(req *hapi.Request) error {
 		if err != nil {
 			return fmt.Errorf("base64 decode request body failed: %v", err)
 		}
-
-		decryptedBody, err := aes.AES_ECB_Decrypt(decodedBody, []byte(h.Opts.EncryptKey))
+		kl := len(h.Opts.EncryptKey)
+		decryptedBody, err := aes.DecryContentWithAESCBC(decodedBody, []byte(h.Opts.EncryptKey), []byte(h.Opts.EncryptKey)[kl-16:])
 		if err != nil {
 			return fmt.Errorf("decrypt request body failed: %v", err)
 		}
@@ -128,7 +128,8 @@ func (h *HttpHandler) encryptResponse(req *hapi.Request, rsp *hapi.Response) err
 
 	// 加密 Body 字段
 	if rsp.Body != "" {
-		encryptedBody, err := aes.AES_ECB_Encrypt([]byte(rsp.Body), []byte(h.Opts.EncryptKey))
+		kl := len(h.Opts.EncryptKey)
+		encryptedBody, err := aes.EncryContentWithAESCBC([]byte(rsp.Body), []byte(h.Opts.EncryptKey), []byte(h.Opts.EncryptKey)[kl-16:])
 		if err != nil {
 			return fmt.Errorf("encrypt response body failed: %v", err)
 		}

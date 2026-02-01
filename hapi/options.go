@@ -22,7 +22,7 @@ type Options struct {
 	IdleTimeout    time.Duration
 	MaxHeaderBytes int
 	DebugKey       string // 调试用(可不用加密调试)(Settings["DebugKey"])
-	EncryptKey     string // 消息包加密key(Settings["EncryptKey"])
+	EncryptKey     string // 消息包加密key(Settings["EncryptKey"])(must 16, 24 or 32 bytes)
 
 	Opts []server.Option // 用来控制Module属性的
 }

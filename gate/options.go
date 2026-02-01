@@ -21,7 +21,7 @@ type Options struct {
 	TLS              bool
 	CertFile         string
 	KeyFile          string
-	EncryptKey       string // 消息包加密key
+	EncryptKey       string // 消息包加密key(must 16, 24 or 32 bytes)
 	//OverTime        time.Duration // 建立连接超时(10s)
 	HeartOverTimer time.Duration // 心跳超时时间(本质是读取超时)(60s)
 

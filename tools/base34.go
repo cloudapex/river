@@ -69,7 +69,7 @@ func FromBase34(s string) (uint64, error) {
 	return out, nil
 }
 
-// ---------------
+// --------------- 混淆这块单独领出去
 
 // 轮函数 - 对16位输入进行非线性变换
 func roundFunc(input uint16, key uint16) uint16 {

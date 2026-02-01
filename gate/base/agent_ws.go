@@ -38,7 +38,8 @@ func (this *WSClientAgent) OnReadDecodingPack() (*gate.Pack, error) {
 	// 2 读取body体
 	bodyData := datas[gate.PACK_HEAD_TOTAL_LEN_SIZE:]
 	if this.gate.Options().EncryptKey != "" {
-		cbc, err := aes.AES_ECB_Decrypt(bodyData, []byte(this.gate.Options().EncryptKey))
+		kl := len(this.gate.Options().EncryptKey)
+		cbc, err := aes.DecryContentWithAESCBC(bodyData, []byte(this.gate.Options().EncryptKey), []byte(this.gate.Options().EncryptKey)[kl-16:])
 		if err != nil {
 			return nil, fmt.Errorf("decrypt cbc, err:%v", err)
 		}
