@@ -88,6 +88,8 @@ River采用分层架构设计，主要包括以下几个核心组件：
    - 支持TLS加密和数据包加密
    - 心跳超时控制（默认60秒）
    - 可配置最大包大小、发送缓冲区等参数
+   - **模块注册设计**：基于工厂模式，使用统一的模块基类`gatebase.GateBase`，支持通过配置动态注册模块
+   - **配置管理**：支持通过配置键（如`ws_addr`, `tcp_addr`, `tls`, `encrypt_key`等）动态配置网关参数
 
 2. **短连接网关层(HAPI)**
    - 提供HTTP/HTTPS API服务
@@ -95,6 +97,8 @@ River采用分层架构设计，主要包括以下几个核心组件：
    - 支持TLS加密
    - 可配置超时参数（读超时、写超时、空闲超时）
    - 使用Gin框架处理HTTP请求
+   - **模块注册设计**：基于工厂模式，使用统一的模块基类`hapibase.HApiBase`，支持通过配置动态注册模块
+   - **配置管理**：支持通过配置键（如`addr`, `read_timeout`, `write_timeout`, `idle_timeout`, `encrypt_key`等）动态配置网关参数
 
 3. **应用层(App)**
    - 提供应用实例创建和管理
@@ -102,23 +106,29 @@ River采用分层架构设计，主要包括以下几个核心组件：
    - 实现服务发现和RPC调用
    - 集成Consul服务注册与发现
    - 支持配置动态加载
+   - **模块注册设计**：采用工厂模式和统一的初始化流程，通过`Init()`方法和`OnInit()`回调实现模块的标准化注册和初始化
+   - **配置管理**：支持通过配置键（如`ConfigKey`, `ConsulAddr`等）动态配置应用参数
 
 4. **模块系统(Module)**
    - 支持自定义业务模块
    - 提供定时器模块等基础模块（基于时间轮算法）
    - 支持模块间RPC通信
    - 模块生命周期管理
+   - **模块注册设计**：遵循工厂模式，所有模块继承自`module.ModuleBase`，通过`GetType()`方法标识模块类型，并在`Init()`方法中完成配置初始化
+   - **对象复用**：采用对象池模式优化资源利用，减少GC压力
 
 5. **RPC通信(MQRPC)**
    - 基于NATS的消息队列实现
    - 支持同步和异步调用
    - 支持广播调用
    - 提供服务注册和发现机制
+   - **配置管理**：支持通过配置键动态调整RPC参数（如超时时间、并发限制等）
 
 6. **服务注册与发现(Registry)**
    - 基于Consul实现
    - 支持服务监控和健康检查
    - 服务自动注册与注销
+   - **配置管理**：支持通过配置键动态配置Consul连接参数
 
 7. **工具集(Tools)**
    - AES加密/解密
@@ -126,6 +136,7 @@ River采用分层架构设计，主要包括以下几个核心组件：
    - Base62编码
    - ID,IP工具
    - 环形Queue,安全Map等实用工具
+   - **对象复用**：提供对象池、缓冲区池等复用机制，提升性能
 
 ## 安装
 
@@ -247,6 +258,7 @@ func main() {
 ### 4. 创建业务模块
 
 ```go
+
 package main
 
 import (
@@ -256,10 +268,13 @@ import (
   "github.com/cloudapex/river/conf"
 )
 
+// 游戏模块示例 - 展现工厂模式和模块注册设计
 type GameModule struct {
   app.ModuleBase
 }
 
+// GetType 返回模块类型，用于模块注册和识别
+// 遵循工厂模式，通过类型标识创建相应模块实例
 func (m *GameModule) GetType() string {
   return "game"
 }
@@ -268,7 +283,17 @@ func (m *GameModule) Version() string {
   return "1.0.0"
 }
 
+// OnInit 模块初始化，通过Settings配置进行初始化
+// 注意：配置key不得硬编码，应使用常量定义
 func (m *GameModule) OnInit(settings *conf.ModuleSettings) {
+  // 从settings中读取配置参数
+  for k, v := range settings.Settings {
+    switch k {
+    case "some_config_key":  // 应该使用常量替代，如 constants.SettingKeySomeConfig
+      // 处理配置参数
+      _ = v
+    }
+  }
   // 模块初始化逻辑
 }
 
@@ -286,6 +311,18 @@ func main() {
   app := river.CreateApp(/* ... */)
   gameModule := &GameModule{}
   app.Run(gameModule)
+}
+
+// 模块工厂模式示例
+func CreateModuleByType(moduleType string) app.IRPCModule {
+  switch moduleType {
+  case "game":
+    return &GameModule{}
+  case "timer":
+    return &TimerModule{} // 假设TimerModule存在
+  default:
+    return nil
+  }
 }
 ```
 
@@ -372,24 +409,42 @@ result, err := server.Call(ctx, "Method", "param1", "param2")
 ### 网关配置参数
 
 **TCP/WebSocket网关(gate)**:
-- `WsAddr`: WebSocket监听地址
-- `TcpAddr`: TCP监听地址
-- `TLS`: 是否启用TLS
-- `CertFile`: TLS证书文件路径
-- `KeyFile`: TLS私钥文件路径
+- `WsAddr`: WebSocket监听地址 (配置键: `ws_addr`)
+- `TcpAddr`: TCP监听地址 (配置键: `tcp_addr`)
+- `TLS`: 是否启用TLS (配置键: `tls`)
+- `CertFile`: TLS证书文件路径 (配置键: `tls_cert_file`)
+- `KeyFile`: TLS私钥文件路径 (配置键: `tls_key_file`)
 - `HeartOverTimer`: 心跳超时时间（默认60秒）
 - `MaxPackSize`: 单个协议包最大数据量（默认65535字节）
 - `SendPackBuffSize`: 发送消息缓冲队列大小（默认100）
+- `EncryptKey`: 消息包加密密钥 (配置键: `encrypt_key`)
 
 **HTTP网关(hapi)**:
-- `Addr`: HTTP监听地址
-- `TLS`: 是否启用HTTPS
-- `CertFile`: HTTPS证书文件路径
-- `KeyFile`: HTTPS私钥文件路径
-- `ReadTimeout`: 读取超时时间（默认5秒）
-- `WriteTimeout`: 写入超时时间（默认10秒）
-- `IdleTimeout`: 空闲超时时间（默认60秒）
-- `MaxHeaderBytes`: 最大HTTP头部字节数（默认4KB）
+- `Addr`: HTTP监听地址 (配置键: `addr`)
+- `TLS`: 是否启用HTTPS (配置键: `tls`)
+- `CertFile`: HTTPS证书文件路径 (配置键: `tls_cert_file`)
+- `KeyFile`: HTTPS私钥文件路径 (配置键: `tls_key_file`)
+- `ReadTimeout`: 读取超时时间（默认5秒）(配置键: `read_timeout`)
+- `WriteTimeout`: 写入超时时间（默认10秒）(配置键: `write_timeout`)
+- `IdleTimeout`: 空闲超时时间（默认60秒）(配置键: `idle_timeout`)
+- `MaxHeaderBytes`: 最大HTTP头部字节数（默认4KB）(配置键: `max_header_bytes`)
+- `DebugKey`: 调试密钥 (配置键: `debug_key`)
+- `EncryptKey`: 消息包加密密钥 (配置键: `encrypt_key`)
+
+### 配置键使用规范
+
+为确保代码的一致性和可维护性，River框架遵循以下配置键使用规范：
+
+1. **配置键常量化**：所有配置键都应在对应的options.go文件中定义为常量，不得在代码中硬编码字符串
+   - 正确做法：使用 `gate.SettingKeyWSAddr` 或 `hapi.SettingKeyAddr`
+   - 错误做法：直接使用 `"ws_addr"` 或 `"addr"` 字符串
+
+2. **配置键命名规范**：
+   - 使用小写字母和下划线分隔
+   - 避免使用驼峰命名法
+   - 保持语义清晰且一致
+
+3. **配置管理**：通过`ModuleSettings`结构体统一管理模块配置，支持动态加载和热更新
 
 ### 超时配置说明
 
@@ -412,7 +467,8 @@ River提供了多个内置模块：
 
 ```json
 {
-  "Module": {
+  "rpc_log": true,
+  "module": {
     "Timer": [
       {
         "id": "timer-1",
@@ -424,11 +480,15 @@ River提供了多个内置模块：
         "id": "gate-1",
         "env": "dev",
         "settings": {
-          "TCPAddr": ":3653",
-          "WsAddr": ":3654",
-          "TLS": false,
-          "HeartOverTimer": "60s",
-          "MaxPackSize": 65535
+          "tcp_addr": ":3653",
+          "ws_addr": ":3654",
+          "tls": false,
+          "tls_cert_file": "./cert.pem",
+          "tls_key_file": "./key.pem",
+          "encrypt_key": "your-encryption-key-here",
+          "heart_over_timer": "60s",
+          "max_pack_size": 65535,
+          "send_pack_buff_num": 100
         }
       }
     ],
@@ -437,17 +497,27 @@ River提供了多个内置模块：
         "id": "hapi-1",
         "env": "dev",
         "settings": {
-          "Addr": ":8090",
-          "TLS": false,
-          "ReadTimeout": "5s",
-          "WriteTimeout": "10s",
-          "IdleTimeout": "60s"
+          "addr": ":8090",
+          "tls": false,
+          "tls_cert_file": "./cert.pem",
+          "tls_key_file": "./key.pem",
+          "read_timeout": "5s",
+          "write_timeout": "10s",
+          "idle_timeout": "60s",
+          "max_header_bytes": 4096,
+          "debug_key": "debug-mode-key",
+          "encrypt_key": "your-encryption-key-here"
         }
       }
     ]
   }
 }
 ```
+
+**注意**：配置中的键名应使用小写字母和下划线格式，遵循配置键使用规范：
+- Gate网关配置使用 `ws_addr`, `tcp_addr`, `tls`, `tls_cert_file`, `tls_key_file`, `encrypt_key` 等键
+- HAPI网关配置使用 `addr`, `tls`, `read_timeout`, `write_timeout`, `idle_timeout`, `max_header_bytes`, `debug_key`, `encrypt_key` 等键
+- 不得在代码中硬编码这些配置键，应使用对应的常量（如 `gate.SettingKeyWSAddr`, `hapi.SettingKeyAddr` 等）
 
 ## 技术栈
 
@@ -459,8 +529,8 @@ River提供了多个内置模块：
 - **Web框架**：[Gin](https://gin-gonic.com/)
 - **配置解析**：[cleanenv](https://github.com/ilyakaznacheev/cleanenv)
 - **日志系统**：基于Beego日志组件封装
-- **加密算法**：AES ECB/CBC模式
-- **工具库**：UUID, Base62, IP工具等
+- **加密算法**：AES CBC/GCM模式
+- **工具库**：UUID,Base34, Base62, aes, IP工具等
 
 ## 性能优化
 
@@ -469,10 +539,11 @@ River针对高并发场景进行了多项优化：
 - 基于Goroutine的并发模型，避免回调地狱
 - 高效的消息序列化和反序列化
 - 连接复用和池化技术
-- 内存预分配和对象复用
-- 缓冲区池化（sync.Pool）减少GC压力
+- **对象复用**：通过对象池模式复用常用对象，减少内存分配和GC压力
+- **缓冲区池化**：使用`sync.Pool`管理缓冲区，显著降低GC频率
 - 零拷贝技术优化数据传输
 - 时间轮算法实现高效定时器
+- **资源复用**：在网关层和RPC层广泛使用连接池、会话复用等技术，提高资源利用率
 
 ## 贡献
 
