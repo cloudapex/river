@@ -23,6 +23,8 @@ type Service struct {
 	Server app.IModuleServerSession
 }
 
+// --------------- 路由器
+
 // Router 路由器定义
 type Router func(r *http.Request) (*Service, error)
 
@@ -68,10 +70,12 @@ var DefaultRoute = func(r *http.Request) (*Service, error) {
 	return &Service{Server: session, Topic: r.URL.Path}, err
 }
 
-// Transfer 函数定义（Transfer）
+// --------------- 转发器
+
+// Transfer 转发器定义（Transfer）
 type Transfer func(service *Service, req *Request, rsp *Response) error
 
-// DefaultTransfer 默认请求规则
-var DefaultTransfer = func(service *Service, req *Request, rsp *Response) error {
+// DefaultTransfe 默认转发规则
+var DefaultTransfe = func(service *Service, req *Request, rsp *Response) error {
 	return mqrpc.MsgPack(rsp, mqrpc.RpcResult(service.Server.GetRPC().Call(context.TODO(), service.Topic, req)))
 }

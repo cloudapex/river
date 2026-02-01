@@ -10,8 +10,9 @@ import (
 
 const (
 	RPC_CONTEXT_KEY_HEADER  = "rtx_header"  // 定义需要RPC传输http.Header的ContextKey
-	HTTP_HEAD_KEY_DEBUG_KEY = "t_debug_key" // client指定header的此key可以不用加密
+	HTTP_HEAD_KEY_DEBUG_KEY = "t_debug_key" // client指定header的此key可以消息不用加密
 )
+
 
 // 注册RPC_CONTEXT_KEY_HEADER
 func init() {

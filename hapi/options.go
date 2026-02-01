@@ -6,6 +6,26 @@ import (
 	"github.com/cloudapex/river/module/server"
 )
 
+// 配置Setting键常量定义
+const (
+	// 服务器配置
+	SettingKeyAddr = "addr" // 监听地址
+
+	// tls
+	SettingKeyTLS      = "tls"           // 是否启用TLS
+	SettingKeyCertFile = "tls_cert_file" // 证书文件路径
+	SettingKeyKeyFile  = "tls_key_file"  // 私钥文件路径
+
+	SettingKeyReadTimeout    = "read_timeout"     // 读取超时（秒）
+	SettingKeyWriteTimeout   = "write_timeout"    // 写入超时（秒）
+	SettingKeyIdleTimeout    = "idle_timeout"     // 空闲超时（秒）
+	SettingKeyMaxHeaderBytes = "max_header_bytes" // 最大头部字节数
+
+	// 安全配置
+	SettingKeyDebugKey   = "debug_key"   // 调试密钥
+	SettingKeyEncryptKey = "encrypt_key" // 加密密钥
+)
+
 // Option 配置
 type Option func(*Options)
 
@@ -32,7 +52,7 @@ func NewOptions(opts ...Option) Options {
 	opt := Options{
 		Addr:           ":8090",
 		Route:          DefaultRoute,
-		Transfer:       DefaultTransfer,
+		Transfer:       DefaultTransfe,
 		TLS:            false,
 		ReadTimeout:    5 * time.Second,
 		WriteTimeout:   10 * time.Second,

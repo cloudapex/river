@@ -7,6 +7,21 @@ import (
 	"github.com/cloudapex/river/module/server"
 )
 
+// 配置键常量定义
+const (
+	// 服务器配置
+	SettingKeyWSAddr  = "ws_addr"  // WebSocket监听地址
+	SettingKeyTCPAddr = "tcp_addr" // TCP监听地址
+
+	// TLS
+	SettingKeyTLS      = "tls"           // 是否启用TLS
+	SettingKeyCertFile = "tls_cert_file" // 证书文件路径
+	SettingKeyKeyFile  = "tls_key_file"  // 私钥文件路径
+
+	// 通讯加密
+	SettingKeyEncryptKey = "encrypt_key" // 消息包加密key
+)
+
 // Option 网关配置项
 type Option func(*Options)
 

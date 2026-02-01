@@ -36,27 +36,23 @@ func (this *GateBase) Init(subclass app.IRPCModule, settings *conf.ModuleSetting
 	this.ModuleBase.Init(subclass, settings, this.opts.Opts...) // 这是必须的
 
 	// 使用settings的配置覆盖opts
+	for k, v := range settings.Settings {
+		switch k {
+		case gate.SettingKeyWSAddr:
+			this.opts.WsAddr = v.(string)
+		case gate.SettingKeyTCPAddr:
+			this.opts.TcpAddr = v.(string)
+		case gate.SettingKeyTLS:
+			this.opts.TLS = v.(bool)
+		case gate.SettingKeyCertFile:
+			this.opts.CertFile = v.(string)
+		case gate.SettingKeyKeyFile:
+			this.opts.KeyFile = v.(string)
+		case gate.SettingKeyEncryptKey:
+			this.opts.EncryptKey = v.(string)
+		}
+	}
 	this.opts = gate.NewOptions(opts...)
-	if WSAddr, ok := settings.Settings["WSAddr"]; ok {
-		this.opts.WsAddr = WSAddr.(string)
-	}
-	if TCPAddr, ok := settings.Settings["TCPAddr"]; ok {
-		this.opts.TcpAddr = TCPAddr.(string)
-	}
-
-	if tls, ok := settings.Settings["TLS"]; ok {
-		this.opts.TLS = tls.(bool)
-	}
-	if CertFile, ok := settings.Settings["CertFile"]; ok {
-		this.opts.CertFile = CertFile.(string)
-	}
-	if KeyFile, ok := settings.Settings["KeyFile"]; ok {
-		this.opts.KeyFile = KeyFile.(string)
-	}
-
-	if EncryptKey, ok := settings.Settings["EncryptKey"]; ok {
-		this.opts.EncryptKey = EncryptKey.(string)
-	}
 
 	// for member
 	delegate := NewDelegate(this)

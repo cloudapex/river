@@ -27,46 +27,31 @@ func (this *HApiBase) Init(subclass app.IRPCModule, settings *conf.ModuleSetting
 	this.ModuleBase.Init(subclass, settings, this.opts.Opts...) // 这是必须的
 
 	// 使用settings的配置覆盖opts
+	for k, v := range settings.Settings {
+		switch k {
+		case hapi.SettingKeyAddr:
+			opts = append(opts, hapi.Addr(v.(string)))
+		case hapi.SettingKeyTLS:
+			opts = append(opts, hapi.TLS(v.(bool)))
+		case hapi.SettingKeyCertFile:
+			opts = append(opts, hapi.CertFile(v.(string)))
+		case hapi.SettingKeyKeyFile:
+			opts = append(opts, hapi.KeyFile(v.(string)))
+		case hapi.SettingKeyReadTimeout:
+			opts = append(opts, hapi.ReadTimeout(time.Duration(v.(int))))
+		case hapi.SettingKeyWriteTimeout:
+			opts = append(opts, hapi.WriteTimeout(time.Duration(v.(int))))
+		case hapi.SettingKeyIdleTimeout:
+			opts = append(opts, hapi.IdleTimeout(time.Duration(v.(int))))
+		case hapi.SettingKeyMaxHeaderBytes:
+			opts = append(opts, hapi.MaxHeaderBytes(v.(int)))
+		case hapi.SettingKeyDebugKey:
+			opts = append(opts, hapi.DebugKey(v.(string)))
+		case hapi.SettingKeyEncryptKey:
+			opts = append(opts, hapi.EncryptKey(v.(string)))
+		}
+	}
 	this.opts = hapi.NewOptions(opts...)
-	if WSAddr, ok := settings.Settings["Addr"]; ok {
-		this.opts.Addr = WSAddr.(string)
-	}
-
-	if tls, ok := settings.Settings["TLS"]; ok {
-		this.opts.TLS = tls.(bool)
-	}
-
-	if CertFile, ok := settings.Settings["CertFile"]; ok {
-		this.opts.CertFile = CertFile.(string)
-	}
-
-	if KeyFile, ok := settings.Settings["KeyFile"]; ok {
-		this.opts.KeyFile = KeyFile.(string)
-	}
-
-	if ReadTimeout, ok := settings.Settings["ReadTimeout"]; ok {
-		this.opts.ReadTimeout = time.Duration(ReadTimeout.(int)) * time.Second
-	}
-
-	if WriteTimeout, ok := settings.Settings["WriteTimeout"]; ok {
-		this.opts.WriteTimeout = time.Duration(WriteTimeout.(int)) * time.Second
-	}
-
-	if IdleTimeout, ok := settings.Settings["IdleTimeout"]; ok {
-		this.opts.IdleTimeout = time.Duration(IdleTimeout.(int)) * time.Second
-	}
-
-	if MaxHeaderBytes, ok := settings.Settings["MaxHeaderBytes"]; ok {
-		this.opts.MaxHeaderBytes = MaxHeaderBytes.(int)
-	}
-
-	if DebugKey, ok := settings.Settings["DebugKey"]; ok {
-		this.opts.DebugKey = DebugKey.(string)
-	}
-
-	if EncryptKey, ok := settings.Settings["EncryptKey"]; ok {
-		this.opts.EncryptKey = EncryptKey.(string)
-	}
 
 	// 创建路由
 	gin.SetMode(gin.ReleaseMode)
