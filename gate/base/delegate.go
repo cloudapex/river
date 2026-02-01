@@ -65,8 +65,8 @@ func (this *Delegate) SessionsRange(f func(key, value any) bool) {
 // 当连接建立(握手成功)
 func (this *Delegate) Connect(a gate.IClientAgent) {
 	defer func() {
-		if err := tools.Catch(recover()); err != nil {
-			log.Error("gateHandler Connect(agent) panic:%v", err)
+		if err := tools.Catch("GateDelegate Connect", recover()); err != nil {
+			log.Error("GateDelegate Connect(agent) panic:%v", err)
 		}
 	}()
 	if a.GetSession() != nil {
@@ -89,8 +89,8 @@ func (this *Delegate) Connect(a gate.IClientAgent) {
 // 当连接关闭(客户端主动关闭或者异常断开)
 func (this *Delegate) DisConnect(a gate.IClientAgent) {
 	defer func() {
-		if err := tools.Catch(recover()); err != nil {
-			log.Error("handler DisConnect panic:%v", err)
+		if err := tools.Catch("GateDelegate DisConnect", recover()); err != nil {
+			log.Error("GateDelegate DisConnect panic:%v", err)
 		}
 		if a.GetSession() != nil {
 			this.sessions.Delete(a.GetSession().GetSessionID())

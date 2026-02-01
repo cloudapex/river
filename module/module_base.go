@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/cloudapex/river/app"
 	"github.com/cloudapex/river/conf"
@@ -14,12 +15,14 @@ import (
 	"github.com/cloudapex/river/mqrpc"
 	"github.com/cloudapex/river/mqrpc/core"
 	"github.com/cloudapex/river/selector"
+	"github.com/cloudapex/river/timer"
 	"github.com/cloudapex/river/tools"
 )
 
 // ModuleBase 默认的RPCModule实现
 type ModuleBase struct {
 	//context.Context
+	timer.ITimer
 
 	impl     app.IRPCModule
 	settings *conf.ModuleSettings
@@ -36,6 +39,12 @@ func (this *ModuleBase) Init(impl app.IRPCModule, settings *conf.ModuleSettings,
 	// 初始化模块
 	this.impl = impl
 	this.settings = settings
+
+	tickerInterval := []time.Duration{}
+	if val, ok := settings.Settings["timer_interval"]; ok {
+		tickerInterval = append(tickerInterval, time.Duration(val.(int))*time.Millisecond)
+	}
+	this.ITimer = timer.NewTimer(tickerInterval...)
 
 	// 创建一个供远程调用的RPCService
 	opts := server.Options{
@@ -107,6 +116,8 @@ func (this *ModuleBase) OnInit(settings *conf.ModuleSettings) {
 
 // OnDestroy 当模块注销时调用
 func (this *ModuleBase) OnDestroy() {
+	this.CloseTimer()
+
 	this.exit() // 让service退出
 
 	select {

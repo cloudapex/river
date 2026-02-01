@@ -8,6 +8,7 @@ import (
 	"github.com/cloudapex/river/mqrpc/core"
 	"github.com/cloudapex/river/registry"
 	"github.com/cloudapex/river/selector"
+	"github.com/cloudapex/river/timer"
 	"github.com/nats-io/nats.go"
 )
 
@@ -76,7 +77,8 @@ type IModule interface {
 
 // IRPCModule RPC模块定义
 type IRPCModule interface {
-	IModule
+	IModule // 需要自行在Run方法中调用StartTimer方法
+	timer.ITimer
 
 	// 模块服务ID
 	GetServerID() string

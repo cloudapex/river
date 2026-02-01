@@ -69,7 +69,7 @@ func (this *agentBase) OnClose() error {
 
 func (this *agentBase) Run() (err error) {
 	defer func() {
-		if err := tools.Catch(recover()); err != nil {
+		if err := tools.Catch("agent.recvLoop() panic", recover()); err != nil {
 			log.Error("agent.recvLoop() panic:%v", err)
 		}
 		this.Close()
@@ -126,7 +126,7 @@ func (this *agentBase) GetError() error {
 // ========== 处理发送
 func (this *agentBase) sendLoop() {
 	defer func() {
-		if err := tools.Catch(recover()); err != nil {
+		if err := tools.Catch("agent.sendLoop() panic", recover()); err != nil {
 			log.Error("agent.sendLoop() panic:%v", err)
 		}
 		this.Close()

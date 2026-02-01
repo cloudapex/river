@@ -15,7 +15,6 @@ import (
 	"github.com/cloudapex/river/conf"
 	"github.com/cloudapex/river/log"
 	"github.com/cloudapex/river/module"
-	"github.com/cloudapex/river/module/modules"
 	"github.com/cloudapex/river/mqrpc"
 	"github.com/cloudapex/river/registry"
 	"github.com/cloudapex/river/registry/consul"
@@ -153,7 +152,7 @@ func (this *DefaultApp) Run(mods ...app.IModule) error {
 	log.Info("river %v starting...", this.opts.Version)
 
 	// 1 RegisterRunMod
-	this.manager.RegisterRun(modules.TimerModule()) // 先注册时间轮模块 每一个进程都默认运行
+	//this.manager.RegisterRun(modules.TimerModule()) // 先注册时间轮模块 每一个进程都默认运行
 
 	// 2 Register
 	for i := 0; i < len(mods); i++ {

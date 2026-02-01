@@ -82,7 +82,7 @@ func (this *ModuleManager) Init(processEnv string) {
 		m.wg.Add(1)
 		go func(unit *moduleUnit) {
 			defer func() {
-				if err := tools.Catch(recover()); err != nil {
+				if err := tools.Catch("module run", recover()); err != nil {
 					log.Error("module[%q] run panic: %v", unit.mi.GetType(), err)
 				}
 			}()
@@ -101,7 +101,7 @@ func (this *ModuleManager) Destroy() {
 		m.wg.Wait()
 		func(unit *moduleUnit) {
 			defer func() {
-				if err := tools.Catch(recover()); err != nil {
+				if err := tools.Catch("module destroy", recover()); err != nil {
 					log.Error("module[%q] destroy panic: %v", unit.mi.GetType(), err)
 				}
 			}()
