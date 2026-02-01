@@ -67,7 +67,7 @@ type IModule interface {
 	GetType() string // 模块类型
 	Version() string // 模块版本
 
-	Run(closeSig chan bool)
+	Run(closeSig chan bool) // Run 由派生类实现(不可调用基类Run)
 
 	OnInit(settings *conf.ModuleSettings) // 所有初始化逻辑都放到Init中, 重载OnInit不可调用基类!(由Init层层调用base.Init)即可
 	OnDestroy()
