@@ -32,8 +32,8 @@ type ModuleSettings struct {
 
 // Nats nats配置
 type Nats struct {
-	Addr          string
-	MaxReconnects int
+	Addr          string `json:"addr"`
+	MaxReconnects int    `json:"max_reconnects"`
 }
 
 // --------------- 本地配置
