@@ -86,6 +86,8 @@ func (this *HApiBase) OnDestroy() {
 func (this *HApiBase) RouterGroup() *gin.RouterGroup { return &this.router.RouterGroup }
 
 func (this *HApiBase) Run(closeSig chan bool) {
+	this.StartTimer()
+
 	srv := this.startHttpServer()
 
 	<-closeSig

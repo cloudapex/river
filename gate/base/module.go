@@ -95,6 +95,8 @@ func (this *GateBase) OnConfChanged(settings *conf.ModuleSettings) {
 }
 
 func (this *GateBase) Run(closeSig chan bool) {
+	this.StartTimer()
+
 	// for wss
 	var wsServer *network.WSServer
 	if this.opts.WsAddr != "" {

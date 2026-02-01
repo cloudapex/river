@@ -163,6 +163,13 @@ func (this *ModuleBase) OnAppConfigurationLoaded() {
 	// 当App初始化时调用，这个接口不管这个模块是否在这个进程运行都会调用
 }
 
+// Run 由派生类实现(不可调用基类Run)
+func (this *ModuleBase) Run(closeSig chan bool) {
+	this.StartTimer()
+
+	<-closeSig
+}
+
 // Register 注册rpc消息
 func (this *ModuleBase) Register(msg string, f interface{}) {
 	this.GetServer().Register(msg, f)
