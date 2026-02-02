@@ -20,6 +20,18 @@ func Catch(desc string, x interface{}) error {
 	return fmt.Errorf("%v, stack:\n%v", head, stack)
 }
 
+// StructName
+func StructName(obj interface{}) string {
+	if obj == nil {
+		return "nil"
+	}
+	t := reflect.TypeOf(obj)
+	if t.Kind() == reflect.Ptr {
+		return t.Elem().Name()
+	}
+	return t.Name()
+}
+
 // FuncName
 func FuncName(fun interface{}) string {
 	return FuncFullName(fun, '.')
