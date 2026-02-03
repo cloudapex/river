@@ -351,15 +351,15 @@ func (c *consulRegistry) Options() Options {
 	return c.opts
 }
 
-func (c *consulRegistry) GetKV(key string) ([]byte, error) {
-	value, _, err := c.Client.KV().Get(key, nil)
+func (c *consulRegistry) GetKV(key string) ([]byte, uint64, error) {
+	value, qm, err := c.Client.KV().Get(key, nil)
 
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	if value == nil {
-		return nil, fmt.Errorf("not find key:%s", key)
+		return nil, 0, fmt.Errorf("not find key:%s", key)
 	}
-	return value.Value, nil
+	return value.Value, qm.LastIndex, nil
 }
