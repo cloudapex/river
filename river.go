@@ -70,7 +70,7 @@ func (this *DefaultApp) initConsul() error {
 
 // initConfig 初始化 config
 func (this *DefaultApp) initConfig() error {
-	confData, err := this.Options().Registry.GetKV(this.Options().ConfigKey)
+	confData, _, err := this.Options().Registry.GetKV(this.Options().ConfigKey)
 	if err != nil {
 		return fmt.Errorf("无法从consul获取配置:%s, err:%v", this.Options().ConfigKey, err)
 	}
