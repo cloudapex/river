@@ -7,11 +7,9 @@ func App(set ...IApp) IApp {
 	if app != nil {
 		return app
 	}
-
 	if len(set) != 0 {
 		app = set[0]
 	}
-
 	return app
 }
 
