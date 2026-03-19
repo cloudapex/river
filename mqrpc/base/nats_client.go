@@ -59,14 +59,18 @@ func (c *NatsClient) Done() (err error) {
 	items := c.callinfos.Items() // 获取一份副本以避免并发问题
 	for key, clinetCallInfo := range items {
 		if clinetCallInfo != nil {
-			//关闭管道
-			c.CloseFch(clinetCallInfo.(ClinetCallInfo).call)
 			//从Map中删除
 			c.callinfos.Delete(key)
+			//关闭管道
+			c.CloseFch(clinetCallInfo.(ClinetCallInfo).call)
 		}
 	}
 	c.callinfos = nil
-	c.done <- nil
+
+	select {
+	case c.done <- nil:
+	default:
+	}
 	c.isClose = true
 	return
 }
@@ -177,9 +181,17 @@ func (c *NatsClient) on_request_handle() (err error) {
 			//删除
 			c.callinfos.Delete(correlation_id)
 			if clinetCallInfo != nil {
-				if clinetCallInfo.(ClinetCallInfo).call != nil {
-					clinetCallInfo.(ClinetCallInfo).call <- resultInfo
-					c.CloseFch(clinetCallInfo.(ClinetCallInfo).call)
+				callChan := clinetCallInfo.(ClinetCallInfo).call
+				if callChan != nil {
+					// 尝试非阻塞发送，避免 channel 已关闭导致 panic
+					select {
+					case callChan <- resultInfo:
+						// 发送成功
+					default:
+						// channel 可能已满或已关闭，跳过
+						log.Info("rpc callback channel is full or closed: [%s]", correlation_id)
+					}
+					c.CloseFch(callChan)
 				}
 			} else {
 				//可能客户端已超时了，但服务端处理完还给回调了
@@ -210,10 +222,8 @@ func (c *NatsClient) Unmarshal(data []byte) (*core.RPCInfo, error) {
 	err := msgpack.Unmarshal(data, &rpcInfo)
 	if err != nil {
 		return nil, err
-	} else {
-		return &rpcInfo, err
 	}
-
+	return &rpcInfo, nil
 }
 
 // goroutine safe

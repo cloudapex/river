@@ -105,6 +105,8 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 	callback := make(chan *core.ResultInfo, 1)
 	err = c.nats_client.Call(callInfo, callback)
 	if err != nil {
+		// 发送失败时立即清理 channel
+		c.close_callback_chan(callback)
 		return nil, err
 	}
 
@@ -131,6 +133,7 @@ func (c *RPCClient) CallArgs(ctx context.Context, _func string, argTypes []strin
 		return result, errors.New(resultInfo.Error)
 
 	case <-ctx.Done(): // 超时
+		// 超时时先删除 callinfo，再关闭 channel，避免 nats_client 尝试发送到已关闭的 channel
 		_ = c.nats_client.Delete(rpcInfo.Cid)
 		c.close_callback_chan(callback)
 		return nil, fmt.Errorf("deadline exceeded")
